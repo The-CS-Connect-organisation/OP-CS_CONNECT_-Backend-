@@ -1,30 +1,12 @@
-import dotenv from 'dotenv';
-import { z } from 'zod';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+ORT=5000
+NODE_ENV=development
+CORS_ORIGIN=http://localhost:5173
+SUPABASE_URL=https://ilabhvbuqhauamgehtuq.supabase.co
+SUPABASE_SERVICE_KEY=sb_secret_LPfeJKnXY8u_AWbv181_Zw_kVRZkkw7
+JWT_SECRET=supersecretjwtkey123
+VITE_API_BASE_URL=http://localhost:5000/api
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: resolve(__dirname, '../.env') });
-
-const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.coerce.number().int().positive().default(5000),
-  SUPABASE_URL: z.string().url('SUPABASE_URL must be a valid URL'),
-  SUPABASE_SERVICE_KEY: z.string().min(1, 'SUPABASE_SERVICE_KEY is required'),
-  CORS_ORIGIN: z.string().default('http://localhost:5173'),
-  JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
-  CEREBRAS_API_KEY: z.string().min(1, 'CEREBRAS_API_KEY is required'),
-  GROQ_API_KEY: z.string().min(1, 'GROQ_API_KEY is required'),
-  GEMINI_API_KEY: z.string().min(1, 'GEMINI_API_KEY is required'),
-  STREAM_API_KEY: z.string().default('n9v8bfwy45pn'),
-  STREAM_API_SECRET: z.string().default(''),
-});
-
-const parsed = envSchema.safeParse(process.env);
-
-if (!parsed.success) {
-  const issues = parsed.error.issues.map((issue) => issue.message).join('; ');
-  throw new Error(`Invalid environment configuration: ${issues}`);
-}
-
-export const env = parsed.data;
+# AI Provider Keys
+CEREBRAS_API_KEY=csk-wkr9wpc3ecp8ve2rkpr6kd8kcyydyfpmkxc2ypettrwk8ede
+GEMINI_API_KEY=AIzaSyC8j27gdLqqp5kWzHGWZoOmLcSS-zWX3Ig
+GROQ_API_KEY=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
