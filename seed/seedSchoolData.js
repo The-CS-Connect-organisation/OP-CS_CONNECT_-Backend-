@@ -245,10 +245,12 @@ const seed = async () => {
   // ═══════════════════════════════════════════
   console.log('📊 Creating marks...');
   const terms = [
-    { term: 'Cycle Test 1', exam_type: 'unit_test',  daysAgo: 90 },
-    { term: 'Mid Term',     exam_type: 'mid_term',   daysAgo: 60 },
-    { term: 'Cycle Test 2', exam_type: 'unit_test',  daysAgo: 30 },
-    { term: 'Term Final',   exam_type: 'final',      daysAgo: 10 },
+    { term: 'Cycle Test 1',  exam_type: 'unit_test', daysAgo: 120 },
+    { term: 'Mid Term',      exam_type: 'mid_term',  daysAgo: 90  },
+    { term: 'Cycle Test 2',  exam_type: 'unit_test', daysAgo: 60  },
+    { term: 'Term Final',    exam_type: 'final',     daysAgo: 30  },
+    { term: 'Cycle Test 3',  exam_type: 'unit_test', daysAgo: 14  },
+    { term: 'Pre-Board',     exam_type: 'mid_term',  daysAgo: 5   },
   ];
   const markSubjects = ['Mathematics','Physics','English','Chemistry','Computer Science','Biology'];
   const scoreBase = [72,68,75,65,80,70];
@@ -285,13 +287,13 @@ const seed = async () => {
   console.log(`   ✓ ${spRows.length} semester performance records`);
 
   // ═══════════════════════════════════════════
-  // 9. ATTENDANCE — 60 days of history
+  // 9. ATTENDANCE — 120 days of history (Mon-Fri only)
   // ═══════════════════════════════════════════
-  console.log('📅 Creating attendance records (60 days)...');
+  console.log('📅 Creating attendance records (120 days)...');
   const attendanceRows = [];
-  for (let day = 0; day < 60; day++) {
+  for (let day = 0; day < 120; day++) {
     const dateObj = new Date(Date.now() - day * 86400000);
-    if (dateObj.getDay() === 0 || dateObj.getDay() === 6) continue; // skip weekends
+    if (dateObj.getDay() === 0 || dateObj.getDay() === 6) continue;
     const date = dateObj.toISOString().split('T')[0];
     students.forEach((student, si) => {
       const cls = classes[studentRows[si].cls];
