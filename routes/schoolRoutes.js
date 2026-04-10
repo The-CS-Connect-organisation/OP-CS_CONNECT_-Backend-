@@ -11,6 +11,7 @@ import {
   getAttendanceReport,
   getLeaderboard,
   getReportCard,
+  getTimetable,
   listAnnouncements,
   listAssignments,
   listMessages,
@@ -47,7 +48,7 @@ router.use(requireAuth);
 router.post('/classes', allowRoles('admin'), validateRequest(createClassSchema), createClassRoom);
 router.post('/students/profiles', allowRoles('admin'), validateRequest(createStudentProfileSchema), createStudentProfile);
 router.post('/teachers/profiles', allowRoles('admin'), validateRequest(createTeacherProfileSchema), createTeacherProfile);
-router.get('/students', allowRoles('admin', 'teacher'), listStudents);
+router.get('/students', allowRoles('admin', 'teacher', 'student', 'parent'), listStudents);
 router.get('/teachers', allowRoles('admin', 'teacher', 'student', 'parent'), listTeachers);
 
 router.get('/messages', allowRoles('student', 'teacher', 'admin', 'parent'), listMessages);
@@ -71,5 +72,6 @@ router.get('/report-cards/:studentId', allowRoles('student', 'teacher', 'admin',
 router.get('/leaderboard/:classId', allowRoles('student', 'teacher', 'admin'), getLeaderboard);
 
 router.put('/timetables', allowRoles('admin', 'teacher'), validateRequest(saveTimetableSchema), saveTimetable);
+router.get('/timetables', allowRoles('student', 'teacher', 'admin', 'parent'), getTimetable);
 
 export default router;

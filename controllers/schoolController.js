@@ -169,6 +169,7 @@ export const listAssignments = asyncHandler(async (req, res) => {
     .select('*', { count: 'exact' });
 
   if (req.query.classId) query = query.eq('class_id', req.query.classId);
+  if (req.query.teacherId) query = query.eq('teacher_id', req.query.teacherId);
   if (req.query.subject) query = query.eq('subject', req.query.subject);
 
   const { data: items, count: total, error } = await query
@@ -323,27 +324,31 @@ export const markAttendance = asyncHandler(async (req, res) => {
 
 export const getAttendanceReport = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
-  const month = Number(req.query.month ?? new Date().getMonth() + 1);
-  const year = Number(req.query.year ?? new Date().getFullYear());
-  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-  const endMonth = month === 12 ? 1 : month + 1;
-  const endYear = month === 12 ? year + 1 : year;
-  const endDate = `${endYear}-${String(endMonth).padStart(2, '0')}-01`;
 
-  const { data: records, error } = await supabase
+  let query = supabase
     .from('attendance_records')
     .select('*')
     .eq('student_id', studentId)
-    .gte('date', startDate)
-    .lt('date', endDate)
     .order('date', { ascending: true });
 
+  // If month/year provided, filter to that month
+  if (req.query.month && req.query.year) {
+    const month = Number(req.query.month);
+    const year = Number(req.query.year);
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endMonth = month === 12 ? 1 : month + 1;
+    const endYear = month === 12 ? year + 1 : year;
+    const endDate = `${endYear}-${String(endMonth).padStart(2, '0')}-01`;
+    query = query.gte('date', startDate).lt('date', endDate);
+  }
+
+  const { data: records, error } = await query.limit(500);
   if (error) throw new ApiError(500, error.message);
 
   if (req.query.format === 'csv') {
     const csvRows = ['date,status', ...(records || []).map((r) => `${r.date},${r.status}`)];
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename=attendance-${studentId}-${year}-${month}.csv`);
+    res.setHeader('Content-Disposition', `attachment; filename=attendance-${studentId}.csv`);
     return res.status(200).send(csvRows.join('\n'));
   }
 
@@ -502,6 +507,27 @@ export const getReportCard = asyncHandler(async (req, res) => {
 });
 
 // ── Timetable ──
+export const getTimetable = asyncHandler(async (req, res) => {
+  const classId = req.query.classId || req.query.class_id;
+  if (!classId) throw new ApiError(400, 'classId is required');
+
+  const { data: timetable, error } = await supabase
+    .from('timetables')
+    .select('*')
+    .eq('class_id', classId)
+    .maybeSingle();
+
+  if (error) throw new ApiError(500, error.message);
+  if (!timetable) return res.json({ success: true, entries: [] });
+
+  // entries is stored as jsonb — parse if string
+  const entries = typeof timetable.entries === 'string'
+    ? JSON.parse(timetable.entries)
+    : timetable.entries;
+
+  res.json({ success: true, classId, entries: entries || [] });
+});
+
 export const saveTimetable = asyncHandler(async (req, res) => {
   const { classId, entries } = req.body;
 
