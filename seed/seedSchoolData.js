@@ -5,94 +5,89 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: resolve(__dirname, '../../.env') });
-
+dotenv.config({ path: resolve(__dirname, '../.env') });
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
-
-// ── Helpers ──
-const hash = (pw) => bcrypt.hashSync(pw, 12);
+const hash = (pw) => bcrypt.hashSync(pw, 10);
 
 const seed = async () => {
-  console.log('🚀 Seeding Cornerstone School data into Supabase...\n');
+  console.log('🚀 Seeding Cornerstone School data...\n');
 
-  // ── Clear existing data (order matters for FK constraints) ──
+  // ── Clear old data ──
   console.log('🧹 Clearing old data...');
-  await supabase.from('semester_performance').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('submissions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('attendance_records').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('marks').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('messages').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('announcements').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('timetables').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('exam_schedules').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('assignments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('classroom_students').delete().neq('classroom_id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('classroom_teachers').delete().neq('classroom_id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('student_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('teacher_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('parent_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('ai_interactions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('classrooms').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('users').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  const tables = [
+    'semester_performance','submissions','attendance_records','marks','messages',
+    'announcements','timetables','exam_schedules','assignments',
+    'classroom_students','classroom_teachers',
+    'student_profiles','teacher_profiles','parent_profiles','ai_interactions',
+    'classrooms','users',
+  ];
+  for (const t of tables) {
+    await supabase.from(t).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  }
 
   // ═══════════════════════════════════════════
-  // 1. USERS — 3 admins, 10 teachers, 20 students
+  // 1. USERS
   // ═══════════════════════════════════════════
   console.log('👥 Creating users...');
 
-  const adminData = [
-    { name: 'Alicia Morgan', email: 'admin@schoolsync.edu', password_hash: hash('admin123'), role: 'admin', is_active: true },
-    { name: 'Rahul Venkataraman', email: 'admin2@schoolsync.edu', password_hash: hash('admin123'), role: 'admin', is_active: true },
-    { name: 'Neha Kapoor', email: 'admin3@schoolsync.edu', password_hash: hash('admin123'), role: 'admin', is_active: true },
+  const { data: admins } = await supabase.from('users').insert([
+    { name: 'Alicia Morgan',       email: 'admin@schoolsync.edu',  password_hash: hash('admin123'),   role: 'admin',  is_active: true },
+    { name: 'Rahul Venkataraman',  email: 'admin2@schoolsync.edu', password_hash: hash('admin123'),   role: 'admin',  is_active: true },
+    { name: 'Neha Kapoor',         email: 'admin3@schoolsync.edu', password_hash: hash('admin123'),   role: 'admin',  is_active: true },
+  ]).select();
+
+  const teacherRows = [
+    { name: 'James Anderson',  email: 'james@schoolsync.edu',    subjects: ['Mathematics', 'Statistics'] },
+    { name: 'Emily Chen',      email: 'teacher2@schoolsync.edu', subjects: ['English Literature'] },
+    { name: 'Arjun Mehta',     email: 'teacher3@schoolsync.edu', subjects: ['Physics'] },
+    { name: 'Sara Iqbal',      email: 'teacher4@schoolsync.edu', subjects: ['Chemistry'] },
+    { name: 'David Roy',       email: 'teacher5@schoolsync.edu', subjects: ['Computer Science'] },
+    { name: 'Priyanka Menon',  email: 'teacher6@schoolsync.edu', subjects: ['Biology'] },
+    { name: 'Rajesh Kumar',    email: 'teacher7@schoolsync.edu', subjects: ['History', 'Civics'] },
+    { name: 'Priya Sharma',    email: 'teacher8@schoolsync.edu', subjects: ['Geography'] },
+    { name: 'Vikram Nair',     email: 'teacher9@schoolsync.edu', subjects: ['Hindi'] },
+    { name: 'Ananya Bose',     email: 'teacher10@schoolsync.edu',subjects: ['Physical Education'] },
   ];
+  const { data: teachers } = await supabase.from('users').insert(
+    teacherRows.map(t => ({ name: t.name, email: t.email, password_hash: hash('teacher123'), role: 'teacher', is_active: true }))
+  ).select();
 
-  const teacherNames = [
-    'Rajesh Kumar', 'Priya Sharma',
+  const studentRows = [
+    { name: 'Aarav Menon',      email: 'alex@schoolsync.edu',     cls: 0 },
+    { name: 'Ishita Kapoor',    email: 'student2@schoolsync.edu', cls: 0 },
+    { name: 'Vivaan Joshi',     email: 'student3@schoolsync.edu', cls: 0 },
+    { name: 'Diya Malhotra',    email: 'student4@schoolsync.edu', cls: 0 },
+    { name: 'Aditya Rao',       email: 'student5@schoolsync.edu', cls: 0 },
+    { name: 'Kavya Reddy',      email: 'student6@schoolsync.edu', cls: 1 },
+    { name: 'Rohan Gupta',      email: 'student7@schoolsync.edu', cls: 1 },
+    { name: 'Ananya Singh',     email: 'student8@schoolsync.edu', cls: 1 },
+    { name: 'Aryan Patel',      email: 'student9@schoolsync.edu', cls: 1 },
+    { name: 'Meera Iyer',       email: 'student10@schoolsync.edu',cls: 1 },
+    { name: 'Siddharth Nair',   email: 'student11@schoolsync.edu',cls: 2 },
+    { name: 'Pooja Verma',      email: 'student12@schoolsync.edu',cls: 2 },
+    { name: 'Karan Sharma',     email: 'student13@schoolsync.edu',cls: 2 },
+    { name: 'Riya Desai',       email: 'student14@schoolsync.edu',cls: 2 },
+    { name: 'Nikhil Bhat',      email: 'student15@schoolsync.edu',cls: 2 },
+    { name: 'Tanvi Kulkarni',   email: 'student16@schoolsync.edu',cls: 3 },
+    { name: 'Harsh Agarwal',    email: 'student17@schoolsync.edu',cls: 3 },
+    { name: 'Sneha Pillai',     email: 'student18@schoolsync.edu',cls: 3 },
+    { name: 'Rahul Mishra',     email: 'student19@schoolsync.edu',cls: 3 },
+    { name: 'Prachi Jain',      email: 'student20@schoolsync.edu',cls: 3 },
   ];
-  const teacherSubjects = [
-    ['Mathematics'], ['English Literature'], ['Physics'], ['Chemistry'],
-    ['Computer Science'], ['Biology'], ['History', 'Civics'], ['Mathematics', 'Statistics'],
-    ['Geography'], ['Hindi'],
+  const { data: students } = await supabase.from('users').insert(
+    studentRows.map(s => ({ name: s.name, email: s.email, password_hash: hash('student123'), role: 'student', is_active: true }))
+  ).select();
+
+  const parentNames = [
+    'Priya Menon','Sunita Kapoor','Ramesh Joshi','Anita Malhotra','Suresh Rao',
+    'Lakshmi Reddy','Vijay Gupta','Rekha Singh','Mohan Patel','Usha Iyer',
+    'Ganesh Nair','Savita Verma','Deepak Sharma','Nirmala Desai','Sunil Bhat',
+    'Kavitha Kulkarni','Rajiv Agarwal','Meena Pillai','Ashok Mishra','Geeta Jain',
   ];
-  const teacherData = teacherNames.map((name, i) => ({
-    name,
-    email: `teacher${i + 1}@schoolsync.edu`,
-    password_hash: hash('teacher123'),
-    role: 'teacher',
-    is_active: true,
-  }));
-
-  const studentNames = [
-    'Aarav Menon', 'Ishita Kapoor', 'Vivaan Joshi', 'Diya Malhotra', 'Aditya Rao',
-  ];
-  const studentData = studentNames.map((name, i) => ({
-    name,
-    email: `student${i + 1}@schoolsync.edu`,
-    password_hash: hash('student123'),
-    role: 'student',
-    is_active: true,
-  }));
-
-  const parentData = Array.from({ length: 10 }).map((_, i) => ({
-    name: `Parent ${i + 1}`,
-    email: `parent${i + 1}@schoolsync.edu`,
-    password_hash: hash('parent123'),
-    role: 'parent',
-    is_active: true,
-  }));
-
-  const { data: admins, error: ae } = await supabase.from('users').insert(adminData).select();
-  if (ae) { console.error('Admin insert error:', ae.message); process.exit(1); }
-
-  const { data: teachers, error: te } = await supabase.from('users').insert(teacherData).select();
-  if (te) { console.error('Teacher insert error:', te.message); process.exit(1); }
-
-  const { data: students, error: se } = await supabase.from('users').insert(studentData).select();
-  if (se) { console.error('Student insert error:', se.message); process.exit(1); }
-
-  const { data: parents, error: pe } = await supabase.from('users').insert(parentData).select();
-  if (pe) { console.error('Parent insert error:', pe.message); process.exit(1); }
+  const { data: parents } = await supabase.from('users').insert(
+    parentNames.map((name, i) => ({ name, email: `parent${i + 1}@schoolsync.edu`, password_hash: hash('parent123'), role: 'parent', is_active: true }))
+  ).select();
 
   console.log(`   ✓ ${admins.length} admins, ${teachers.length} teachers, ${students.length} students, ${parents.length} parents`);
 
@@ -100,32 +95,23 @@ const seed = async () => {
   // 2. CLASSROOMS
   // ═══════════════════════════════════════════
   console.log('🏫 Creating classrooms...');
-  const { data: classes, error: ce } = await supabase
-    .from('classrooms')
-    .insert([
-      { name: 'Grade 10-A', grade: '10', section: 'A' },
-      { name: 'Grade 10-B', grade: '10', section: 'B' },
-      { name: 'Grade 11-A', grade: '11', section: 'A' },
-      { name: 'Grade 11-B', grade: '11', section: 'B' },
-    ])
-    .select();
-  if (ce) { console.error('Classroom error:', ce.message); process.exit(1); }
+  const { data: classes } = await supabase.from('classrooms').insert([
+    { name: 'Grade 10-A', grade: '10', section: 'A' },
+    { name: 'Grade 10-B', grade: '10', section: 'B' },
+    { name: 'Grade 11-A', grade: '11', section: 'A' },
+    { name: 'Grade 11-B', grade: '11', section: 'B' },
+  ]).select();
   console.log(`   ✓ ${classes.length} classrooms`);
 
-  // ── Classroom ↔ Student junction ──
-  const csRows = students.map((s, i) => ({
-    classroom_id: classes[i % classes.length].id,
-    student_id: s.id,
-  }));
-  await supabase.from('classroom_students').insert(csRows);
-
-  // ── Classroom ↔ Teacher junction ──
+  // Junction tables
+  await supabase.from('classroom_students').insert(
+    students.map((s, i) => ({ classroom_id: classes[studentRows[i].cls].id, student_id: s.id }))
+  );
   const ctRows = [];
   teachers.forEach((t, i) => {
-    ctRows.push({ classroom_id: classes[i % classes.length].id, teacher_id: t.id });
-    ctRows.push({ classroom_id: classes[(i + 1) % classes.length].id, teacher_id: t.id });
+    ctRows.push({ classroom_id: classes[i % 4].id, teacher_id: t.id });
+    ctRows.push({ classroom_id: classes[(i + 1) % 4].id, teacher_id: t.id });
   });
-  // Deduplicate
   const ctUnique = [...new Map(ctRows.map(r => [`${r.classroom_id}-${r.teacher_id}`, r])).values()];
   await supabase.from('classroom_teachers').insert(ctUnique);
 
@@ -133,198 +119,239 @@ const seed = async () => {
   // 3. PROFILES
   // ═══════════════════════════════════════════
   console.log('📋 Creating profiles...');
-  const attendanceBand = [97, 95, 93, 91, 88, 86, 84, 82, 80, 78, 76, 74, 90, 87, 85, 83, 79, 77, 92, 89];
+  const attBand = [97,95,93,91,88,86,84,82,80,78,76,74,90,87,85,83,79,77,92,89];
+  const xpBand  = [980,920,870,840,810,780,750,720,690,660,630,600,570,540,510,480,450,420,390,360];
 
-  const studentProfiles = students.map((s, i) => {
-    const cls = classes[i % classes.length];
-    const att = attendanceBand[i % attendanceBand.length];
-    return {
-      user_id: s.id,
-      grade: cls.grade,
-      section: cls.section,
-      roll_number: `${cls.grade}${cls.section}-${String(i + 1).padStart(3, '0')}`,
-      subjects: ['Mathematics', 'Physics', 'English', 'Chemistry'],
-      attendance_percent: att,
-      parent_name: parents[i]?.name || null,
-      parent_phone: `+91-90${String(1000000 + i).padStart(7, '0')}`,
-      xp: Math.max(10, 200 - i * 8),
-      badges: att >= 90 ? ['Punctual', 'Consistent'] : att >= 80 ? ['Consistent'] : ['Needs Support'],
-    };
-  });
-  const { error: spe } = await supabase.from('student_profiles').insert(studentProfiles);
-  if (spe) { console.error('Student profile error:', spe.message); process.exit(1); }
+  await supabase.from('student_profiles').insert(
+    students.map((s, i) => {
+      const cls = classes[studentRows[i].cls];
+      return {
+        user_id: s.id,
+        grade: cls.grade,
+        section: cls.section,
+        roll_number: `${cls.grade}${cls.section}-${String(i + 1).padStart(3, '0')}`,
+        subjects: ['Mathematics','Physics','English','Chemistry','Computer Science','Biology'],
+        attendance_percent: attBand[i],
+        parent_name: parents[i]?.name || null,
+        parent_phone: `+91-90${String(1000000 + i).padStart(7, '0')}`,
+        xp: xpBand[i],
+        badges: attBand[i] >= 90 ? ['Punctual','Consistent','Top Performer'] : attBand[i] >= 80 ? ['Consistent','Active'] : ['Needs Support'],
+        attendance_streak: Math.max(0, Math.floor(attBand[i] / 10) - 5),
+      };
+    })
+  );
 
-  const teacherProfiles = teachers.map((t, i) => ({
-    user_id: t.id,
-    subjects: teacherSubjects[i] || ['General'],
-    phone: `+91-98${String(7654300 + i).padStart(7, '0')}`,
-  }));
-  const { error: tpe } = await supabase.from('teacher_profiles').insert(teacherProfiles);
-  if (tpe) { console.error('Teacher profile error:', tpe.message); process.exit(1); }
+  await supabase.from('teacher_profiles').insert(
+    teachers.map((t, i) => ({
+      user_id: t.id,
+      subjects: teacherRows[i].subjects,
+      phone: `+91-98${String(7654300 + i).padStart(7, '0')}`,
+    }))
+  );
 
-  const parentProfiles = parents.map((p, i) => ({
-    user_id: p.id,
-    child_ids: students[i] ? [students[i].id] : [],
-    phone: `+91-90${String(1000000 + i).padStart(7, '0')}`,
-  }));
-  const { error: ppe } = await supabase.from('parent_profiles').insert(parentProfiles);
-  if (ppe) { console.error('Parent profile error:', ppe.message); process.exit(1); }
-
-  console.log(`   ✓ ${studentProfiles.length} student, ${teacherProfiles.length} teacher, ${parentProfiles.length} parent profiles`);
+  await supabase.from('parent_profiles').insert(
+    parents.map((p, i) => ({
+      user_id: p.id,
+      child_ids: students[i] ? [students[i].id] : [],
+      phone: `+91-90${String(1000000 + i).padStart(7, '0')}`,
+    }))
+  );
+  console.log('   ✓ All profiles created');
 
   // ═══════════════════════════════════════════
-  // 4. ASSIGNMENTS
+  // 4. TIMETABLES
+  // ═══════════════════════════════════════════
+  console.log('📅 Creating timetables...');
+  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+  const subjectPool = ['Mathematics','Physics','English','Chemistry','Computer Science','Biology','History','Geography'];
+  const rooms = ['101','102','103','104','Lab-A','Lab-B','201','202'];
+
+  const timetableEntries = (classIdx) => days.map((day, di) => ({
+    day,
+    slots: [
+      { time: '08:00 - 08:45', subject: subjectPool[(classIdx + di) % subjectPool.length],     teacher: teacherRows[(classIdx + di) % teachers.length].name,     room: rooms[(classIdx + di) % rooms.length] },
+      { time: '08:50 - 09:35', subject: subjectPool[(classIdx + di + 1) % subjectPool.length], teacher: teacherRows[(classIdx + di + 1) % teachers.length].name, room: rooms[(classIdx + di + 1) % rooms.length] },
+      { time: '09:40 - 10:25', subject: subjectPool[(classIdx + di + 2) % subjectPool.length], teacher: teacherRows[(classIdx + di + 2) % teachers.length].name, room: rooms[(classIdx + di + 2) % rooms.length] },
+      { time: '10:40 - 11:25', subject: subjectPool[(classIdx + di + 3) % subjectPool.length], teacher: teacherRows[(classIdx + di + 3) % teachers.length].name, room: rooms[(classIdx + di + 3) % rooms.length] },
+      { time: '11:30 - 12:15', subject: subjectPool[(classIdx + di + 4) % subjectPool.length], teacher: teacherRows[(classIdx + di + 4) % teachers.length].name, room: rooms[(classIdx + di + 4) % rooms.length] },
+      { time: '13:00 - 13:45', subject: subjectPool[(classIdx + di + 5) % subjectPool.length], teacher: teacherRows[(classIdx + di + 5) % teachers.length].name, room: rooms[(classIdx + di + 5) % rooms.length] },
+      { time: '13:50 - 14:35', subject: subjectPool[(classIdx + di + 6) % subjectPool.length], teacher: teacherRows[(classIdx + di + 6) % teachers.length].name, room: rooms[(classIdx + di + 6) % rooms.length] },
+    ],
+  }));
+
+  await supabase.from('timetables').insert(
+    classes.map((cls, i) => ({ class_id: cls.id, entries: timetableEntries(i) }))
+  );
+  console.log('   ✓ Timetables created for all 4 classes');
+
+  // ═══════════════════════════════════════════
+  // 5. ASSIGNMENTS (3 per class = 12 total)
   // ═══════════════════════════════════════════
   console.log('📝 Creating assignments...');
-  const assignmentData = classes.flatMap((cls, idx) => ([
-    {
-      title: `${cls.name} Mathematics Worksheet`,
-      description: `Practice algebra and data interpretation for ${cls.name}.`,
-      subject: 'Mathematics',
+  const assignmentTemplates = [
+    { title: 'Algebra & Data Interpretation Worksheet',  subject: 'Mathematics',      desc: 'Solve 20 problems covering quadratic equations, data tables, and graph interpretation.', marks: 100 },
+    { title: 'Physics Lab Report — Optics',              subject: 'Physics',           desc: 'Document your observations from the lens experiment. Include ray diagrams and error analysis.', marks: 100 },
+    { title: 'English Essay — Climate Change',           subject: 'English',           desc: 'Write a 600-word argumentative essay on the impact of climate change on developing nations.', marks: 50 },
+    { title: 'Organic Chemistry Reactions',              subject: 'Chemistry',         desc: 'Complete the reaction mechanism worksheet covering substitution and elimination reactions.', marks: 80 },
+    { title: 'Python Programming Assignment',            subject: 'Computer Science',  desc: 'Build a simple student grade calculator using Python. Submit .py file and output screenshots.', marks: 100 },
+    { title: 'Cell Biology Diagram & Notes',             subject: 'Biology',           desc: 'Draw and label a detailed plant cell and animal cell. Include functions of each organelle.', marks: 60 },
+  ];
+
+  const assignmentData = classes.flatMap((cls, ci) =>
+    assignmentTemplates.slice(0, 3).map((tmpl, ti) => ({
+      title: `${cls.name} — ${tmpl.title}`,
+      description: tmpl.desc,
+      subject: tmpl.subject,
       class_id: cls.id,
-      teacher_id: teachers[idx % teachers.length].id,
-      due_date: new Date(Date.now() + (idx + 3) * 86400000).toISOString(),
-      max_marks: 100,
-    },
-    {
-      title: `${cls.name} Science Lab Report`,
-      description: `Submit full lab observations and inferences for ${cls.name}.`,
-      subject: 'Physics',
-      class_id: cls.id,
-      teacher_id: teachers[(idx + 2) % teachers.length].id,
-      due_date: new Date(Date.now() + (idx + 5) * 86400000).toISOString(),
-      max_marks: 100,
-    },
-    {
-      title: `${cls.name} English Essay`,
-      description: `Write a 500-word essay on a given topic for ${cls.name}.`,
-      subject: 'English',
-      class_id: cls.id,
-      teacher_id: teachers[(idx + 1) % teachers.length].id,
-      due_date: new Date(Date.now() + (idx + 7) * 86400000).toISOString(),
-      max_marks: 50,
-    },
-  ]));
-  const { data: assignments, error: ase } = await supabase.from('assignments').insert(assignmentData).select();
-  if (ase) { console.error('Assignment error:', ase.message); process.exit(1); }
+      teacher_id: teachers[(ci + ti) % teachers.length].id,
+      due_date: new Date(Date.now() + (ci * 2 + ti + 3) * 86400000).toISOString(),
+      max_marks: tmpl.marks,
+    }))
+  );
+  const { data: assignments } = await supabase.from('assignments').insert(assignmentData).select();
   console.log(`   ✓ ${assignments.length} assignments`);
 
   // ═══════════════════════════════════════════
-  // 5. SUBMISSIONS
+  // 6. SUBMISSIONS (most students submitted)
   // ═══════════════════════════════════════════
   console.log('📤 Creating submissions...');
-  const submissionRows = students.slice(0, 15).map((student, idx) => {
-    const assignment = assignments[idx % assignments.length];
-    const submittedAt = new Date(Date.now() - idx * 3600 * 1000).toISOString();
-    return {
-      assignment_id: assignment.id,
-      student_id: student.id,
-      submitted_at: submittedAt,
-      is_late: new Date(submittedAt) > new Date(assignment.due_date),
-      content: `Submission draft by ${student.name || studentNames[idx]}.`,
-      marks: 65 + (idx % 35),
-      feedback: 'Good attempt. Improve structure and examples.',
-      graded_at: new Date().toISOString(),
-    };
+  const submissionRows = [];
+  students.forEach((student, si) => {
+    const clsIdx = studentRows[si].cls;
+    const clsAssignments = assignments.filter(a => a.class_id === classes[clsIdx].id);
+    clsAssignments.forEach((asgn, ai) => {
+      if ((si + ai) % 5 !== 0) { // ~80% submission rate
+        const daysAgo = Math.floor(Math.random() * 5) + 1;
+        submissionRows.push({
+          assignment_id: asgn.id,
+          student_id: student.id,
+          submitted_at: new Date(Date.now() - daysAgo * 86400000).toISOString(),
+          is_late: daysAgo === 1 && ai % 3 === 0,
+          content: `Submission by ${studentRows[si].name} for ${asgn.subject}.`,
+          marks: 50 + ((si * 7 + ai * 13) % 45),
+          feedback: ['Excellent work! Very detailed.','Good attempt. Improve structure.','Needs more examples.','Well done, keep it up!','Average. Revise concepts.'][(si + ai) % 5],
+          graded_at: new Date(Date.now() - (daysAgo - 1) * 86400000).toISOString(),
+        });
+      }
+    });
   });
-  await supabase.from('submissions').insert(submissionRows);
+  for (let i = 0; i < submissionRows.length; i += 100) {
+    await supabase.from('submissions').insert(submissionRows.slice(i, i + 100));
+  }
   console.log(`   ✓ ${submissionRows.length} submissions`);
 
   // ═══════════════════════════════════════════
-  // 6. MARKS
+  // 7. MARKS — 3 terms × 6 subjects × 20 students
   // ═══════════════════════════════════════════
   console.log('📊 Creating marks...');
-  const markRows = students.flatMap((student, idx) => {
-    const cls = classes[idx % classes.length];
-    return [
-      { student_id: student.id, class_id: cls.id, subject: 'Mathematics', exam_type: 'unit_test', score: 60 + (idx % 35), term: 'Cycle Test 1' },
-      { student_id: student.id, class_id: cls.id, subject: 'Physics', exam_type: 'mid_term', score: 58 + ((idx * 2) % 35), term: 'Cycle Test 2' },
-      { student_id: student.id, class_id: cls.id, subject: 'English', exam_type: 'final', score: 62 + ((idx * 3) % 30), term: 'Term 1' },
-      { student_id: student.id, class_id: cls.id, subject: 'Chemistry', exam_type: 'unit_test', score: 55 + ((idx * 4) % 40), term: 'Cycle Test 1' },
-    ];
+  const terms = [
+    { term: 'Cycle Test 1', exam_type: 'unit_test',  daysAgo: 90 },
+    { term: 'Mid Term',     exam_type: 'mid_term',   daysAgo: 60 },
+    { term: 'Cycle Test 2', exam_type: 'unit_test',  daysAgo: 30 },
+    { term: 'Term Final',   exam_type: 'final',      daysAgo: 10 },
+  ];
+  const markSubjects = ['Mathematics','Physics','English','Chemistry','Computer Science','Biology'];
+  const scoreBase = [72,68,75,65,80,70];
+
+  const markRows = students.flatMap((student, si) => {
+    const cls = classes[studentRows[si].cls];
+    return terms.flatMap((term, ti) =>
+      markSubjects.map((subject, subi) => ({
+        student_id: student.id,
+        class_id: cls.id,
+        subject,
+        exam_type: term.exam_type,
+        score: Math.min(100, Math.max(35, scoreBase[subi] + (si % 5) * 3 - (ti % 3) * 2 + (subi % 4) * 2)),
+        term: term.term,
+      }))
+    );
   });
-  await supabase.from('marks').insert(markRows);
-  console.log(`   ✓ ${markRows.length} marks`);
+  for (let i = 0; i < markRows.length; i += 200) {
+    await supabase.from('marks').insert(markRows.slice(i, i + 200));
+  }
+  console.log(`   ✓ ${markRows.length} marks records`);
 
   // ═══════════════════════════════════════════
-  // 7. ATTENDANCE (30 days)
+  // 8. SEMESTER PERFORMANCE
   // ═══════════════════════════════════════════
-  console.log('📅 Creating attendance records (30 days)...');
+  console.log('📈 Creating semester performance...');
+  const { data: spProfiles } = await supabase.from('student_profiles').select('id, user_id');
+  const spRows = spProfiles.flatMap((sp, i) => [
+    { student_profile_id: sp.id, semester: 'Semester 1 (2024-25)', percentage: 68 + (i % 20), grade: i % 20 >= 15 ? 'A+' : i % 20 >= 10 ? 'A' : i % 20 >= 5 ? 'B+' : 'B' },
+    { student_profile_id: sp.id, semester: 'Semester 2 (2024-25)', percentage: 71 + (i % 22), grade: i % 22 >= 16 ? 'A+' : i % 22 >= 11 ? 'A' : i % 22 >= 6 ? 'B+' : 'B' },
+    { student_profile_id: sp.id, semester: 'Semester 1 (2025-26)', percentage: 74 + (i % 18), grade: i % 18 >= 14 ? 'A+' : i % 18 >= 9 ? 'A' : i % 18 >= 4 ? 'B+' : 'B' },
+  ]);
+  await supabase.from('semester_performance').insert(spRows);
+  console.log(`   ✓ ${spRows.length} semester performance records`);
+
+  // ═══════════════════════════════════════════
+  // 9. ATTENDANCE — 60 days of history
+  // ═══════════════════════════════════════════
+  console.log('📅 Creating attendance records (60 days)...');
   const attendanceRows = [];
-  for (let day = 0; day < 30; day++) {
-    const date = new Date(Date.now() - day * 86400000).toISOString().split('T')[0];
-    for (let i = 0; i < students.length; i++) {
-      const cls = classes[i % classes.length];
-      const teacher = teachers[i % teachers.length];
-      const pick = (i + day) % 14;
-      const status = pick < 10 ? 'present' : pick < 12 ? 'late' : 'absent';
-      attendanceRows.push({
-        class_id: cls.id,
-        student_id: students[i].id,
-        teacher_id: teacher.id,
-        date,
-        status,
-      });
-    }
+  for (let day = 0; day < 60; day++) {
+    const dateObj = new Date(Date.now() - day * 86400000);
+    if (dateObj.getDay() === 0 || dateObj.getDay() === 6) continue; // skip weekends
+    const date = dateObj.toISOString().split('T')[0];
+    students.forEach((student, si) => {
+      const cls = classes[studentRows[si].cls];
+      const teacher = teachers[si % teachers.length];
+      const roll = (si + day) % 20;
+      const status = roll < 14 ? 'present' : roll < 17 ? 'late' : 'absent';
+      attendanceRows.push({ class_id: cls.id, student_id: student.id, teacher_id: teacher.id, date, status });
+    });
   }
-  // Insert in batches of 200 to avoid payload limits
   for (let i = 0; i < attendanceRows.length; i += 200) {
     await supabase.from('attendance_records').insert(attendanceRows.slice(i, i + 200));
   }
   console.log(`   ✓ ${attendanceRows.length} attendance records`);
 
   // ═══════════════════════════════════════════
-  // 8. ANNOUNCEMENTS
+  // 10. ANNOUNCEMENTS
   // ═══════════════════════════════════════════
   console.log('📢 Creating announcements...');
   await supabase.from('announcements').insert([
-    {
-      title: 'Cornerstone International School Orientation',
-      body: 'New academic year orientation starts next Monday at 9 AM in the main auditorium.',
-      category: 'event', scope: 'school', created_by: admins[0].id, pinned: true,
-    },
-    {
-      title: 'Mid Term Exam Schedule Released',
-      body: 'Exam IDs and hall ticket details are available in the student portal. Check your dashboard.',
-      category: 'exam', scope: 'school', created_by: admins[0].id, pinned: true,
-    },
-    {
-      title: 'Heavy Rain Alert — Transport Delay',
-      body: 'School transport may be delayed tomorrow due to heavy rain forecast. Plan accordingly.',
-      category: 'emergency', scope: 'school', created_by: admins[0].id, pinned: false,
-    },
-    {
-      title: 'Science Fair 2026 Registration Open',
-      body: 'Students can register for the annual science fair. Last date: April 30. See your class teacher for details.',
-      category: 'event', scope: 'school', created_by: admins[1].id, pinned: false,
-    },
-    {
-      title: 'Holiday: Republic Day',
-      body: 'School will remain closed on January 26 for Republic Day celebrations.',
-      category: 'holiday', scope: 'school', created_by: admins[0].id, pinned: false,
-    },
+    { title: 'New Academic Year Orientation',         body: 'Orientation for the new academic year starts Monday at 9 AM in the main auditorium. All students and parents are requested to attend.',                                                    category: 'event',     scope: 'school', created_by: admins[0].id, pinned: true  },
+    { title: 'Mid Term Exam Schedule Released',       body: 'Mid-term exams begin April 21. Hall tickets are available in the student portal. Check your dashboard for your exam timetable and room allocation.',                                          category: 'exam',      scope: 'school', created_by: admins[0].id, pinned: true  },
+    { title: 'Heavy Rain Alert — Transport Delay',    body: 'School transport may be delayed tomorrow due to heavy rain forecast. Parents are advised to make alternate arrangements if possible.',                                                          category: 'emergency', scope: 'school', created_by: admins[0].id, pinned: false },
+    { title: 'Science Fair 2026 — Registrations Open',body: 'Annual Science Fair registrations are now open. Students can register through their class teacher. Last date: April 30. Prizes worth ₹50,000 to be won!',                                    category: 'event',     scope: 'school', created_by: admins[1].id, pinned: false },
+    { title: 'Holiday: Republic Day',                 body: 'School will remain closed on January 26 for Republic Day. The flag hoisting ceremony will be held at 8 AM for students who wish to attend.',                                                  category: 'holiday',   scope: 'school', created_by: admins[0].id, pinned: false },
+    { title: 'Parent-Teacher Meeting — April 20',     body: 'PTM is scheduled for April 20 from 10 AM to 1 PM. Parents are requested to collect their ward\'s progress report and meet subject teachers.',                                                category: 'event',     scope: 'school', created_by: admins[2].id, pinned: false },
+    { title: 'Library Book Return Reminder',          body: 'All students must return borrowed library books by April 15. A fine of ₹5 per day will be charged for late returns.',                                                                         category: 'event',     scope: 'school', created_by: admins[1].id, pinned: false },
+    { title: 'Sports Day — May 5',                    body: 'Annual Sports Day is scheduled for May 5. Students participating in events must register with the PE department by April 25. Practice sessions start next week.',                             category: 'event',     scope: 'school', created_by: admins[0].id, pinned: false },
   ]);
-  console.log('   ✓ 5 announcements');
+  console.log('   ✓ 8 announcements');
+
+  // ═══════════════════════════════════════════
+  // 11. EXAM SCHEDULES
+  // ═══════════════════════════════════════════
+  console.log('📋 Creating exam schedules...');
+  const examScheduleRows = classes.flatMap((cls, ci) =>
+    markSubjects.map((subject, si) => ({
+      class_id: cls.id,
+      subject,
+      date: new Date(Date.now() + (11 + ci * 6 + si) * 86400000).toISOString(),
+      room: rooms[(ci + si) % rooms.length],
+    }))
+  );
+  await supabase.from('exam_schedules').insert(examScheduleRows);
+  console.log(`   ✓ ${examScheduleRows.length} exam schedules`);
 
   // ═══════════════════════════════════════════
   // DONE
   // ═══════════════════════════════════════════
   console.log('\n✅ Seed complete!\n');
-  console.log('┌──────────────────────────────────────────────────────┐');
-  console.log('│  LOGIN CREDENTIALS                                  │');
-  console.log('├──────────────────────────────────────────────────────┤');
-  console.log('│  Admin:   admin@schoolsync.edu    / admin123        │');
-  console.log('│  Admin 2: admin2@schoolsync.edu   / admin123        │');
-  console.log('│  Admin 3: admin3@schoolsync.edu   / admin123        │');
-  console.log('│  Teachers: teacher1..10@schoolsync.edu / teacher123 │');
-  console.log('│  Students: student1..20@schoolsync.edu / student123 │');
-  console.log('│  Parents:  parent1..20@schoolsync.edu  / parent123  │');
-  console.log('└──────────────────────────────────────────────────────┘');
-
+  console.log('┌──────────────────────────────────────────────────────────┐');
+  console.log('│  LOGIN CREDENTIALS                                       │');
+  console.log('├──────────────────────────────────────────────────────────┤');
+  console.log('│  Admin:    admin@schoolsync.edu       / admin123         │');
+  console.log('│  Teachers: james@schoolsync.edu       / teacher123       │');
+  console.log('│            teacher2-10@schoolsync.edu / teacher123       │');
+  console.log('│  Students: alex@schoolsync.edu        / student123       │');
+  console.log('│            student2-20@schoolsync.edu / student123       │');
+  console.log('│  Parents:  parent1-20@schoolsync.edu  / parent123        │');
+  console.log('└──────────────────────────────────────────────────────────┘');
   process.exit(0);
 };
 
-seed().catch((err) => {
-  console.error('❌ Seed failed:', err);
-  process.exit(1);
-});
+seed().catch(err => { console.error('❌ Seed failed:', err); process.exit(1); });
