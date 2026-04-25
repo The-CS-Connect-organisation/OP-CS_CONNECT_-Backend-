@@ -71,7 +71,11 @@ export const gradeSubmissionSchema = z.object({
 export const markAttendanceSchema = z.object({
   body: z.object({
     classId: uuidField,
-    date: z.string().datetime(),
+    // Accept both ISO datetime and plain date strings (YYYY-MM-DD)
+    date: z.string().refine(
+      (val) => /^\d{4}-\d{2}-\d{2}(T.*)?$/.test(val),
+      { message: 'date must be a valid date string (YYYY-MM-DD or ISO datetime)' }
+    ),
     entries: z
       .array(
         z.object({

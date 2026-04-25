@@ -3,7 +3,14 @@ const { hash } = pkg;
 import { supabase } from '../config/supabase.js';
 import { logger } from '../utils/logger.js';
 
+// Default users are only bootstrapped in development mode
+// In production, create users via the admin API
 export const bootstrapDefaultUsers = async () => {
+  if (process.env.NODE_ENV === 'production') {
+    logger.info('Skipping default user bootstrap in production');
+    return;
+  }
+
   const defaults = [
     { name: 'Alicia Morgan', email: 'admin@schoolsync.edu', role: 'admin', password: 'admin123' },
     { name: 'James Anderson', email: 'james@schoolsync.edu', role: 'teacher', password: 'teacher123' },

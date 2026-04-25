@@ -14,9 +14,9 @@ const envSchema = z.object({
   SUPABASE_SERVICE_KEY: z.string().min(1, 'SUPABASE_SERVICE_KEY is required'),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
   JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
-  CEREBRAS_API_KEY: z.string().min(1, 'CEREBRAS_API_KEY is required'),
-  GROQ_API_KEY: z.string().min(1, 'GROQ_API_KEY is required'),
-  GEMINI_API_KEY: z.string().min(1, 'GEMINI_API_KEY is required'),
+  CEREBRAS_API_KEY: z.string().default(''),
+  GROQ_API_KEY: z.string().default(''),
+  GEMINI_API_KEY: z.string().default(''),
   STREAM_API_KEY: z.string().default('n9v8bfwy45pn'),
   STREAM_API_SECRET: z.string().default(''),
 });

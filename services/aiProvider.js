@@ -47,8 +47,13 @@ const ADVANCED_PROVIDERS = [
 ];
 
 const tryProviders = async (providers, messages) => {
+  // Filter out providers with no API key configured
+  const available = providers.filter(p => p.key && p.key.length > 0);
+  if (!available.length) {
+    throw new ApiError(503, 'No AI providers configured. Please set CEREBRAS_API_KEY, GROQ_API_KEY, or GEMINI_API_KEY.');
+  }
   let lastError = null;
-  for (const provider of providers) {
+  for (const provider of available) {
     try {
       logger.info(`Attempting AI request with provider: ${provider.name} (${provider.model})`);
       const response = await fetch(provider.url, {

@@ -7,6 +7,8 @@ import authRoutes from './routes/authRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import schoolRoutes from './routes/schoolRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import gamificationRoutes from './routes/gamificationRoutes.js';
+import feesRoutes from './routes/feesRoutes.js';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
@@ -20,7 +22,23 @@ export const setSocketServer = (io) => {
 app.use(helmet());
 app.use(
   cors({
-    origin: true,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      const allowed = [
+        env.CORS_ORIGIN,
+        // Always allow both deployed frontends
+        'https://the-cs-connect-organisation.github.io',
+      ].filter(Boolean);
+      // In development, allow any localhost port
+      if (env.NODE_ENV !== 'production' && /^http:\/\/localhost:\d+$/.test(origin)) {
+        return callback(null, true);
+      }
+      if (allowed.some(o => origin === o || origin.startsWith(o))) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
     credentials: true,
   })
 );
@@ -61,6 +79,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/school', schoolRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/gamification', gamificationRoutes);
+app.use('/api/fees', feesRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -282,12 +282,15 @@ export const gradeSubmission = asyncHandler(async (req, res) => {
 export const markAttendance = asyncHandler(async (req, res) => {
   const { classId, date, entries } = req.body;
 
+  // Normalize date to YYYY-MM-DD (strip time if ISO datetime was passed)
+  const normalizedDate = date.split('T')[0];
+
   // Upsert all attendance entries
   const rows = entries.map((entry) => ({
     class_id: classId,
     student_id: entry.studentId,
     teacher_id: req.user.id,
-    date,
+    date: normalizedDate,
     status: entry.status,
   }));
 

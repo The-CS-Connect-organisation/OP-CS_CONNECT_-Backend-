@@ -19,7 +19,7 @@ const enrichUser = async (user) => {
   if (user.role === 'student') {
     const { data: profile } = await supabase
       .from('student_profiles')
-      .select('grade, section, roll_number, attendance_percent, xp, badges, subjects, parent_name, parent_phone')
+      .select('grade, section, roll_number, attendance_percent, subjects, parent_name, parent_phone')
       .eq('user_id', user.id)
       .maybeSingle();
     if (profile) {
@@ -28,8 +28,8 @@ const enrichUser = async (user) => {
       user.section = profile.section;
       user.rollNo = profile.roll_number;
       user.attendancePercent = profile.attendance_percent;
-      user.xp = profile.xp;
-      user.badges = profile.badges;
+      user.xp = 0;
+      user.badges = [];
       user.subjects = profile.subjects;
       user.parentName = profile.parent_name;
       user.parentPhone = profile.parent_phone;
