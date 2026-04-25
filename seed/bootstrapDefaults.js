@@ -1,6 +1,6 @@
 import pkg from 'bcryptjs';
 const { hash } = pkg;
-import { supabase } from '../config/supabase.js';
+import { getRecord, queryRecords, updateRecord } from '../utils/firebaseDb.js';
 import { logger } from '../utils/logger.js';
 
 // Default users are only bootstrapped in development mode
@@ -22,34 +22,30 @@ export const bootstrapDefaultUsers = async () => {
     const passwordHash = await hash(entry.password, 12);
 
     // Check if user already exists
-    const { data: existing } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', entry.email)
-      .maybeSingle();
+    const existing = await queryRecords('users', (u) => u.email === entry.email);
 
-    if (existing) {
+    if (existing.length > 0) {
       // Update existing user
-      await supabase
-        .from('users')
-        .update({
-          name: entry.name,
-          role: entry.role,
-          is_active: true,
-          password_hash: passwordHash,
-        })
-        .eq('id', existing.id);
+      const userId = existing[0].id;
+      await updateRecord(`users/${userId}`, {
+        name: entry.name,
+        role: entry.role,
+        is_active: true,
+        password_hash: passwordHash,
+      });
     } else {
       // Insert new user
-      await supabase
-        .from('users')
-        .insert({
-          name: entry.name,
-          email: entry.email,
-          role: entry.role,
-          is_active: true,
-          password_hash: passwordHash,
-        });
+      const userId = Date.now().toString();
+      await updateRecord(`users/${userId}`, {
+        id: userId,
+        name: entry.name,
+        email: entry.email,
+        role: entry.role,
+        is_active: true,
+        password_hash: passwordHash,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
     }
   }
 

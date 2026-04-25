@@ -1,7 +1,7 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { buildPaginatedResponse, parsePagination } from '../utils/pagination.js';
-import { supabase } from '../config/supabase.js';
+import { getRecord, getRecords, queryRecords, createRecord, updateRecord, deleteRecord, batchWrite } from '../utils/firebaseDb.js';
 
 const gradeFromPercentage = (percentage) => {
   if (percentage >= 90) return 'A';
@@ -13,60 +13,59 @@ const gradeFromPercentage = (percentage) => {
 
 // ── ClassRoom ──
 export const createClassRoom = asyncHandler(async (req, res) => {
-  const { data: classRoom, error } = await supabase
-    .from('classrooms')
-    .insert(req.body)
-    .select()
-    .single();
-  if (error) throw new ApiError(500, error.message);
-  res.status(201).json({ success: true, classRoom });
+  const classroomId = Date.now().toString();
+  const classroom = {
+    id: classroomId,
+    ...req.body,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  await updateRecord(`classrooms/${classroomId}`, classroom);
+  res.status(201).json({ success: true, classRoom: classroom });
 });
 
 // ── Student Profile ──
 export const createStudentProfile = asyncHandler(async (req, res) => {
-  const { data: user } = await supabase
-    .from('users')
-    .select('id, role')
-    .eq('id', req.body.userId || req.body.user_id)
-    .single();
+  const userId = req.body.userId || req.body.user_id;
+  const user = await getRecord(`users/${userId}`);
   if (!user || user.role !== 'student') throw new ApiError(400, 'userId must belong to a student');
 
-  const { data: profile, error } = await supabase
-    .from('student_profiles')
-    .insert({
-      user_id: user.id,
-      grade: req.body.grade,
-      section: req.body.section,
-      roll_number: req.body.rollNumber || req.body.roll_number,
-      subjects: req.body.subjects || [],
-      parent_name: req.body.parentName || req.body.parent_name,
-      parent_phone: req.body.parentPhone || req.body.parent_phone,
-    })
-    .select()
-    .single();
-  if (error) throw new ApiError(500, error.message);
+  const profileId = Date.now().toString();
+  const profile = {
+    id: profileId,
+    user_id: user.id,
+    grade: req.body.grade,
+    section: req.body.section,
+    roll_number: req.body.rollNumber || req.body.roll_number,
+    subjects: req.body.subjects || [],
+    parent_name: req.body.parentName || req.body.parent_name,
+    parent_phone: req.body.parentPhone || req.body.parent_phone,
+    attendance_percent: 100,
+    xp: 0,
+    badges: [],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  await updateRecord(`student_profiles/${profileId}`, profile);
   res.status(201).json({ success: true, profile });
 });
 
 // ── Teacher Profile ──
 export const createTeacherProfile = asyncHandler(async (req, res) => {
-  const { data: user } = await supabase
-    .from('users')
-    .select('id, role')
-    .eq('id', req.body.userId || req.body.user_id)
-    .single();
+  const userId = req.body.userId || req.body.user_id;
+  const user = await getRecord(`users/${userId}`);
   if (!user || user.role !== 'teacher') throw new ApiError(400, 'userId must belong to a teacher');
 
-  const { data: profile, error } = await supabase
-    .from('teacher_profiles')
-    .insert({
-      user_id: user.id,
-      subjects: req.body.subjects || [],
-      phone: req.body.phone,
-    })
-    .select()
-    .single();
-  if (error) throw new ApiError(500, error.message);
+  const profileId = Date.now().toString();
+  const profile = {
+    id: profileId,
+    user_id: user.id,
+    subjects: req.body.subjects || [],
+    phone: req.body.phone,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  await updateRecord(`teacher_profiles/${profileId}`, profile);
   res.status(201).json({ success: true, profile });
 });
 
@@ -74,47 +73,63 @@ export const createTeacherProfile = asyncHandler(async (req, res) => {
 export const listStudents = asyncHandler(async (req, res) => {
   const { page, limit, skip } = parsePagination(req.query);
 
-  let query = supabase
-    .from('student_profiles')
-    .select('*, users!inner(name, email, role)', { count: 'exact' });
+  let students = await getRecords('student_profiles');
 
-  if (req.query.grade) query = query.eq('grade', req.query.grade);
-  if (req.query.section) query = query.eq('section', req.query.section);
-  if (req.query.minAttendance) query = query.gte('attendance_percent', Number(req.query.minAttendance));
+  // Apply filters
+  if (req.query.grade) {
+    students = students.filter(s => s.grade === req.query.grade);
+  }
+  if (req.query.section) {
+    students = students.filter(s => s.section === req.query.section);
+  }
+  if (req.query.minAttendance) {
+    students = students.filter(s => s.attendance_percent >= Number(req.query.minAttendance));
+  }
 
-  const { data: items, count: total, error } = await query
-    .order('xp', { ascending: false })
-    .range(skip, skip + limit - 1);
+  // Sort by XP descending
+  students.sort((a, b) => (b.xp || 0) - (a.xp || 0));
 
-  if (error) throw new ApiError(500, error.message);
+  // Enrich with user data
+  const enriched = await Promise.all(
+    students.map(async (student) => {
+      const user = await getRecord(`users/${student.user_id}`);
+      return {
+        ...student,
+        userId: user ? { name: user.name, email: user.email, role: user.role } : null,
+      };
+    })
+  );
 
-  // Reshape to match old format: { ...profile, userId: { name, email, role } }
-  const shaped = (items || []).map((item) => {
-    const { users, ...rest } = item;
-    return { ...rest, userId: users };
-  });
+  const total = enriched.length;
+  const items = enriched.slice(skip, skip + limit);
 
-  res.json({ success: true, ...buildPaginatedResponse({ items: shaped, total: total || 0, page, limit }) });
+  res.json({ success: true, ...buildPaginatedResponse({ items, total, page, limit }) });
 });
 
 // ── List Teachers ──
 export const listTeachers = asyncHandler(async (req, res) => {
   const { page, limit, skip } = parsePagination(req.query);
 
-  const { data: items, count: total, error } = await supabase
-    .from('teacher_profiles')
-    .select('*, users!inner(name, email, role)', { count: 'exact' })
-    .order('created_at', { ascending: false })
-    .range(skip, skip + limit - 1);
+  let teachers = await getRecords('teacher_profiles');
 
-  if (error) throw new ApiError(500, error.message);
+  // Sort by created_at descending
+  teachers.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-  const shaped = (items || []).map((item) => {
-    const { users, ...rest } = item;
-    return { ...rest, userId: users };
-  });
+  // Enrich with user data
+  const enriched = await Promise.all(
+    teachers.map(async (teacher) => {
+      const user = await getRecord(`users/${teacher.user_id}`);
+      return {
+        ...teacher,
+        userId: user ? { name: user.name, email: user.email, role: user.role } : null,
+      };
+    })
+  );
 
-  res.json({ success: true, ...buildPaginatedResponse({ items: shaped, total: total || 0, page, limit }) });
+  const total = enriched.length;
+  const items = enriched.slice(skip, skip + limit);
+
+  res.json({ success: true, ...buildPaginatedResponse({ items, total, page, limit }) });
 });
 
 // ── Messages ──
@@ -123,111 +138,104 @@ export const listMessages = asyncHandler(async (req, res) => {
   if (!otherUserId) throw new ApiError(400, 'Query otherUserId is required');
   const userId = req.user.id;
 
-  const { data: messages, error } = await supabase
-    .from('messages')
-    .select('*')
-    .or(
-      `and(sender_id.eq.${userId},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${userId})`
-    )
-    .order('created_at', { ascending: true })
-    .limit(500);
+  const messages = await queryRecords('messages', (msg) => {
+    const isBetweenUsers =
+      (msg.sender_id === userId && msg.recipient_id === otherUserId) ||
+      (msg.sender_id === otherUserId && msg.recipient_id === userId);
+    return isBetweenUsers;
+  });
 
-  if (error) throw new ApiError(500, error.message);
-  res.json({ success: true, messages: messages || [] });
+  // Sort by created_at ascending
+  messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+  res.json({ success: true, messages: messages.slice(-500) });
 });
 
 // ── Assignments ──
 export const createAssignment = asyncHandler(async (req, res) => {
-  const { data: assignment, error } = await supabase
-    .from('assignments')
-    .insert({
-      title: req.body.title,
-      description: req.body.description,
-      subject: req.body.subject,
-      class_id: req.body.classId || req.body.class_id,
-      teacher_id: req.user.id,
-      due_date: req.body.dueDate || req.body.due_date,
-      max_marks: req.body.maxMarks || req.body.max_marks,
-      attachments: (req.files || []).map((file) => ({
-        fileName: file.originalname,
-        mimeType: file.mimetype,
-        size: file.size,
-        url: `/uploads/${file.filename || file.originalname}`,
-      })),
-    })
-    .select()
-    .single();
-  if (error) throw new ApiError(500, error.message);
+  const assignmentId = Date.now().toString();
+  const assignment = {
+    id: assignmentId,
+    title: req.body.title,
+    description: req.body.description,
+    subject: req.body.subject,
+    class_id: req.body.classId || req.body.class_id,
+    teacher_id: req.user.id,
+    due_date: req.body.dueDate || req.body.due_date,
+    max_marks: req.body.maxMarks || req.body.max_marks,
+    attachments: (req.files || []).map((file) => ({
+      fileName: file.originalname,
+      mimeType: file.mimetype,
+      size: file.size,
+      url: `/uploads/${file.filename || file.originalname}`,
+    })),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  await updateRecord(`assignments/${assignmentId}`, assignment);
   res.status(201).json({ success: true, assignment });
 });
 
 export const listAssignments = asyncHandler(async (req, res) => {
   const { page, limit, skip } = parsePagination(req.query);
 
-  let query = supabase
-    .from('assignments')
-    .select('*', { count: 'exact' });
+  let assignments = await getRecords('assignments');
 
-  if (req.query.classId) query = query.eq('class_id', req.query.classId);
-  if (req.query.teacherId) query = query.eq('teacher_id', req.query.teacherId);
-  if (req.query.subject) query = query.eq('subject', req.query.subject);
+  // Apply filters
+  if (req.query.classId) {
+    assignments = assignments.filter(a => a.class_id === req.query.classId);
+  }
+  if (req.query.teacherId) {
+    assignments = assignments.filter(a => a.teacher_id === req.query.teacherId);
+  }
+  if (req.query.subject) {
+    assignments = assignments.filter(a => a.subject === req.query.subject);
+  }
 
-  const { data: items, count: total, error } = await query
-    .order('due_date', { ascending: true })
-    .range(skip, skip + limit - 1);
+  // Sort by due_date ascending
+  assignments.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
 
-  if (error) throw new ApiError(500, error.message);
-  res.json({ success: true, ...buildPaginatedResponse({ items: items || [], total: total || 0, page, limit }) });
+  const total = assignments.length;
+  const items = assignments.slice(skip, skip + limit);
+
+  res.json({ success: true, ...buildPaginatedResponse({ items, total, page, limit }) });
 });
 
 // ── Submissions ──
 export const submitAssignment = asyncHandler(async (req, res) => {
-  const { data: assignment } = await supabase
-    .from('assignments')
-    .select('*')
-    .eq('id', req.params.assignmentId)
-    .single();
+  const assignment = await getRecord(`assignments/${req.params.assignmentId}`);
   if (!assignment) throw new ApiError(404, 'Assignment not found');
 
   const submittedAt = new Date().toISOString();
   const isLate = new Date(submittedAt) > new Date(assignment.due_date);
 
-  const { data: submission, error } = await supabase
-    .from('submissions')
-    .upsert(
-      {
-        assignment_id: assignment.id,
-        student_id: req.user.id,
-        submitted_at: submittedAt,
-        is_late: isLate,
-        content: req.body.content,
-        attachments: (req.files || []).map((file) => ({
-          fileName: file.originalname,
-          mimeType: file.mimetype,
-          size: file.size,
-          url: `/uploads/${file.filename || file.originalname}`,
-        })),
-      },
-      { onConflict: 'assignment_id,student_id' }
-    )
-    .select()
-    .single();
+  const submissionId = Date.now().toString();
+  const submission = {
+    id: submissionId,
+    assignment_id: assignment.id,
+    student_id: req.user.id,
+    submitted_at: submittedAt,
+    is_late: isLate,
+    content: req.body.content,
+    attachments: (req.files || []).map((file) => ({
+      fileName: file.originalname,
+      mimeType: file.mimetype,
+      size: file.size,
+      url: `/uploads/${file.filename || file.originalname}`,
+    })),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
 
-  if (error) throw new ApiError(500, error.message);
+  await updateRecord(`submissions/${submissionId}`, submission);
 
   // Award XP for on-time submissions
   if (!isLate) {
-    const { data: profile } = await supabase
-      .from('student_profiles')
-      .select('xp')
-      .eq('user_id', req.user.id)
-      .single();
-
+    const profile = await getRecord(`student_profiles/${req.user.id}`);
     if (profile) {
-      await supabase
-        .from('student_profiles')
-        .update({ xp: (profile.xp || 0) + 10 })
-        .eq('user_id', req.user.id);
+      await updateRecord(`student_profiles/${req.user.id}`, {
+        xp: (profile.xp || 0) + 10,
+      });
     }
   }
 
@@ -235,43 +243,31 @@ export const submitAssignment = asyncHandler(async (req, res) => {
 });
 
 export const gradeSubmission = asyncHandler(async (req, res) => {
-  const { data: submission } = await supabase
-    .from('submissions')
-    .select('*')
-    .eq('id', req.params.submissionId)
-    .single();
+  const submission = await getRecord(`submissions/${req.params.submissionId}`);
   if (!submission) throw new ApiError(404, 'Submission not found');
 
-  const { data: updated, error } = await supabase
-    .from('submissions')
-    .update({
-      marks: req.body.marks,
-      feedback: req.body.feedback || '',
-      graded_at: new Date().toISOString(),
-    })
-    .eq('id', submission.id)
-    .select()
-    .single();
+  const updated = {
+    ...submission,
+    marks: req.body.marks,
+    feedback: req.body.feedback || '',
+    graded_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
 
-  if (error) throw new ApiError(500, error.message);
+  await updateRecord(`submissions/${req.params.submissionId}`, updated);
 
   // Award badge for perfect score
   if (req.body.marks >= 100) {
-    const { data: profile } = await supabase
-      .from('student_profiles')
-      .select('xp, badges')
-      .eq('user_id', submission.student_id)
-      .single();
-
+    const profile = await getRecord(`student_profiles/${submission.student_id}`);
     if (profile) {
       const badges = Array.isArray(profile.badges) ? profile.badges : [];
       if (!badges.includes('Top Scorer')) {
         badges.push('Top Scorer');
       }
-      await supabase
-        .from('student_profiles')
-        .update({ xp: (profile.xp || 0) + 25, badges })
-        .eq('user_id', submission.student_id);
+      await updateRecord(`student_profiles/${submission.student_id}`, {
+        xp: (profile.xp || 0) + 25,
+        badges,
+      });
     }
   }
 
@@ -281,44 +277,42 @@ export const gradeSubmission = asyncHandler(async (req, res) => {
 // ── Attendance ──
 export const markAttendance = asyncHandler(async (req, res) => {
   const { classId, date, entries } = req.body;
-
-  // Normalize date to YYYY-MM-DD (strip time if ISO datetime was passed)
   const normalizedDate = date.split('T')[0];
 
-  // Upsert all attendance entries
-  const rows = entries.map((entry) => ({
-    class_id: classId,
-    student_id: entry.studentId,
-    teacher_id: req.user.id,
-    date: normalizedDate,
-    status: entry.status,
-  }));
+  // Create attendance records
+  const operations = entries.map((entry) => {
+    const recordId = `${classId}_${entry.studentId}_${normalizedDate}`;
+    return {
+      path: `attendance_records/${recordId}`,
+      data: {
+        id: recordId,
+        class_id: classId,
+        student_id: entry.studentId,
+        teacher_id: req.user.id,
+        date: normalizedDate,
+        status: entry.status,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      operation: 'set',
+    };
+  });
 
-  const { error } = await supabase
-    .from('attendance_records')
-    .upsert(rows, { onConflict: 'class_id,student_id,date' });
-
-  if (error) throw new ApiError(500, error.message);
+  await batchWrite(operations);
 
   // Recalculate attendance percentages
   await Promise.all(
     entries.map(async (entry) => {
-      const { count: total } = await supabase
-        .from('attendance_records')
-        .select('id', { count: 'exact', head: true })
-        .eq('student_id', entry.studentId);
+      const records = await queryRecords('attendance_records', (r) => r.student_id === entry.studentId);
+      const presentOrLate = records.filter(r => ['present', 'late'].includes(r.status)).length;
+      const attendancePercent = records.length > 0 ? Math.round((presentOrLate / records.length) * 100) : 100;
 
-      const { count: presentOrLate } = await supabase
-        .from('attendance_records')
-        .select('id', { count: 'exact', head: true })
-        .eq('student_id', entry.studentId)
-        .in('status', ['present', 'late']);
-
-      const attendancePercent = total > 0 ? Math.round((presentOrLate / total) * 100) : 100;
-      await supabase
-        .from('student_profiles')
-        .update({ attendance_percent: attendancePercent })
-        .eq('user_id', entry.studentId);
+      const profile = await getRecord(`student_profiles/${entry.studentId}`);
+      if (profile) {
+        await updateRecord(`student_profiles/${entry.studentId}`, {
+          attendance_percent: attendancePercent,
+        });
+      }
     })
   );
 
@@ -328,13 +322,9 @@ export const markAttendance = asyncHandler(async (req, res) => {
 export const getAttendanceReport = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
 
-  let query = supabase
-    .from('attendance_records')
-    .select('*')
-    .eq('student_id', studentId)
-    .order('date', { ascending: true });
+  let records = await queryRecords('attendance_records', (r) => r.student_id === studentId);
 
-  // If month/year provided, filter to that month
+  // Filter by month/year if provided
   if (req.query.month && req.query.year) {
     const month = Number(req.query.month);
     const year = Number(req.query.year);
@@ -342,39 +332,41 @@ export const getAttendanceReport = asyncHandler(async (req, res) => {
     const endMonth = month === 12 ? 1 : month + 1;
     const endYear = month === 12 ? year + 1 : year;
     const endDate = `${endYear}-${String(endMonth).padStart(2, '0')}-01`;
-    query = query.gte('date', startDate).lt('date', endDate);
+
+    records = records.filter(r => r.date >= startDate && r.date < endDate);
   }
 
-  const { data: records, error } = await query.limit(500);
-  if (error) throw new ApiError(500, error.message);
+  // Sort by date
+  records.sort((a, b) => new Date(a.date) - new Date(b.date));
 
   if (req.query.format === 'csv') {
-    const csvRows = ['date,status', ...(records || []).map((r) => `${r.date},${r.status}`)];
+    const csvRows = ['date,status', ...records.map((r) => `${r.date},${r.status}`)];
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename=attendance-${studentId}.csv`);
     return res.status(200).send(csvRows.join('\n'));
   }
 
-  return res.json({ success: true, records: records || [] });
+  return res.json({ success: true, records });
 });
 
 // ── Announcements ──
 export const createAnnouncement = asyncHandler(async (req, res) => {
-  const { data: announcement, error } = await supabase
-    .from('announcements')
-    .insert({
-      title: req.body.title,
-      body: req.body.body,
-      category: req.body.category,
-      scope: req.body.scope,
-      class_id: req.body.classId || req.body.class_id || null,
-      created_by: req.user.id,
-      pinned: req.body.pinned || false,
-    })
-    .select()
-    .single();
+  const announcementId = Date.now().toString();
+  const announcement = {
+    id: announcementId,
+    title: req.body.title,
+    body: req.body.body,
+    category: req.body.category,
+    scope: req.body.scope,
+    class_id: req.body.classId || req.body.class_id || null,
+    created_by: req.user.id,
+    pinned: req.body.pinned || false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
 
-  if (error) throw new ApiError(500, error.message);
+  await updateRecord(`announcements/${announcementId}`, announcement);
+
   if (req.io) req.io.emit('announcement:new', announcement);
   res.status(201).json({ success: true, announcement });
 });
@@ -382,21 +374,29 @@ export const createAnnouncement = asyncHandler(async (req, res) => {
 export const listAnnouncements = asyncHandler(async (req, res) => {
   const { page, limit, skip } = parsePagination(req.query);
 
-  let query = supabase
-    .from('announcements')
-    .select('*', { count: 'exact' });
+  let announcements = await getRecords('announcements');
 
-  if (req.query.scope) query = query.eq('scope', req.query.scope);
-  if (req.query.category) query = query.eq('category', req.query.category);
-  if (req.query.classId) query = query.eq('class_id', req.query.classId);
+  // Apply filters
+  if (req.query.scope) {
+    announcements = announcements.filter(a => a.scope === req.query.scope);
+  }
+  if (req.query.category) {
+    announcements = announcements.filter(a => a.category === req.query.category);
+  }
+  if (req.query.classId) {
+    announcements = announcements.filter(a => a.class_id === req.query.classId);
+  }
 
-  const { data: items, count: total, error } = await query
-    .order('pinned', { ascending: false })
-    .order('created_at', { ascending: false })
-    .range(skip, skip + limit - 1);
+  // Sort by pinned (descending) then created_at (descending)
+  announcements.sort((a, b) => {
+    if (b.pinned !== a.pinned) return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0);
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
 
-  if (error) throw new ApiError(500, error.message);
-  res.json({ success: true, ...buildPaginatedResponse({ items: items || [], total: total || 0, page, limit }) });
+  const total = announcements.length;
+  const items = announcements.slice(skip, skip + limit);
+
+  res.json({ success: true, ...buildPaginatedResponse({ items, total, page, limit }) });
 });
 
 // ── Messaging ──
@@ -404,19 +404,20 @@ export const sendMessage = asyncHandler(async (req, res) => {
   if (!req.body.classId && !req.body.recipientId) {
     throw new ApiError(400, 'recipientId is required for direct messages (or provide classId for class messages)');
   }
-  const { data: message, error } = await supabase
-    .from('messages')
-    .insert({
-      sender_id: req.user.id,
-      recipient_id: req.body.recipientId || null,
-      class_id: req.body.classId || null,
-      content: req.body.content,
-      read_by: [req.user.id],
-    })
-    .select()
-    .single();
 
-  if (error) throw new ApiError(500, error.message);
+  const messageId = Date.now().toString();
+  const message = {
+    id: messageId,
+    sender_id: req.user.id,
+    recipient_id: req.body.recipientId || null,
+    class_id: req.body.classId || null,
+    content: req.body.content,
+    read_by: [req.user.id],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  await updateRecord(`messages/${messageId}`, message);
 
   if (req.io) {
     const rid = req.body.recipientId;
@@ -429,12 +430,7 @@ export const sendMessage = asyncHandler(async (req, res) => {
 });
 
 export const markMessageRead = asyncHandler(async (req, res) => {
-  const { data: existing } = await supabase
-    .from('messages')
-    .select('id, read_by')
-    .eq('id', req.params.messageId)
-    .single();
-
+  const existing = await getRecord(`messages/${req.params.messageId}`);
   if (!existing) throw new ApiError(404, 'Message not found');
 
   const readBy = Array.isArray(existing.read_by) ? existing.read_by : [];
@@ -442,42 +438,37 @@ export const markMessageRead = asyncHandler(async (req, res) => {
     readBy.push(req.user.id);
   }
 
-  const { data: message, error } = await supabase
-    .from('messages')
-    .update({ read_by: readBy })
-    .eq('id', existing.id)
-    .select()
-    .single();
+  const message = {
+    ...existing,
+    read_by: readBy,
+    updated_at: new Date().toISOString(),
+  };
 
-  if (error) throw new ApiError(500, error.message);
+  await updateRecord(`messages/${req.params.messageId}`, message);
   res.json({ success: true, message });
 });
 
 // ── Marks ──
 export const createMark = asyncHandler(async (req, res) => {
-  const { data: mark, error } = await supabase
-    .from('marks')
-    .insert({
-      student_id: req.body.studentId || req.body.student_id,
-      class_id: req.body.classId || req.body.class_id,
-      subject: req.body.subject,
-      exam_type: req.body.examType || req.body.exam_type,
-      score: req.body.score,
-      term: req.body.term,
-    })
-    .select()
-    .single();
-  if (error) throw new ApiError(500, error.message);
+  const markId = Date.now().toString();
+  const mark = {
+    id: markId,
+    student_id: req.body.studentId || req.body.student_id,
+    class_id: req.body.classId || req.body.class_id,
+    subject: req.body.subject,
+    exam_type: req.body.examType || req.body.exam_type,
+    score: req.body.score,
+    term: req.body.term,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  await updateRecord(`marks/${markId}`, mark);
   res.status(201).json({ success: true, mark });
 });
 
 export const getReportCard = asyncHandler(async (req, res) => {
-  const { data: marks, error } = await supabase
-    .from('marks')
-    .select('*')
-    .eq('student_id', req.params.studentId);
+  const marks = await queryRecords('marks', (m) => m.student_id === req.params.studentId);
 
-  if (error) throw new ApiError(500, error.message);
   if (!marks || !marks.length) {
     return res.json({ success: true, report: { total: 0, percentage: 0, grade: 'N/A', marks: [] } });
   }
@@ -514,16 +505,10 @@ export const getTimetable = asyncHandler(async (req, res) => {
   const classId = req.query.classId || req.query.class_id;
   if (!classId) throw new ApiError(400, 'classId is required');
 
-  const { data: timetable, error } = await supabase
-    .from('timetables')
-    .select('*')
-    .eq('class_id', classId)
-    .maybeSingle();
+  const timetable = await getRecord(`timetables/${classId}`);
 
-  if (error) throw new ApiError(500, error.message);
   if (!timetable) return res.json({ success: true, entries: [] });
 
-  // entries is stored as jsonb — parse if string
   const entries = typeof timetable.entries === 'string'
     ? JSON.parse(timetable.entries)
     : timetable.entries;
@@ -543,26 +528,21 @@ export const saveTimetable = asyncHandler(async (req, res) => {
     duplicateSlots.add(slot);
   }
 
-  const { data: timetable, error } = await supabase
-    .from('timetables')
-    .upsert(
-      { class_id: classId, entries: JSON.stringify(entries) },
-      { onConflict: 'class_id' }
-    )
-    .select()
-    .single();
+  const timetable = {
+    id: classId,
+    class_id: classId,
+    entries: JSON.stringify(entries),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
 
-  if (error) throw new ApiError(500, error.message);
+  await updateRecord(`timetables/${classId}`, timetable);
   res.json({ success: true, timetable });
 });
 
 // ── Leaderboard ──
 export const getLeaderboard = asyncHandler(async (req, res) => {
-  const { data: classRoom } = await supabase
-    .from('classrooms')
-    .select('id, privacy_leaderboard_enabled')
-    .eq('id', req.params.classId)
-    .single();
+  const classRoom = await getRecord(`classrooms/${req.params.classId}`);
 
   if (!classRoom) throw new ApiError(404, 'Class not found');
   if (!classRoom.privacy_leaderboard_enabled && req.user.role === 'student') {
@@ -570,24 +550,22 @@ export const getLeaderboard = asyncHandler(async (req, res) => {
   }
 
   // Get student IDs in this classroom
-  const { data: enrollments } = await supabase
-    .from('classroom_students')
-    .select('student_id')
-    .eq('classroom_id', req.params.classId);
+  const enrollments = await queryRecords('classroom_students', (e) => e.classroom_id === req.params.classId);
+  const studentIds = enrollments.map((e) => e.student_id);
 
-  const studentIds = (enrollments || []).map((e) => e.student_id);
   if (!studentIds.length) {
     return res.json({ success: true, leaderboard: [] });
   }
 
-  const { data: students, error } = await supabase
-    .from('student_profiles')
-    .select('*')
-    .in('user_id', studentIds)
-    .order('xp', { ascending: false })
-    .order('attendance_percent', { ascending: false })
-    .limit(50);
+  // Get student profiles
+  let students = await getRecords('student_profiles');
+  students = students
+    .filter(s => studentIds.includes(s.user_id))
+    .sort((a, b) => {
+      if (b.xp !== a.xp) return (b.xp || 0) - (a.xp || 0);
+      return (b.attendance_percent || 0) - (a.attendance_percent || 0);
+    })
+    .slice(0, 50);
 
-  if (error) throw new ApiError(500, error.message);
-  res.json({ success: true, leaderboard: students || [] });
+  res.json({ success: true, leaderboard: students });
 });

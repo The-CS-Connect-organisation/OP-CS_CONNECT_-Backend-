@@ -1,6 +1,6 @@
 import pkg from 'bcryptjs';
 const { hash, compare } = pkg;
-import { supabase } from '../config/supabase.js';
+import { getRecord, queryRecords, createRecord, updateRecord } from '../utils/firebaseDb.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { signToken } from '../utils/jwt.js';
@@ -17,11 +17,7 @@ const toSafeUser = (row) => ({
 // Fetch and attach profile data to the user object
 const enrichUser = async (user) => {
   if (user.role === 'student') {
-    const { data: profile } = await supabase
-      .from('student_profiles')
-      .select('grade, section, roll_number, attendance_percent, subjects, parent_name, parent_phone')
-      .eq('user_id', user.id)
-      .maybeSingle();
+    const profile = await getRecord(`student_profiles/${user.id}`);
     if (profile) {
       user.class = `${profile.grade}-${profile.section}`;
       user.grade = profile.grade;
@@ -35,34 +31,21 @@ const enrichUser = async (user) => {
       user.parentPhone = profile.parent_phone;
     }
     // Get classroom id
-    const { data: enrollment } = await supabase
-      .from('classroom_students')
-      .select('classroom_id')
-      .eq('student_id', user.id)
-      .maybeSingle();
-    if (enrollment) user.classroomId = enrollment.classroom_id;
+    const enrollments = await queryRecords('classroom_students', (e) => e.student_id === user.id);
+    if (enrollments.length > 0) {
+      user.classroomId = enrollments[0].classroom_id;
+    }
   } else if (user.role === 'teacher') {
-    const { data: profile } = await supabase
-      .from('teacher_profiles')
-      .select('subjects, phone')
-      .eq('user_id', user.id)
-      .maybeSingle();
+    const profile = await getRecord(`teacher_profiles/${user.id}`);
     if (profile) {
       user.subjects = profile.subjects;
       user.phone = profile.phone;
     }
     // Get classrooms this teacher teaches
-    const { data: classrooms } = await supabase
-      .from('classroom_teachers')
-      .select('classroom_id')
-      .eq('teacher_id', user.id);
-    user.classroomIds = (classrooms || []).map(c => c.classroom_id);
+    const classrooms = await queryRecords('classroom_teachers', (c) => c.teacher_id === user.id);
+    user.classroomIds = classrooms.map(c => c.classroom_id);
   } else if (user.role === 'parent') {
-    const { data: profile } = await supabase
-      .from('parent_profiles')
-      .select('child_ids, phone')
-      .eq('user_id', user.id)
-      .maybeSingle();
+    const profile = await getRecord(`parent_profiles/${user.id}`);
     if (profile) {
       user.childIds = profile.child_ids;
       user.phone = profile.phone;
@@ -75,24 +58,27 @@ export const signup = asyncHandler(async (req, res) => {
   const { name, email, password, role } = req.body;
 
   // Check if email already exists
-  const { data: existing } = await supabase
-    .from('users')
-    .select('id')
-    .eq('email', email.toLowerCase().trim())
-    .maybeSingle();
+  const existingUsers = await queryRecords('users', (u) => u.email === email.toLowerCase().trim());
 
-  if (existing) {
+  if (existingUsers.length > 0) {
     throw new ApiError(409, 'Email already registered');
   }
 
   const passwordHash = await hash(password, 12);
-  const { data: user, error } = await supabase
-    .from('users')
-    .insert({ name, email: email.toLowerCase().trim(), password_hash: passwordHash, role })
-    .select()
-    .single();
+  const userId = Date.now().toString();
+  
+  const user = {
+    id: userId,
+    name,
+    email: email.toLowerCase().trim(),
+    password_hash: passwordHash,
+    role,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
 
-  if (error) throw new ApiError(500, error.message);
+  await updateRecord(`users/${userId}`, user);
 
   const token = signToken({ sub: user.id, role: user.role });
 
@@ -109,14 +95,15 @@ export const signup = asyncHandler(async (req, res) => {
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const { data: user, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('email', email.toLowerCase().trim())
-    .maybeSingle();
+  const users = await queryRecords('users', (u) => u.email === email.toLowerCase().trim());
 
-  if (error) throw new ApiError(500, error.message);
-  if (!user || !user.is_active) {
+  if (users.length === 0) {
+    throw new ApiError(401, 'Invalid email or password');
+  }
+
+  const user = users[0];
+
+  if (!user.is_active) {
     throw new ApiError(401, 'Invalid email or password');
   }
 

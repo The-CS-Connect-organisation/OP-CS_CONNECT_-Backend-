@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase.js';
+import { getRecord, queryRecords, updateRecord } from '../utils/firebaseDb.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 
@@ -41,13 +41,8 @@ export const awardXP = asyncHandler(async (req, res) => {
   const xpAmount = amount || XP_ACTIONS[action] || 0;
   if (xpAmount <= 0) throw new ApiError(400, 'Invalid XP action or amount');
 
-  const { data: profile, error } = await supabase
-    .from('student_profiles')
-    .select('xp, badges, attendance_streak')
-    .eq('user_id', userId)
-    .single();
-
-  if (error || !profile) throw new ApiError(404, 'Student profile not found');
+  const profile = await getRecord(`student_profiles/${userId}`);
+  if (!profile) throw new ApiError(404, 'Student profile not found');
 
   const newXP = (profile.xp || 0) + xpAmount;
   const oldLevel = getLevelFromXP(profile.xp || 0);
@@ -61,10 +56,7 @@ export const awardXP = asyncHandler(async (req, res) => {
   if (newXP >= 1000 && !badges.includes('Scholar')) badges.push('Scholar');
   if (newXP >= 2500 && !badges.includes('Legend')) badges.push('Legend');
 
-  await supabase
-    .from('student_profiles')
-    .update({ xp: newXP, badges })
-    .eq('user_id', userId);
+  await updateRecord(`student_profiles/${userId}`, { xp: newXP, badges });
 
   res.json({ success: true, xpAwarded: xpAmount, newTotal: newXP, levelUp, newLevel, badges });
 });
@@ -72,35 +64,25 @@ export const awardXP = asyncHandler(async (req, res) => {
 export const getStudentStats = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
 
-  const { data: profile, error } = await supabase
-    .from('student_profiles')
-    .select('xp, badges, attendance_streak, attendance_percent, grade, section')
-    .eq('user_id', studentId)
-    .single();
-
-  if (error || !profile) throw new ApiError(404, 'Student profile not found');
+  const profile = await getRecord(`student_profiles/${studentId}`);
+  if (!profile) throw new ApiError(404, 'Student profile not found');
 
   // Get class rank
-  const { data: classmates } = await supabase
-    .from('student_profiles')
-    .select('user_id, xp')
-    .eq('grade', profile.grade)
-    .eq('section', profile.section)
-    .order('xp', { ascending: false });
-
-  const rank = (classmates || []).findIndex(c => c.user_id === studentId) + 1;
-  const classTotal = (classmates || []).length;
+  const classmates = await queryRecords('student_profiles', (s) => 
+    s.grade === profile.grade && s.section === profile.section
+  );
+  classmates.sort((a, b) => (b.xp || 0) - (a.xp || 0));
+  const rank = classmates.findIndex(c => c.user_id === studentId) + 1;
+  const classTotal = classmates.length;
 
   // Weekly challenge: submit 3 assignments this week
   const weekStart = new Date();
   weekStart.setDate(weekStart.getDate() - weekStart.getDay());
   weekStart.setHours(0, 0, 0, 0);
 
-  const { count: weeklySubmissions } = await supabase
-    .from('submissions')
-    .select('id', { count: 'exact', head: true })
-    .eq('student_id', studentId)
-    .gte('submitted_at', weekStart.toISOString());
+  const submissions = await queryRecords('submissions', (s) => 
+    s.student_id === studentId && new Date(s.submitted_at) >= weekStart
+  );
 
   const level = getLevelFromXP(profile.xp || 0);
 
@@ -116,10 +98,10 @@ export const getStudentStats = asyncHandler(async (req, res) => {
       rank,
       classTotal,
       weeklyChallenge: {
-        progress: Math.min(weeklySubmissions || 0, 3),
+        progress: Math.min(submissions.length, 3),
         target: 3,
         reward: 50,
-        completed: (weeklySubmissions || 0) >= 3,
+        completed: submissions.length >= 3,
       },
       streak: profile.attendance_streak || 0,
       attendancePercent: profile.attendance_percent || 0,
@@ -130,47 +112,37 @@ export const getStudentStats = asyncHandler(async (req, res) => {
 export const getLeaderboard = asyncHandler(async (req, res) => {
   const { classId } = req.params;
 
-  const { data: classRoom } = await supabase
-    .from('classrooms')
-    .select('id, privacy_leaderboard_enabled')
-    .eq('id', classId)
-    .single();
-
+  const classRoom = await getRecord(`classrooms/${classId}`);
   if (!classRoom) throw new ApiError(404, 'Class not found');
   if (!classRoom.privacy_leaderboard_enabled && req.user.role === 'student') {
     throw new ApiError(403, 'Leaderboard is disabled for this class');
   }
 
-  const { data: enrollments } = await supabase
-    .from('classroom_students')
-    .select('student_id')
-    .eq('classroom_id', classId);
+  const enrollments = await queryRecords('classroom_students', (e) => e.classroom_id === classId);
+  const studentIds = enrollments.map(e => e.student_id);
 
-  const studentIds = (enrollments || []).map(e => e.student_id);
   if (!studentIds.length) return res.json({ success: true, leaderboard: [] });
 
-  const { data: profiles, error } = await supabase
-    .from('student_profiles')
-    .select('user_id, xp, badges, attendance_percent, users!inner(name)')
-    .in('user_id', studentIds)
-    .order('xp', { ascending: false })
-    .limit(50);
+  let profiles = await queryRecords('student_profiles', (p) => studentIds.includes(p.user_id));
+  profiles.sort((a, b) => (b.xp || 0) - (a.xp || 0));
+  profiles = profiles.slice(0, 50);
 
-  if (error) throw new ApiError(500, error.message);
-
-  const leaderboard = (profiles || []).map((p, idx) => {
-    const level = getLevelFromXP(p.xp || 0);
-    return {
-      rank: idx + 1,
-      userId: p.user_id,
-      name: p.users?.name || 'Unknown',
-      xp: p.xp || 0,
-      level: level.level,
-      levelTitle: level.title,
-      badges: p.badges || [],
-      attendancePercent: p.attendance_percent || 0,
-    };
-  });
+  const leaderboard = await Promise.all(
+    profiles.map(async (p, idx) => {
+      const user = await getRecord(`users/${p.user_id}`);
+      const level = getLevelFromXP(p.xp || 0);
+      return {
+        rank: idx + 1,
+        userId: p.user_id,
+        name: user?.name || 'Unknown',
+        xp: p.xp || 0,
+        level: level.level,
+        levelTitle: level.title,
+        badges: p.badges || [],
+        attendancePercent: p.attendance_percent || 0,
+      };
+    })
+  );
 
   res.json({ success: true, leaderboard });
 });
@@ -179,26 +151,18 @@ export const getSubjectHealth = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
 
   // Get marks grouped by subject
-  const { data: marks, error: marksError } = await supabase
-    .from('marks')
-    .select('subject, score, term')
-    .eq('student_id', studentId);
+  const marks = await queryRecords('marks', (m) => m.student_id === studentId);
 
-  if (marksError) throw new ApiError(500, marksError.message);
+  // Get attendance
+  const attendance = await queryRecords('attendance_records', (a) => a.student_id === studentId);
 
-  // Get attendance grouped by subject (via class attendance)
-  const { data: attendance } = await supabase
-    .from('attendance_records')
-    .select('status, date')
-    .eq('student_id', studentId);
-
-  const totalAttendance = (attendance || []).length;
-  const presentCount = (attendance || []).filter(a => a.status === 'present' || a.status === 'late').length;
+  const totalAttendance = attendance.length;
+  const presentCount = attendance.filter(a => a.status === 'present' || a.status === 'late').length;
   const overallAttendance = totalAttendance > 0 ? Math.round((presentCount / totalAttendance) * 100) : 100;
 
   // Group marks by subject
   const subjectMap = {};
-  for (const mark of (marks || [])) {
+  for (const mark of marks) {
     if (!subjectMap[mark.subject]) subjectMap[mark.subject] = [];
     subjectMap[mark.subject].push(Number(mark.score));
   }
