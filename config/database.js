@@ -1,21 +1,32 @@
-// Database connection is now handled by the Supabase client (stateless HTTP).
-// This file is kept for backward compatibility with server.js imports.
-// No connection lifecycle is needed — Supabase JS SDK manages connections automatically.
+// Database connection is now handled by Firebase Admin SDK.
+// This file manages the Firebase Realtime Database connection lifecycle.
 
-import { supabase } from './supabase.js';
+import { db } from './firebase.js';
 import { logger } from '../utils/logger.js';
 
 export const connectDatabase = async () => {
-  // Verify Supabase connectivity with a simple query
-  const { error } = await supabase.from('users').select('id', { count: 'exact', head: true });
-  if (error) {
-    logger.error('Supabase connection check failed', { message: error.message });
-    throw new Error(`Supabase connection failed: ${error.message}`);
+  try {
+    // Verify Firebase connectivity with a simple read
+    const ref = db.ref('.info/connected');
+    const snapshot = await ref.once('value');
+    
+    if (snapshot.val() === true) {
+      logger.info('Firebase Realtime Database connection verified');
+    } else {
+      throw new Error('Firebase connection check failed');
+    }
+  } catch (error) {
+    logger.error('Firebase connection check failed', { message: error.message });
+    throw new Error(`Firebase connection failed: ${error.message}`);
   }
-  logger.info('Supabase connection verified');
 };
 
 export const closeDatabase = async () => {
-  // No-op: Supabase client is stateless
-  logger.info('Supabase client cleanup (no-op)');
+  try {
+    await db.goOffline();
+    logger.info('Firebase database connection closed');
+  } catch (error) {
+    logger.error('Error closing Firebase connection', { message: error.message });
+  }
 };
+

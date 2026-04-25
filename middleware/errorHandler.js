@@ -1,7 +1,7 @@
 import { ZodError } from 'zod';
 import { ApiError } from '../utils/ApiError.js';
 import { logger } from '../utils/logger.js';
-import { supabase } from '../config/supabase.js';
+import { createRecord } from '../utils/firebaseDb.js';
 
 export const notFoundHandler = (req, _res, next) => {
   next(new ApiError(404, `Route not found: ${req.method} ${req.originalUrl}`));
@@ -20,14 +20,6 @@ export const errorHandler = (error, req, res, _next) => {
     statusCode = 400;
     message = 'Validation error';
     details = error.issues;
-  } else if (error?.code === '23505') {
-    // PostgreSQL unique constraint violation
-    statusCode = 409;
-    message = 'Duplicate resource';
-  } else if (error?.code === '23503') {
-    // PostgreSQL foreign key violation
-    statusCode = 400;
-    message = 'Referenced resource not found';
   }
 
   logger.error('Request failed', {
@@ -38,19 +30,15 @@ export const errorHandler = (error, req, res, _next) => {
     stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
   });
 
-  // Log to error_logs table (fire-and-forget)
-  supabase
-    .from('error_logs')
-    .insert({
-      path: req.originalUrl,
-      method: req.method,
-      status_code: statusCode,
-      message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-      meta: details,
-    })
-    .then(() => {})
-    .catch(() => {});
+  // Log to error_logs collection (fire-and-forget)
+  createRecord('error_logs', {
+    path: req.originalUrl,
+    method: req.method,
+    status_code: statusCode,
+    message: error.message,
+    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    meta: details,
+  }).catch(() => {});
 
   res.status(statusCode).json({
     success: false,

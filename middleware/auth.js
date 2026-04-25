@@ -1,6 +1,6 @@
 import { ApiError } from '../utils/ApiError.js';
 import { verifyToken } from '../utils/jwt.js';
-import { supabase } from '../config/supabase.js';
+import { getRecord } from '../utils/firebaseDb.js';
 
 const getBearerToken = (authorizationHeader) => {
   if (!authorizationHeader) return null;
@@ -17,18 +17,14 @@ export const requireAuth = async (req, _res, next) => {
     }
 
     const decoded = verifyToken(token);
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, name, email, role, is_active')
-      .eq('id', decoded.sub)
-      .single();
+    const user = await getRecord(`users/${decoded.sub}`);
 
-    if (error || !user || !user.is_active) {
+    if (!user || !user.is_active) {
       throw new ApiError(401, 'Invalid authentication token');
     }
 
     req.user = {
-      id: user.id,
+      id: decoded.sub,
       role: user.role,
       email: user.email,
       name: user.name,
@@ -45,14 +41,10 @@ export const optionalAuth = async (req, _res, next) => {
     if (!token) return next();
 
     const decoded = verifyToken(token);
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, name, email, role, is_active')
-      .eq('id', decoded.sub)
-      .single();
+    const user = await getRecord(`users/${decoded.sub}`);
 
-    if (!error && user && user.is_active) {
-      req.user = { id: user.id, role: user.role, email: user.email, name: user.name };
+    if (user && user.is_active) {
+      req.user = { id: decoded.sub, role: user.role, email: user.email, name: user.name };
     }
   } catch {
     // invalid token — continue without user
