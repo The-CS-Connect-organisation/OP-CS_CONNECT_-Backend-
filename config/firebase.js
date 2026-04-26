@@ -3,11 +3,18 @@ import { env } from './env.js';
 import { logger } from '../utils/logger.js';
 
 // Initialize Firebase Admin SDK
+// Handle private key: if it has literal \n strings, convert them to actual newlines
+let privateKey = env.FIREBASE_PRIVATE_KEY.trim();
+if (!privateKey.includes('\n')) {
+  // If no actual newlines, try to replace escaped \n strings
+  privateKey = privateKey.replace(/\\n/g, '\n');
+}
+
 const serviceAccount = {
   type: 'service_account',
   project_id: env.FIREBASE_PROJECT_ID,
   private_key_id: 'key-id',
-  private_key: env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+  private_key: privateKey,
   client_email: env.FIREBASE_CLIENT_EMAIL,
   client_id: 'client-id',
   auth_uri: 'https://accounts.google.com/o/oauth2/auth',
