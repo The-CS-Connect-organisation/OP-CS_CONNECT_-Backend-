@@ -17,7 +17,7 @@ const serviceAccount = {
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: env.FIREBASE_DATABASE_URL,
+  databaseURL: env.FIREBASE_DATABASE_URL.trim(),
 });
 
 export const db = admin.database();
