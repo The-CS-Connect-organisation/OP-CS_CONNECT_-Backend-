@@ -83,3 +83,50 @@ export const sendClubMessage = asyncHandler(async (req, res) => {
 
   res.status(201).json({ success: true, message });
 });
+
+/**
+ * @desc    Upload a research paper to a club
+ * @route   POST /api/school/clubs/:clubId/research
+ */
+export const uploadResearchPaper = asyncHandler(async (req, res) => {
+  const { title, author } = req.body;
+  const clubId = req.params.clubId;
+
+  if (!req.files || req.files.length === 0) {
+    throw new ApiError(400, 'No files uploaded');
+  }
+
+  const paperId = `paper_${Date.now()}`;
+  const paper = {
+    id: paperId,
+    club_id: clubId,
+    title: title || 'Untitled Research',
+    author: author || req.user.name,
+    file_url: req.files[0].path || '', // In a real app, this would be a cloud URL
+    size: `${(req.files[0].size / 1024 / 1024).toFixed(1)} MB`,
+    created_at: new Date().toISOString()
+  };
+
+  await updateRecord(`community_research/${clubId}/${paperId}`, paper);
+  res.status(201).json({ success: true, paper });
+});
+
+/**
+ * @desc    Get club leaderboard
+ * @route   GET /api/school/clubs/leaderboard
+ */
+export const getClubLeaderboard = asyncHandler(async (req, res) => {
+  const clubs = await getRecords('communities');
+  
+  // Rank by member count and simulated activity
+  const leaderboard = clubs.map(club => ({
+    id: club.id,
+    name: club.name,
+    type: club.type,
+    color: club.color,
+    members: club.members?.length || 0,
+    points: (club.members?.length || 0) * 10 + Math.floor(Math.random() * 500) // Simulated activity points
+  })).sort((a, b) => b.points - a.points);
+
+  res.json({ success: true, leaderboard });
+});
