@@ -24,6 +24,8 @@ import {
   submitAssignment,
   gradeSubmission,
 } from '../controllers/schoolController.js';
+import { getAllClubs, createClub, joinClub, sendClubMessage } from '../controllers/clubsController.js';
+import { saveStudyPlan, getMyStudyPlans } from '../controllers/studyPlannerController.js';
 import { allowRoles, requireAuth } from '../middleware/auth.js';
 import { validateRequest } from '../middleware/validateRequest.js';
 import {
@@ -73,5 +75,14 @@ router.get('/leaderboard/:classId', allowRoles('student', 'teacher', 'admin'), g
 
 router.put('/timetables', allowRoles('admin', 'teacher'), validateRequest(saveTimetableSchema), saveTimetable);
 router.get('/timetables', allowRoles('student', 'teacher', 'admin', 'parent'), getTimetable);
+// ── Communities & Clubs ──
+router.get('/clubs', allowRoles('student', 'teacher', 'admin'), getAllClubs);
+router.post('/clubs', allowRoles('student', 'teacher', 'admin'), createClub);
+router.post('/clubs/:clubId/join', allowRoles('student', 'teacher', 'admin'), joinClub);
+router.post('/clubs/:clubId/messages', allowRoles('student', 'teacher', 'admin'), sendClubMessage);
+
+// ── Study Planner ──
+router.post('/study-plans', allowRoles('student'), saveStudyPlan);
+router.get('/study-plans', allowRoles('student'), getMyStudyPlans);
 
 export default router;
