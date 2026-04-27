@@ -118,15 +118,22 @@ export const uploadResearchPaper = asyncHandler(async (req, res) => {
 export const getClubLeaderboard = asyncHandler(async (req, res) => {
   const clubs = await getRecords('communities');
   
-  // Rank by member count and simulated activity
-  const leaderboard = clubs.map(club => ({
-    id: club.id,
-    name: club.name,
-    type: club.type,
-    color: club.color,
-    members: club.members?.length || 0,
-    points: (club.members?.length || 0) * 10 + Math.floor(Math.random() * 500) // Simulated activity points
-  })).sort((a, b) => b.points - a.points);
+  // Rank by member count and actual activity points from Firebase
+  const leaderboard = await Promise.all(clubs.map(async (club) => {
+    const activityData = await getRecord(`community_activity/${club.id}`);
+    const activityPoints = activityData?.points || 0;
+    
+    return {
+      id: club.id,
+      name: club.name,
+      type: club.type,
+      color: club.color,
+      members: club.members?.length || 0,
+      points: (club.members?.length || 0) * 10 + activityPoints
+    };
+  }));
+
+  leaderboard.sort((a, b) => b.points - a.points);
 
   res.json({ success: true, leaderboard });
 });
