@@ -1,7 +1,7 @@
 import { ZodError } from 'zod';
 import { ApiError } from '../utils/ApiError.js';
 import { logger } from '../utils/logger.js';
-import { createRecord } from '../utils/firebaseDb.js';
+import { createRecord } from '../utils/supabaseDb.js';
 
 export const notFoundHandler = (req, _res, next) => {
   next(new ApiError(404, `Route not found: ${req.method} ${req.originalUrl}`));

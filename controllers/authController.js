@@ -1,6 +1,6 @@
 import pkg from 'bcryptjs';
 const { hash, compare } = pkg;
-import { getRecord, queryRecords, createRecord, updateRecord } from '../utils/firebaseDb.js';
+import { getRecord, queryRecords, updateRecord } from '../utils/supabaseDb.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { signToken } from '../utils/jwt.js';

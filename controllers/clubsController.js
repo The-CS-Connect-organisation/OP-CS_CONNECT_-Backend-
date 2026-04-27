@@ -1,6 +1,6 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
-import { getRecord, getRecords, updateRecord, deleteRecord } from '../utils/firebaseDb.js';
+import { getRecord, getRecords, updateRecord, deleteRecord } from '../utils/supabaseDb.js';
 
 /**
  * @desc    Get all clubs

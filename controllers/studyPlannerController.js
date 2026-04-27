@@ -1,5 +1,5 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { getRecord, queryRecords, updateRecord } from '../utils/firebaseDb.js';
+import { getRecord, queryRecords, updateRecord } from '../utils/supabaseDb.js';
 
 /**
  * @desc    Save a generated study plan

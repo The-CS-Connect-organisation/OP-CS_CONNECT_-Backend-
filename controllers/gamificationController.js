@@ -1,4 +1,4 @@
-import { getRecord, queryRecords, updateRecord } from '../utils/firebaseDb.js';
+import { getRecord, queryRecords, updateRecord } from '../utils/supabaseDb.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 
