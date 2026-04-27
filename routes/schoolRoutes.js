@@ -23,6 +23,7 @@ import {
   sendMessage,
   submitAssignment,
   gradeSubmission,
+  getStreamToken,
 } from '../controllers/schoolController.js';
 import { getAllClubs, createClub, joinClub, sendClubMessage, uploadResearchPaper, getClubLeaderboard } from '../controllers/clubsController.js';
 import { saveStudyPlan, getMyStudyPlans } from '../controllers/studyPlannerController.js';
@@ -87,4 +88,6 @@ router.get('/clubs/leaderboard', allowRoles('student', 'teacher', 'admin'), getC
 router.post('/study-plans', allowRoles('student'), saveStudyPlan);
 router.get('/study-plans', allowRoles('student'), getMyStudyPlans);
 
-export default router;
+router.get('/stream-token', allowRoles('student', 'teacher', 'admin', 'parent'), getStreamToken);
+ 
+ export default router;

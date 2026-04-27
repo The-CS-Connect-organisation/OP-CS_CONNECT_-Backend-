@@ -1,3 +1,5 @@
+import { StreamChat } from 'stream-chat';
+import { env } from '../config/env.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { buildPaginatedResponse, parsePagination } from '../utils/pagination.js';
@@ -568,4 +570,9 @@ export const getLeaderboard = asyncHandler(async (req, res) => {
     .slice(0, 50);
 
   res.json({ success: true, leaderboard: students });
+});
+export const getStreamToken = asyncHandler(async (req, res) => {
+  const serverClient = StreamChat.getInstance(env.STREAM_API_KEY, env.STREAM_API_SECRET);
+  const token = serverClient.createToken(req.user.id);
+  res.json({ success: true, token, apiKey: env.STREAM_API_KEY });
 });
