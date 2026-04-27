@@ -28,6 +28,7 @@ export const createClub = asyncHandler(async (req, res) => {
     creator_id: req.user.id,
     members: [req.user.id],
     channels: ['general', 'announcements'],
+    extensions: [],
     is_private: req.body.isPrivate || false,
     created_at: new Date().toISOString()
   };
