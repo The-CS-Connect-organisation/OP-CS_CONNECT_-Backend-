@@ -1,7 +1,7 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { chatWithFallback } from '../services/aiProvider.js';
-import { createRecord, queryRecords } from '../utils/supabaseDb.js';
+import { createRecord, queryRecords } from '../utils/firebaseDb.js';
 
 const CSAI_DISCLAIMER = "We trained CSAI to be brilliant, not perfect. Mistakes can happen.";
 

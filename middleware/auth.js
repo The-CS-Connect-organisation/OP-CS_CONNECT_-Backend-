@@ -1,6 +1,6 @@
 import { ApiError } from '../utils/ApiError.js';
 import { verifyToken } from '../utils/jwt.js';
-import { getRecord } from '../utils/supabaseDb.js';
+import { getRecord } from '../utils/firebaseDb.js';
 
 const getBearerToken = (authorizationHeader) => {
   if (!authorizationHeader) return null;

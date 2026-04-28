@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { requireAuth, allowRoles } from '../middleware/auth.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
-import { getRecord, getRecords, queryRecords, createRecord, updateRecord, deleteRecord } from '../utils/supabaseDb.js';
+import { getRecord, getRecords, queryRecords, createRecord, updateRecord, deleteRecord } from '../utils/firebaseDb.js';
 import { buildPaginatedResponse, parsePagination } from '../utils/pagination.js';
 import { z } from 'zod';
 import { validateRequest } from '../middleware/validateRequest.js';
