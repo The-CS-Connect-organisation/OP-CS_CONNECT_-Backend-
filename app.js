@@ -9,6 +9,7 @@ import schoolRoutes from './routes/schoolRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import gamificationRoutes from './routes/gamificationRoutes.js';
 import feesRoutes from './routes/feesRoutes.js';
+import busRoutes from './routes/busRoutes.js';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
@@ -81,6 +82,7 @@ app.use('/api/school', schoolRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/fees', feesRoutes);
+app.use('/api/bus', busRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

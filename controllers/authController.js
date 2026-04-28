@@ -50,6 +50,14 @@ const enrichUser = async (user) => {
       user.childIds = profile.child_ids;
       user.phone = profile.phone;
     }
+  } else if (user.role === 'driver') {
+    const profile = await getRecord(`driver_profiles/${user.id}`);
+    if (profile) {
+      user.busNumber = profile.bus_number;
+      user.licensePlate = profile.license_plate;
+      user.phone = profile.phone;
+      user.routeId = profile.route_id;
+    }
   }
   return user;
 };
