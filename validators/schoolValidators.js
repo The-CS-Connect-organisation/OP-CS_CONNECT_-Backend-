@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-const uuidField = z.string().uuid('Invalid UUID');
+// IDs are timestamp-based strings (e.g. "1718000000000"), not UUIDs
+const uuidField = z.string().min(1, 'ID is required');
 
 export const paginationSchema = z.object({
   query: z.object({
