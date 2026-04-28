@@ -1,6 +1,6 @@
 import pkg from 'bcryptjs';
 const { hash } = pkg;
-import { supabase } from '../config/supabase.js';
+import { db } from '../config/firebase.js';
 import { logger } from '../utils/logger.js';
 
 export const bootstrapDefaultUsers = async () => {
@@ -11,32 +11,32 @@ export const bootstrapDefaultUsers = async () => {
     { name: 'Priya Menon',    email: 'parent@schoolsync.edu',role: 'parent',  password: 'parent123'  },
   ];
 
-  for (const entry of defaults) {
-    const { data: existing } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', entry.email)
-      .maybeSingle();
+  const usersRef = db.ref('users');
 
-    if (existing) {
+  for (const entry of defaults) {
+    // Check if user already exists
+    const snapshot = await usersRef.orderByChild('email').equalTo(entry.email).once('value');
+    
+    if (snapshot.exists()) {
       logger.info(`User ${entry.email} already exists, skipping`);
       continue;
     }
 
     const passwordHash = await hash(entry.password, 12);
-    const { error } = await supabase.from('users').insert({
+    const userId = `${entry.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    await usersRef.child(userId).set({
+      id: userId,
       name: entry.name,
       email: entry.email,
       role: entry.role,
       is_active: true,
       password_hash: passwordHash,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     });
 
-    if (error) {
-      logger.error(`Failed to create default user ${entry.email}`, { error: error.message });
-    } else {
-      logger.info(`Created default user: ${entry.email}`);
-    }
+    logger.info(`Created default user: ${entry.email}`);
   }
 
   logger.info('Default users bootstrap complete');
