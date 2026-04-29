@@ -2,7 +2,6 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/authRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import schoolRoutes from './routes/schoolRoutes.js';
@@ -10,14 +9,17 @@ import chatRoutes from './routes/chatRoutes.js';
 import gamificationRoutes from './routes/gamificationRoutes.js';
 import feesRoutes from './routes/feesRoutes.js';
 import busRoutes from './routes/busRoutes.js';
+import teacherRoutes from './routes/teacherRoutes.js';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import { setIO, getIO } from './utils/socket.js';
+import { sanitizeInput } from './middleware/sanitizer.js';
+import { generalLimiter, authLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
-let ioInstance = null;
 
 export const setSocketServer = (io) => {
-  ioInstance = io;
+  setIO(io);
 };
 
 app.use(helmet());
@@ -45,28 +47,27 @@ app.use(
 );
 app.use(express.json({ limit: '200kb' }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-app.use((req, _res, next) => {
-  req.io = ioInstance;
+
+// Security and sanitization middleware
+app.use(sanitizeInput);
+
+// Add security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   next();
 });
-app.use(
-  '/api',
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 300,
-    standardHeaders: true,
-    legacyHeaders: false,
-  })
-);
-app.use(
-  '/api/auth',
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 20,
-    standardHeaders: true,
-    legacyHeaders: false,
-  })
-);
+
+app.use((_req, _res, next) => {
+  _req.io = getIO();
+  next();
+});
+
+// Rate limiting
+app.use('/api', generalLimiter);
+app.use('/api/auth', authLimiter);
 
 app.get('/', (_req, res) => {
   res.json({ success: true, message: 'CS Connect API is running' });
@@ -83,6 +84,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/fees', feesRoutes);
 app.use('/api/bus', busRoutes);
+app.use('/api/teacher', teacherRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
