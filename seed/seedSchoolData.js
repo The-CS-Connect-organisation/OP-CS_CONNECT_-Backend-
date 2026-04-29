@@ -1,5 +1,4 @@
 import bcrypt from 'bcryptjs';
-import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
