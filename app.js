@@ -10,6 +10,8 @@ import gamificationRoutes from './routes/gamificationRoutes.js';
 import feesRoutes from './routes/feesRoutes.js';
 import busRoutes from './routes/busRoutes.js';
 import teacherRoutes from './routes/teacherRoutes.js';
+import studentAssistantRoutes from './routes/studentAssistantRoutes.js';
+import studentRoutes from './routes/studentRoutes.js';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { setIO, getIO } from './utils/socket.js';
@@ -85,6 +87,8 @@ app.use('/api/gamification', gamificationRoutes);
 app.use('/api/fees', feesRoutes);
 app.use('/api/bus', busRoutes);
 app.use('/api/teacher', teacherRoutes);
+app.use('/api/student-assistant', studentAssistantRoutes);
+app.use('/api/student', studentRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -4,6 +4,7 @@ import { getRecord, queryRecords, updateRecord } from '../utils/firebaseDb.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { signToken } from '../utils/jwt.js';
+import { createRecord } from '../utils/firebaseDb.js';
 
 const toSafeUser = (row) => ({
   id: row.id,
@@ -137,4 +138,91 @@ export const me = asyncHandler(async (_req, res) => {
     success: true,
     message: 'Auth API is healthy',
   });
+});
+
+// ============================================================================
+// PASSWORD RESET
+// ============================================================================
+
+export const requestPasswordReset = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) throw new ApiError(400, 'Email is required');
+
+  const users = await queryRecords('users', (u) => u.email === email.toLowerCase().trim());
+
+  // Always return success to prevent email enumeration
+  if (users.length === 0) {
+    return res.json({ success: true, message: 'If that email exists, a reset code has been sent.' });
+  }
+
+  const user = users[0];
+
+  // Generate 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes
+
+  await updateRecord(`password_resets/${user.id}`, {
+    user_id: user.id,
+    email: user.email,
+    otp,
+    expires_at: expiresAt,
+    used: false,
+    created_at: new Date().toISOString(),
+  });
+
+  // In production this would send an email. For demo, return the OTP in the response.
+  res.json({
+    success: true,
+    message: 'Reset code sent to your email.',
+    // Demo only - remove in production:
+    demo_otp: otp,
+    user_id: user.id,
+  });
+});
+
+export const verifyResetOtp = asyncHandler(async (req, res) => {
+  const { userId, otp } = req.body;
+  if (!userId || !otp) throw new ApiError(400, 'userId and otp are required');
+
+  const resetRecord = await getRecord(`password_resets/${userId}`);
+
+  if (!resetRecord) throw new ApiError(400, 'Invalid or expired reset code');
+  if (resetRecord.used) throw new ApiError(400, 'Reset code already used');
+  if (new Date(resetRecord.expires_at) < new Date()) throw new ApiError(400, 'Reset code has expired');
+  if (resetRecord.otp !== otp) throw new ApiError(400, 'Invalid reset code');
+
+  // Issue a short-lived reset token
+  const resetToken = signToken({ sub: userId, purpose: 'password_reset' }, '15m');
+
+  res.json({ success: true, resetToken });
+});
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { resetToken, newPassword } = req.body;
+  if (!resetToken || !newPassword) throw new ApiError(400, 'resetToken and newPassword are required');
+  if (newPassword.length < 6) throw new ApiError(400, 'Password must be at least 6 characters');
+
+  // Verify token
+  let decoded;
+  try {
+    const { verifyToken } = await import('../utils/jwt.js');
+    decoded = verifyToken(resetToken);
+  } catch {
+    throw new ApiError(400, 'Invalid or expired reset token');
+  }
+
+  if (decoded.purpose !== 'password_reset') throw new ApiError(400, 'Invalid reset token');
+
+  const userId = decoded.sub;
+  const passwordHash = await hash(newPassword, 12);
+
+  await updateRecord(`users/${userId}`, {
+    password_hash: passwordHash,
+    updated_at: new Date().toISOString(),
+  });
+
+  // Mark reset record as used
+  await updateRecord(`password_resets/${userId}`, { used: true });
+
+  res.json({ success: true, message: 'Password reset successfully. You can now log in.' });
 });
