@@ -9,6 +9,7 @@ export const bootstrapDefaultUsers = async () => {
     { name: 'James Anderson', email: 'james@schoolsync.edu', role: 'teacher', password: 'teacher123' },
     { name: 'Aarav Menon',    email: 'alex@schoolsync.edu',  role: 'student', password: 'student123' },
     { name: 'Priya Menon',    email: 'parent@schoolsync.edu',role: 'parent',  password: 'parent123'  },
+    { name: 'Rajesh Kumar',   email: 'driver@schoolsync.edu',role: 'driver',  password: 'driver123'  },
   ];
 
   const usersRef = db.ref('users');

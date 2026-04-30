@@ -88,7 +88,13 @@ const seed = async () => {
     parentNames.map((name, i) => ({ name, email: `parent${i + 1}@schoolsync.edu`, password_hash: hash('parent123'), role: 'parent', is_active: true }))
   ).select();
 
-  console.log(`   ✓ ${admins.length} admins, ${teachers.length} teachers, ${students.length} students, ${parents.length} parents`);
+  const { data: drivers } = await supabase.from('users').insert([
+    { name: 'Rajesh Kumar',  email: 'driver@schoolsync.edu',  password_hash: hash('driver123'), role: 'driver', is_active: true },
+    { name: 'Suresh Patel',  email: 'driver2@schoolsync.edu', password_hash: hash('driver123'), role: 'driver', is_active: true },
+    { name: 'Mohan Singh',   email: 'driver3@schoolsync.edu', password_hash: hash('driver123'), role: 'driver', is_active: true },
+  ]).select();
+
+  console.log(`   ✓ ${admins.length} admins, ${teachers.length} teachers, ${students.length} students, ${parents.length} parents, ${drivers.length} drivers`);
 
   // ═══════════════════════════════════════════
   // 2. CLASSROOMS
@@ -153,6 +159,16 @@ const seed = async () => {
       user_id: p.id,
       child_ids: students[i] ? [students[i].id] : [],
       phone: `+91-90${String(1000000 + i).padStart(7, '0')}`,
+    }))
+  );
+
+  await supabase.from('driver_profiles').insert(
+    drivers.map((d, i) => ({
+      user_id: d.id,
+      bus_number: `BUS-${String(i + 1).padStart(3, '0')}`,
+      license_plate: `DL-01-${String.fromCharCode(65 + i)}-${String(1234 + i * 1000).padStart(4, '0')}`,
+      phone: `+91-94${String(4000000 + i).padStart(7, '0')}`,
+      route_id: `route-${i + 1}`,
     }))
   );
   console.log('   ✓ All profiles created');
@@ -351,6 +367,9 @@ const seed = async () => {
   console.log('│  Students: alex@schoolsync.edu        / student123       │');
   console.log('│            student2-20@schoolsync.edu / student123       │');
   console.log('│  Parents:  parent1-20@schoolsync.edu  / parent123        │');
+  console.log('│  Drivers:  driver@schoolsync.edu      / driver123        │');
+  console.log('│            driver2@schoolsync.edu     / driver123        │');
+  console.log('│            driver3@schoolsync.edu     / driver123        │');
   console.log('└──────────────────────────────────────────────────────────┘');
   process.exit(0);
 };
