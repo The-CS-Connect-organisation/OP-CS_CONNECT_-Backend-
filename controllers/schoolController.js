@@ -138,7 +138,10 @@ export const listTeachers = asyncHandler(async (req, res) => {
 export const listMessages = asyncHandler(async (req, res) => {
   const otherUserId = req.query.otherUserId;
   if (!otherUserId) throw new ApiError(400, 'Query otherUserId is required');
-  const userId = req.user.id;
+  
+  // Get user ID from header, query param, or req.user (if authenticated)
+  const userId = req.headers['x-user-id'] || req.query.userId || req.user?.id;
+  if (!userId) throw new ApiError(400, 'userId is required (via header x-user-id, query param, or auth)');
 
   const messages = await queryRecords('messages', (msg) => {
     const isBetweenUsers =
@@ -407,14 +410,18 @@ export const sendMessage = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'recipientId is required for direct messages (or provide classId for class messages)');
   }
 
+  // Get user ID from header, query param, or req.user (if authenticated)
+  const userId = req.headers['x-user-id'] || req.query.userId || req.user?.id;
+  if (!userId) throw new ApiError(400, 'userId is required (via header x-user-id, query param, or auth)');
+
   const messageId = Date.now().toString();
   const message = {
     id: messageId,
-    sender_id: req.user.id,
+    sender_id: userId,
     recipient_id: req.body.recipientId || null,
     class_id: req.body.classId || null,
     content: req.body.content,
-    read_by: [req.user.id],
+    read_by: [userId],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
@@ -424,7 +431,7 @@ export const sendMessage = asyncHandler(async (req, res) => {
   if (req.io) {
     const rid = req.body.recipientId;
     if (rid) req.io.to(`user:${rid}`).emit('message:new', message);
-    req.io.to(`user:${req.user.id}`).emit('message:new', message);
+    req.io.to(`user:${userId}`).emit('message:new', message);
     if (req.body.classId) req.io.to(`class:${req.body.classId}`).emit('message:new', message);
   }
 
@@ -435,9 +442,13 @@ export const markMessageRead = asyncHandler(async (req, res) => {
   const existing = await getRecord(`messages/${req.params.messageId}`);
   if (!existing) throw new ApiError(404, 'Message not found');
 
+  // Get user ID from header, query param, or req.user (if authenticated)
+  const userId = req.headers['x-user-id'] || req.query.userId || req.user?.id;
+  if (!userId) throw new ApiError(400, 'userId is required (via header x-user-id, query param, or auth)');
+
   const readBy = Array.isArray(existing.read_by) ? existing.read_by : [];
-  if (!readBy.includes(req.user.id)) {
-    readBy.push(req.user.id);
+  if (!readBy.includes(userId)) {
+    readBy.push(userId);
   }
 
   const message = {
