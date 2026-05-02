@@ -21,16 +21,16 @@ const router = Router();
 router.use(requireAuth);
 
 // ── Bus Routes ──
-router.post('/buses', allowRoles('admin'), createBus);
-router.get('/buses', allowRoles('admin', 'teacher', 'student', 'parent'), listBuses);
-router.get('/buses/:busId', allowRoles('admin', 'teacher', 'student', 'parent'), getBus);
+router.post('/buses', allowRoles('admin', 'driver'), createBus);
+router.get('/buses', allowRoles('admin', 'teacher', 'student', 'parent', 'driver'), listBuses);
+router.get('/buses/:busId', allowRoles('admin', 'teacher', 'student', 'parent', 'driver'), getBus);
 router.patch('/buses/:busId', allowRoles('admin'), updateBus);
 router.delete('/buses/:busId', allowRoles('admin'), deleteBus);
 
 // ── Route Management ──
-router.post('/routes', allowRoles('admin'), createRoute);
-router.get('/routes', allowRoles('admin', 'teacher', 'student', 'parent'), listRoutes);
-router.get('/routes/:routeId', allowRoles('admin', 'teacher', 'student', 'parent'), getRoute);
+router.post('/routes', allowRoles('admin', 'driver'), createRoute);
+router.get('/routes', allowRoles('admin', 'teacher', 'student', 'parent', 'driver'), listRoutes);
+router.get('/routes/:routeId', allowRoles('admin', 'teacher', 'student', 'parent', 'driver'), getRoute);
 router.patch('/routes/:routeId', allowRoles('admin'), updateRoute);
 router.delete('/routes/:routeId', allowRoles('admin'), deleteRoute);
 
