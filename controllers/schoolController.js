@@ -582,6 +582,84 @@ export const getLeaderboard = asyncHandler(async (req, res) => {
 
   res.json({ success: true, leaderboard: students });
 });
+
+// ── Get Expanded Student Profile ──
+export const getExpandedStudentProfile = asyncHandler(async (req, res) => {
+  const studentId = req.params.studentId || req.user.id;
+
+  // Get user and profile data
+  const user = await getRecord(`users/${studentId}`);
+  const profile = await getRecord(`student_profiles/${studentId}`);
+
+  if (!user) throw new ApiError(404, 'Student not found');
+
+  // Get parent information
+  let mother = null;
+  let father = null;
+
+  if (profile?.mother_id) {
+    mother = await getRecord(`parents/${profile.mother_id}`);
+  }
+  if (profile?.father_id) {
+    father = await getRecord(`parents/${profile.father_id}`);
+  }
+
+  // Format the response
+  res.json({
+    success: true,
+    profile: {
+      id: studentId,
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      photo: user.photo || null,
+      avatar: user.avatar || '',
+      
+      // Personal Information
+      admissionNumber: profile?.admission_no || profile?.admission_number || '',
+      rollNumber: profile?.roll_number || profile?.rollNumber || '',
+      dateOfBirth: profile?.date_of_birth || profile?.dob || null,
+      bloodGroup: profile?.blood_group || profile?.bloodGroup || '',
+      religion: profile?.religion || '',
+      nationality: profile?.nationality || '',
+      
+      // Academic Information
+      class: profile?.grade || profile?.class || '',
+      section: profile?.section || '',
+      
+      // Identification
+      aadharNumber: profile?.aadhar_number || profile?.aadharNumber || '',
+      pen: profile?.pen || '',
+      apaarId: profile?.apaar_id || profile?.apaarId || '',
+      
+      // Parent Information
+      mother: mother ? {
+        fullName: mother.full_name || mother.fullName || '',
+        phone: mother.phone || '',
+        photo: mother.photo || null,
+        houseName: mother.house_name || mother.houseName || '',
+        address: mother.address || '',
+        houseLocation: mother.house_location || mother.houseLocation || '',
+      } : null,
+      
+      father: father ? {
+        fullName: father.full_name || father.fullName || '',
+        phone: father.phone || '',
+        photo: father.photo || null,
+        houseName: father.house_name || father.houseName || '',
+        address: father.address || '',
+        houseLocation: father.house_location || father.houseLocation || '',
+      } : null,
+      
+      // Additional Info
+      attendancePercent: profile?.attendance_percent || 100,
+      xp: profile?.xp || 0,
+      badges: profile?.badges || [],
+      joinedAt: user.joined_at || user.created_at || '',
+    },
+  });
+});
+
 export const getStreamToken = asyncHandler(async (req, res) => {
   const serverClient = StreamChat.getInstance(env.STREAM_API_KEY, env.STREAM_API_SECRET);
   // Get user ID from query param, header, body, or use a default
