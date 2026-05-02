@@ -57,7 +57,7 @@ import {
   generateClassInsightsAI,
   generateFeedbackAI,
 } from '../controllers/teacherController.js';
-import { allowRoles } from '../middleware/auth.js';
+import { allowRoles, requireAuth } from '../middleware/auth.js';
 import { validateRequest } from '../middleware/validateRequest.js';
 import {
   bulkMarkAttendanceSchema,
@@ -82,6 +82,7 @@ const router = Router();
 const upload = multer({ limits: { fileSize: 10 * 1024 * 1024 } });
 
 // Apply authentication to all teacher routes
+router.use(requireAuth);
 router.use(allowRoles('teacher', 'admin'));
 
 // ============================================================================
