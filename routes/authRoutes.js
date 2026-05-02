@@ -20,7 +20,7 @@ router.post('/forgot-password', requestPasswordReset);
 router.post('/verify-otp', verifyResetOtp);
 router.post('/reset-password', resetPassword);
 
-// One-time seed endpoint - creates missing demo users
+// One-time seed endpoint - creates missing demo users + bus + route + driver profile
 router.post('/seed-demo-users', asyncHandler(async (req, res) => {
   const demoUsers = [
     { name: 'Rajesh Kumar',  email: 'driver@schoolsync.edu',  role: 'driver',  password: 'driver123' },
@@ -33,11 +33,13 @@ router.post('/seed-demo-users', asyncHandler(async (req, res) => {
 
   const created = [];
   const skipped = [];
+  const userIds = {};
 
   for (const u of demoUsers) {
     const existing = await queryRecords('users', (x) => x.email === u.email);
     if (existing.length > 0) {
       skipped.push(u.email);
+      userIds[u.email] = existing[0].id;
       continue;
     }
     const passwordHash = await hash(u.password, 12);
@@ -53,9 +55,85 @@ router.post('/seed-demo-users', asyncHandler(async (req, res) => {
       updated_at: new Date().toISOString(),
     });
     created.push(u.email);
+    userIds[u.email] = userId;
   }
 
-  res.json({ success: true, created, skipped });
+  // Create demo route centered on Chandanagar, Hyderabad
+  const existingRoutes = await queryRecords('routes', (r) => r.name === 'Chandanagar Route A');
+  let routeId;
+  if (existingRoutes.length > 0) {
+    routeId = existingRoutes[0].id;
+  } else {
+    routeId = `route-${Date.now()}`;
+    await updateRecord(`routes/${routeId}`, {
+      id: routeId,
+      name: 'Chandanagar Route A',
+      description: 'Demo route covering Chandanagar area, Hyderabad',
+      status: 'active',
+      start_time: '07:00',
+      end_time: '09:00',
+      total_distance: 8,
+      estimated_duration: 45,
+      stops: [
+        { name: 'Chandanagar Bus Stop',    latitude: 17.4967, longitude: 78.3614, time: '07:00' },
+        { name: 'Medicover Hospital Stop', latitude: 17.4983, longitude: 78.3146, time: '07:15' },
+        { name: 'Lingampally Station',     latitude: 17.4950, longitude: 78.3200, time: '07:30' },
+        { name: 'Miyapur X Roads',         latitude: 17.4940, longitude: 78.3550, time: '07:45' },
+        { name: 'Cornerstone School Gate', latitude: 17.4960, longitude: 78.3700, time: '08:00' },
+      ],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+    created.push('route:Chandanagar Route A');
+  }
+
+  // Create demo bus assigned to the route
+  const existingBuses = await queryRecords('buses', (b) => b.bus_number === 'CS-001');
+  let busId;
+  if (existingBuses.length > 0) {
+    busId = existingBuses[0].id;
+  } else {
+    busId = `bus-${Date.now()}`;
+    const driverId = userIds['driver@schoolsync.edu'];
+    await updateRecord(`buses/${busId}`, {
+      id: busId,
+      bus_number: 'CS-001',
+      license_plate: 'TS-09-EA-1234',
+      capacity: 40,
+      status: 'active',
+      route_id: routeId,
+      driver_id: driverId,
+      current_location: {
+        latitude: 17.4967,
+        longitude: 78.3614,
+        speed: 0,
+        heading: 0,
+        timestamp: new Date().toISOString(),
+      },
+      last_updated: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+    created.push('bus:CS-001');
+  }
+
+  // Create driver profile linking driver to bus
+  const driverId = userIds['driver@schoolsync.edu'];
+  if (driverId) {
+    await updateRecord(`driver_profiles/${driverId}`, {
+      user_id: driverId,
+      bus_number: 'CS-001',
+      license_plate: 'TS-09-EA-1234',
+      phone: '+91-9876543210',
+      route_id: routeId,
+      bus_id: busId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+    created.push('driver_profile:driver@schoolsync.edu');
+  }
+
+  res.json({ success: true, created, skipped, routeId, busId });
 }));
 
 export default router;
