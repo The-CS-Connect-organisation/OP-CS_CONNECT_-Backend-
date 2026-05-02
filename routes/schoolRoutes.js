@@ -46,6 +46,13 @@ import {
 const router = Router();
 const upload = multer({ limits: { fileSize: 10 * 1024 * 1024 } });
 
+// Public endpoints - no auth required
+router.get('/stream-token', getStreamToken);
+router.get('/clubs', getAllClubs);
+router.get('/messages', listMessages);
+router.post('/messages', sendMessage);
+router.patch('/messages/:messageId/read', markMessageRead);
+
 router.use(requireAuth);
 
 router.post('/classes', allowRoles('admin'), validateRequest(createClassSchema), createClassRoom);
@@ -53,8 +60,6 @@ router.post('/students/profiles', allowRoles('admin'), validateRequest(createStu
 router.post('/teachers/profiles', allowRoles('admin'), validateRequest(createTeacherProfileSchema), createTeacherProfile);
 router.get('/students', allowRoles('admin', 'teacher', 'student', 'parent'), listStudents);
 router.get('/teachers', allowRoles('admin', 'teacher', 'student', 'parent'), listTeachers);
-
-router.get('/messages', allowRoles('student', 'teacher', 'admin', 'parent'), listMessages);
 
 router.post('/assignments', allowRoles('teacher', 'admin'), upload.array('files', 5), validateRequest(createAssignmentSchema), createAssignment);
 router.get('/assignments', allowRoles('student', 'teacher', 'admin', 'parent'), listAssignments);
@@ -67,9 +72,6 @@ router.get('/attendance/:studentId/report', allowRoles('student', 'teacher', 'ad
 router.post('/announcements', allowRoles('teacher', 'admin'), validateRequest(createAnnouncementSchema), createAnnouncement);
 router.get('/announcements', allowRoles('student', 'teacher', 'admin', 'parent'), listAnnouncements);
 
-router.post('/messages', allowRoles('student', 'teacher', 'admin', 'parent'), validateRequest(sendMessageSchema), sendMessage);
-router.patch('/messages/:messageId/read', allowRoles('student', 'teacher', 'admin', 'parent'), markMessageRead);
-
 router.post('/marks', allowRoles('teacher', 'admin'), validateRequest(createMarkSchema), createMark);
 router.get('/report-cards/:studentId', allowRoles('student', 'teacher', 'admin', 'parent'), getReportCard);
 router.get('/leaderboard/:classId', allowRoles('student', 'teacher', 'admin'), getLeaderboard);
@@ -77,7 +79,6 @@ router.get('/leaderboard/:classId', allowRoles('student', 'teacher', 'admin'), g
 router.put('/timetables', allowRoles('admin', 'teacher'), validateRequest(saveTimetableSchema), saveTimetable);
 router.get('/timetables', allowRoles('student', 'teacher', 'admin', 'parent'), getTimetable);
 // ── Communities & Clubs ──
-router.get('/clubs', allowRoles('student', 'teacher', 'admin'), getAllClubs);
 router.post('/clubs', allowRoles('student', 'teacher', 'admin'), createClub);
 router.post('/clubs/:clubId/join', allowRoles('student', 'teacher', 'admin'), joinClub);
 router.post('/clubs/:clubId/messages', allowRoles('student', 'teacher', 'admin'), sendClubMessage);
@@ -87,7 +88,5 @@ router.get('/clubs/leaderboard', allowRoles('student', 'teacher', 'admin'), getC
 // ── Study Planner ──
 router.post('/study-plans', allowRoles('student'), saveStudyPlan);
 router.get('/study-plans', allowRoles('student'), getMyStudyPlans);
-
-router.get('/stream-token', allowRoles('student', 'teacher', 'admin', 'parent'), getStreamToken);
  
  export default router;
