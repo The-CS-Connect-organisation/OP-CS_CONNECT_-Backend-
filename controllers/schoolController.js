@@ -585,7 +585,13 @@ export const getLeaderboard = asyncHandler(async (req, res) => {
 export const getStreamToken = asyncHandler(async (req, res) => {
   const serverClient = StreamChat.getInstance(env.STREAM_API_KEY, env.STREAM_API_SECRET);
   // Get user ID from header, query param, body, or use a default
-  const userId = req.headers['x-user-id'] || req.query.userId || req.body?.userId || req.user?.id || 'anonymous';
+  let userId = req.headers['x-user-id'] || req.query.userId || req.body?.userId || req.user?.id || 'anonymous';
+  
+  // Sanitize user ID to match frontend sanitization (alphanumeric, underscore, dash only)
+  userId = String(userId)
+    .replace(/[^a-zA-Z0-9_-]/g, '_')
+    .substring(0, 64);
+  
   const token = serverClient.createToken(userId);
   res.json({ success: true, token, apiKey: env.STREAM_API_KEY });
 });
