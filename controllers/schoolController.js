@@ -588,6 +588,7 @@ export const getStreamToken = asyncHandler(async (req, res) => {
   let userId = req.headers['x-user-id'] || req.query.userId || req.body?.userId || req.user?.id || 'anonymous';
   
   // Sanitize user ID to match frontend sanitization (alphanumeric, underscore, dash only)
+  // This ensures the token's user_id claim matches the ID used to connect to Stream Chat
   userId = String(userId)
     .replace(/[^a-zA-Z0-9_-]/g, '_')
     .substring(0, 64);
