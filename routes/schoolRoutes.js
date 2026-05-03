@@ -25,6 +25,7 @@ import {
   gradeSubmission,
   getStreamToken,
   getExpandedStudentProfile,
+  getUser,
 } from '../controllers/schoolController.js';
 import { getAllClubs, createClub, joinClub, sendClubMessage, uploadResearchPaper, getClubLeaderboard } from '../controllers/clubsController.js';
 import { saveStudyPlan, getMyStudyPlans } from '../controllers/studyPlannerController.js';
@@ -62,6 +63,7 @@ router.post('/teachers/profiles', allowRoles('admin'), validateRequest(createTea
 router.get('/students', allowRoles('admin', 'teacher', 'student', 'parent'), listStudents);
 router.get('/students/:studentId/profile', allowRoles('admin', 'teacher', 'student', 'parent'), getExpandedStudentProfile);
 router.get('/teachers', allowRoles('admin', 'teacher', 'student', 'parent'), listTeachers);
+router.get('/users/:userId', allowRoles('admin', 'teacher', 'student', 'parent', 'driver'), getUser);
 
 router.post('/assignments', allowRoles('teacher', 'admin'), upload.array('files', 5), validateRequest(createAssignmentSchema), createAssignment);
 router.get('/assignments', allowRoles('student', 'teacher', 'admin', 'parent'), listAssignments);

@@ -134,6 +134,26 @@ export const listTeachers = asyncHandler(async (req, res) => {
   res.json({ success: true, ...buildPaginatedResponse({ items, total, page, limit }) });
 });
 
+// ── Get User by ID ──
+export const getUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const user = await getRecord(`users/${userId}`);
+  if (!user) throw new ApiError(404, 'User not found');
+  
+  // Return user data without sensitive fields
+  res.json({ 
+    success: true, 
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone || null,
+      role: user.role,
+      created_at: user.created_at,
+    }
+  });
+});
+
 // ── Messages ──
 export const listMessages = asyncHandler(async (req, res) => {
   const otherUserId = req.query.otherUserId;
