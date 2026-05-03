@@ -154,6 +154,41 @@ export const getUser = asyncHandler(async (req, res) => {
   });
 });
 
+// ── List Users by Role ──
+export const listUsers = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = parsePagination(req.query);
+  const { role } = req.query;
+
+  let users = await getRecords('users');
+
+  // Apply role filter if provided
+  if (role) {
+    users = users.filter(u => u.role === role);
+  }
+
+  // Sort by created_at descending
+  users.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  // Return users without sensitive fields
+  const sanitized = users.map(u => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    phone: u.phone || null,
+    role: u.role,
+    created_at: u.created_at,
+  }));
+
+  const total = sanitized.length;
+  const items = sanitized.slice(skip, skip + limit);
+
+  res.json({ 
+    success: true, 
+    users: items,
+    ...buildPaginatedResponse({ items, total, page, limit }) 
+  });
+});
+
 // ── Messages ──
 export const listMessages = asyncHandler(async (req, res) => {
   const otherUserId = req.query.otherUserId;
