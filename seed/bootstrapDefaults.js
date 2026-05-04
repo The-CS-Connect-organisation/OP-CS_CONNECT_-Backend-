@@ -6,14 +6,24 @@ import { logger } from '../utils/logger.js';
 export const bootstrapDefaultUsers = async () => {
   const defaults = [
     { name: 'Alicia Morgan', email: 'admin@schoolsync.edu',  role: 'admin',   password: 'admin123'   },
-    { name: 'James Anderson', email: 'james@schoolsync.edu', role: 'teacher', password: 'teacher123' },
-    { name: 'Aarav Menon',    email: 'alex@schoolsync.edu',  role: 'student', password: 'student123' },
-    { name: 'Priya Menon',    email: 'parent@schoolsync.edu',role: 'parent',  password: 'parent123'  },
-    { name: 'Rajesh Kumar',   email: 'driver@schoolsync.edu',role: 'driver',  password: 'driver123'  },
   ];
 
   const usersRef = db.ref('users');
 
+  // First, delete all users except Alicia Morgan
+  logger.info('Cleaning up old seeded users...');
+  const allUsersSnapshot = await usersRef.once('value');
+  const allUsers = allUsersSnapshot.val() || {};
+  
+  for (const userId in allUsers) {
+    const user = allUsers[userId];
+    if (user.email !== 'admin@schoolsync.edu') {
+      await usersRef.child(userId).remove();
+      logger.info(`Deleted ${user.name} (${user.email})`);
+    }
+  }
+
+  // Then ensure Alicia Morgan exists
   for (const entry of defaults) {
     // Check if user already exists
     const snapshot = await usersRef.orderByChild('email').equalTo(entry.email).once('value');
