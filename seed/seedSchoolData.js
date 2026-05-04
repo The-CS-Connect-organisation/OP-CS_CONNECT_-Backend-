@@ -54,7 +54,7 @@ const seed = async () => {
       };
     }
 
-    await db.ref('users').set(usersData);
+    await db.ref('users').update(usersData);
     console.log(`   ✓ 1 admin created`);
 
     console.log('\n✅ Seed complete!\n');
