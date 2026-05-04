@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { login, me, signup, requestPasswordReset, verifyResetOtp, resetPassword } from '../controllers/authController.js';
+import { login, me, signup, requestPasswordReset, verifyResetOtp, resetPassword, deleteUser } from '../controllers/authController.js';
 import { validateRequest } from '../middleware/validateRequest.js';
 import { loginSchema, signupSchema } from '../validators/authValidators.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, allowRoles } from '../middleware/auth.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { queryRecords, updateRecord } from '../utils/firebaseDb.js';
 import pkg from 'bcryptjs';
@@ -19,6 +19,9 @@ router.post('/login', validateRequest(loginSchema), login);
 router.post('/forgot-password', requestPasswordReset);
 router.post('/verify-otp', verifyResetOtp);
 router.post('/reset-password', resetPassword);
+
+// Delete User (admin only)
+router.delete('/users/:userId', requireAuth, allowRoles('admin'), deleteUser);
 
 // One-time seed endpoint - creates missing demo users + bus + route + driver profile
 router.post('/seed-demo-users', asyncHandler(async (req, res) => {

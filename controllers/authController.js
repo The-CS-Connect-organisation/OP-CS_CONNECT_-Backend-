@@ -1,6 +1,6 @@
 import pkg from 'bcryptjs';
 const { hash, compare } = pkg;
-import { getRecord, queryRecords, updateRecord } from '../utils/firebaseDb.js';
+import { getRecord, queryRecords, updateRecord, deleteRecord } from '../utils/firebaseDb.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { signToken } from '../utils/jwt.js';
@@ -287,4 +287,43 @@ export const resetPassword = asyncHandler(async (req, res) => {
   await updateRecord(`password_resets/${userId}`, { used: true });
 
   res.json({ success: true, message: 'Password reset successfully. You can now log in.' });
+});
+
+// ============================================================================
+// DELETE USER
+// ============================================================================
+
+export const deleteUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  
+  if (!userId) {
+    throw new ApiError(400, 'User ID is required');
+  }
+
+  // Get the user to find their role
+  const user = await getRecord(`users/${userId}`);
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  // Delete user record
+  await deleteRecord(`users/${userId}`);
+
+  // Delete role-specific profile based on role
+  if (user.role === 'student') {
+    await deleteRecord(`student_profiles/${userId}`);
+  } else if (user.role === 'teacher') {
+    await deleteRecord(`teacher_profiles/${userId}`);
+  } else if (user.role === 'parent') {
+    await deleteRecord(`parent_profiles/${userId}`);
+  } else if (user.role === 'driver') {
+    await deleteRecord(`driver_profiles/${userId}`);
+  } else if (user.role === 'librarian') {
+    await deleteRecord(`librarian_profiles/${userId}`);
+  }
+
+  res.json({ 
+    success: true, 
+    message: `User ${user.name} and associated profile deleted successfully` 
+  });
 });
