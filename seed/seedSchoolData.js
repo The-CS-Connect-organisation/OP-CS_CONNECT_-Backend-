@@ -7,9 +7,22 @@ const seed = async () => {
 
   try {
     // ── Clear old data ──
-    console.log('🧹 Clearing old users...');
-    await db.ref('users').remove();
-    console.log('   ✓ Cleared users');
+    console.log('🧹 Cleaning up seeded users (keeping only Alicia Morgan)...');
+    
+    // Get all existing users
+    const snapshot = await db.ref('users').once('value');
+    const existingUsers = snapshot.val() || {};
+    
+    // Delete all users except Alicia Morgan (admin@schoolsync.edu)
+    for (const userId in existingUsers) {
+      const user = existingUsers[userId];
+      if (user.email !== 'admin@schoolsync.edu') {
+        await db.ref(`users/${userId}`).remove();
+        console.log(`   ✓ Deleted ${user.name} (${user.email})`);
+      }
+    }
+    
+    console.log('   ✓ Cleanup complete');
 
     // ═══════════════════════════════════════════
     // 1. USERS - ONLY ALICIA MORGAN (ADMIN)
