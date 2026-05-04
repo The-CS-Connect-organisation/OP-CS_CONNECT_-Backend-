@@ -89,6 +89,68 @@ export const signup = asyncHandler(async (req, res) => {
 
   await updateRecord(`users/${userId}`, user);
 
+  // Create role-specific profile
+  if (role === 'student') {
+    const studentProfile = {
+      id: userId,
+      user_id: userId,
+      grade: '',
+      section: '',
+      roll_number: '',
+      subjects: [],
+      parent_name: '',
+      parent_phone: '',
+      attendance_percent: 100,
+      xp: 0,
+      badges: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    await updateRecord(`student_profiles/${userId}`, studentProfile);
+  } else if (role === 'teacher') {
+    const teacherProfile = {
+      id: userId,
+      user_id: userId,
+      subjects: [],
+      phone: '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    await updateRecord(`teacher_profiles/${userId}`, teacherProfile);
+  } else if (role === 'parent') {
+    const parentProfile = {
+      id: userId,
+      user_id: userId,
+      child_ids: [],
+      phone: '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    await updateRecord(`parent_profiles/${userId}`, parentProfile);
+  } else if (role === 'driver') {
+    const driverProfile = {
+      id: userId,
+      user_id: userId,
+      bus_number: '',
+      license_plate: '',
+      phone: '',
+      route_id: '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    await updateRecord(`driver_profiles/${userId}`, driverProfile);
+  } else if (role === 'librarian') {
+    const librarianProfile = {
+      id: userId,
+      user_id: userId,
+      library_section: '',
+      phone: '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    await updateRecord(`librarian_profiles/${userId}`, librarianProfile);
+  }
+
   const token = signToken({ sub: user.id, role: user.role });
 
   const safeUser = toSafeUser(user);
