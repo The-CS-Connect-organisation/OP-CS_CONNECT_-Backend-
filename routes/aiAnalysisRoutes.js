@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticate } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import {
   triggerAnalysis,
   getAnalysis,
@@ -12,7 +12,7 @@ import {
 const router = express.Router();
 
 // All routes require authentication
-router.use(authenticate);
+router.use(requireAuth);
 
 // Trigger AI analysis for a report card
 router.post('/analyze', triggerAnalysis);
