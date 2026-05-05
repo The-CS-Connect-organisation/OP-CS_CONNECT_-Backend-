@@ -5,6 +5,25 @@ import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { signToken } from '../utils/jwt.js';
 import { createRecord } from '../utils/firebaseDb.js';
+import { StreamChat } from 'stream-chat';
+import { env } from '../config/env.js';
+import { logger } from '../utils/logger.js';
+
+// Provision user in GetStream so they can connect to chat
+const provisionStreamUser = async (userId, name, role) => {
+  if (!env.STREAM_API_KEY || !env.STREAM_API_SECRET) return;
+  try {
+    const sanitizedId = String(userId).replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 64);
+    const serverClient = StreamChat.getInstance(env.STREAM_API_KEY, env.STREAM_API_SECRET);
+    await serverClient.upsertUser({
+      id: sanitizedId,
+      name: name || 'User',
+      role: role === 'admin' ? 'admin' : 'user',
+    });
+  } catch (err) {
+    logger.warn('GetStream upsert failed (non-fatal)', { userId, message: err.message });
+  }
+};
 
 const toSafeUser = (row) => ({
   id: row.id,
@@ -208,6 +227,9 @@ export const login = asyncHandler(async (req, res) => {
 
   const safeUser = toSafeUser(user);
   await enrichUser(safeUser);
+
+  // Provision in GetStream on every login (ensures new/existing users can chat)
+  provisionStreamUser(user.id, user.name, user.role).catch(() => {});
 
   res.json({
     success: true,
