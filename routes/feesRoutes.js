@@ -118,4 +118,35 @@ router.delete('/:feeId', allowRoles('admin'), asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Fee deleted' });
 }));
 
+// Send reminder for a pending/overdue fee (admin only)
+router.post('/:feeId/send-reminder', allowRoles('admin'), asyncHandler(async (req, res) => {
+  const existing = await getRecord(`fees/${req.params.feeId}`);
+  if (!existing) throw new ApiError(404, 'Fee not found');
+  if (existing.status === 'paid') throw new ApiError(400, 'Fee is already paid');
+
+  // Create a notification for the student
+  const notification = await createRecord('notifications', {
+    user_id: existing.student_id,
+    message: `Reminder: Your fee of ₹${existing.amount} for ${existing.term} is due on ${existing.due_date}. Please pay at the earliest.`,
+    type: 'fee_reminder',
+    meta: { feeId: req.params.feeId, amount: existing.amount, term: existing.term, dueDate: existing.due_date },
+    read: false,
+    created_by: req.user.id,
+  });
+
+  // Push real-time via socket
+  if (req.io) {
+    req.io.to(`user:${existing.student_id}`).emit('notification:new', notification);
+  }
+
+  // Log the reminder
+  await updateRecord(`fees/${req.params.feeId}`, {
+    ...existing,
+    last_reminder_sent_at: new Date().toISOString(),
+    reminder_count: (existing.reminder_count || 0) + 1,
+  });
+
+  res.json({ success: true, message: 'Reminder sent successfully' });
+}));
+
 export default router;

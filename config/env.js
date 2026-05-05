@@ -34,7 +34,7 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().default(''),
 
   // Stream Chat
-  STREAM_API_KEY: z.string().default('h8334x6zj8ze'),
+  STREAM_API_KEY: z.string().default('n9v8bfwy45pn'),
   STREAM_API_SECRET: z.string().default(''),
 });
 

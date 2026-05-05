@@ -2,32 +2,58 @@ import pkg from 'bcryptjs';
 const { hash } = pkg;
 import { db } from '../config/firebase.js';
 import { logger } from '../utils/logger.js';
+import { StreamChat } from 'stream-chat';
+import { env } from '../config/env.js';
 
-// Bootstrap flag path in Firebase — written once after first successful seed.
-// On every subsequent server start we read this single node (cheap) and skip entirely.
 const BOOTSTRAP_FLAG_PATH = '_meta/bootstrap_done';
+const BOOTSTRAP_VERSION = 2; // bump to re-run bootstrap with new users
+
+const DEMO_USERS = [
+  // Students
+  { name: 'Priya Sharma',    email: 'student@schoolsync.edu',  role: 'student', password: 'student123' },
+  { name: 'Aarav Menon',     email: 'student2@schoolsync.edu', role: 'student', password: 'student123' },
+  { name: 'Ishita Kapoor',   email: 'student3@schoolsync.edu', role: 'student', password: 'student123' },
+  // Teachers
+  { name: 'Rajesh Kumar',    email: 'teacher@schoolsync.edu',  role: 'teacher', password: 'teacher123' },
+  { name: 'James Anderson',  email: 'teacher2@schoolsync.edu', role: 'teacher', password: 'teacher123' },
+  { name: 'Emily Chen',      email: 'teacher3@schoolsync.edu', role: 'teacher', password: 'teacher123' },
+  // Admins
+  { name: 'Alicia Morgan',   email: 'admin@schoolsync.edu',    role: 'admin',   password: 'admin123'   },
+  { name: 'Rahul Venkat',    email: 'admin2@schoolsync.edu',   role: 'admin',   password: 'admin123'   },
+  { name: 'Neha Kapoor',     email: 'admin3@schoolsync.edu',   role: 'admin',   password: 'admin123'   },
+  // Drivers
+  { name: 'Amit Patel',      email: 'driver@schoolsync.edu',   role: 'driver',  password: 'driver123'  },
+  { name: 'Suresh Singh',    email: 'driver2@schoolsync.edu',  role: 'driver',  password: 'driver123'  },
+  { name: 'Mohan Das',       email: 'driver3@schoolsync.edu',  role: 'driver',  password: 'driver123'  },
+  // Parents
+  { name: 'Vikram Singh',    email: 'parent@schoolsync.edu',   role: 'parent',  password: 'parent123'  },
+  { name: 'Priya Menon',     email: 'parent2@schoolsync.edu',  role: 'parent',  password: 'parent123'  },
+  { name: 'Deepak Verma',    email: 'parent3@schoolsync.edu',  role: 'parent',  password: 'parent123'  },
+];
+
+/**
+ * Provision a user in GetStream so they can connect to chat.
+ */
+const provisionStreamUser = async (userId, name, role) => {
+  if (!env.STREAM_API_KEY || !env.STREAM_API_SECRET) return;
+  try {
+    const serverClient = StreamChat.getInstance(env.STREAM_API_KEY, env.STREAM_API_SECRET);
+    await serverClient.upsertUser({ id: userId, name, role: role === 'admin' ? 'admin' : 'user' });
+  } catch (err) {
+    logger.warn(`GetStream upsert failed for ${userId}`, { message: err.message });
+  }
+};
 
 export const bootstrapDefaultUsers = async () => {
-  // Single cheap read — if flag exists, we're done. No scanning users collection.
   const flagSnap = await db.ref(BOOTSTRAP_FLAG_PATH).once('value');
-  if (flagSnap.val() === true) {
+  if (flagSnap.val() === BOOTSTRAP_VERSION) {
     logger.info('Bootstrap already completed — skipping');
     return;
   }
 
-  const seedUsers = [
-    { name: 'Alicia Morgan', email: 'admin@schoolsync.edu', role: 'admin', password: 'admin123' },
-    { name: 'Rajesh Kumar', email: 'teacher@schoolsync.edu', role: 'teacher', password: 'teacher123' },
-    { name: 'Priya Sharma', email: 'student@schoolsync.edu', role: 'student', password: 'student123' },
-    { name: 'Vikram Singh', email: 'parent@schoolsync.edu', role: 'parent', password: 'parent123' },
-    { name: 'Amit Patel', email: 'driver@schoolsync.edu', role: 'driver', password: 'driver123' },
-    { name: 'Deepak Verma', email: 'librarian@schoolsync.edu', role: 'librarian', password: 'librarian123' },
-  ];
+  logger.info('Running first-time bootstrap — creating 15 demo users...');
 
-  logger.info('Running first-time bootstrap — creating default users...');
-
-  for (const entry of seedUsers) {
-    // Skip if this email already exists (safe guard for partial runs)
+  for (const entry of DEMO_USERS) {
     const existing = await db.ref('users').orderByChild('email').equalTo(entry.email).once('value');
     if (existing.exists()) {
       logger.info(`User ${entry.email} already exists, skipping`);
@@ -48,10 +74,13 @@ export const bootstrapDefaultUsers = async () => {
       updated_at: new Date().toISOString(),
     });
 
-    logger.info(`Created default user: ${entry.email}`);
+    // Provision in GetStream with sanitized ID
+    const streamUserId = userId.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 64);
+    await provisionStreamUser(streamUserId, entry.name, entry.role);
+
+    logger.info(`Created demo user: ${entry.email}`);
   }
 
-  // Write the flag so this never runs again
-  await db.ref(BOOTSTRAP_FLAG_PATH).set(true);
-  logger.info('Bootstrap complete — flag written to Firebase');
+  await db.ref(BOOTSTRAP_FLAG_PATH).set(BOOTSTRAP_VERSION);
+  logger.info('Bootstrap complete — 15 demo users created and provisioned in GetStream');
 };
