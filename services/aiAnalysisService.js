@@ -1,15 +1,18 @@
 import { getRecord, getRecords, queryRecords, createRecord, updateRecord } from '../utils/firebaseDb.js';
 import { env } from '../config/env.js';
 
-// Initialize OpenAI client
-let openai = null;
+// Initialize Cerebras AI client
+let cerebras = null;
 try {
-  if (env.OPENAI_API_KEY) {
-    const { default: OpenAI } = await import('openai');
-    openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+  if (env.CEREBRAS_API_KEY) {
+    const { default: Anthropic } = await import('@anthropic-ai/sdk');
+    cerebras = new Anthropic({
+      apiKey: env.CEREBRAS_API_KEY,
+      baseURL: 'https://api.cerebras.ai/v1'
+    });
   }
 } catch (error) {
-  console.warn('OpenAI not available, using template-based analysis');
+  console.warn('Cerebras AI not available, using template-based analysis');
 }
 
 // ============================================================================
@@ -226,29 +229,25 @@ export const generateRecommendations = (performance, trends = null) => {
 // WRITTEN ANALYSIS GENERATOR
 // ============================================================================
 export const generateWrittenAnalysis = async (reportCard, performance, recommendations) => {
-  // Try to use LLM if available
-  if (openai) {
+  // Try to use Cerebras AI if available
+  if (cerebras) {
     try {
       const prompt = buildAnalysisPrompt(reportCard, performance, recommendations);
-      const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+      const response = await cerebras.messages.create({
+        model: 'claude-3-5-sonnet',
+        max_tokens: 500,
         messages: [
-          {
-            role: 'system',
-            content: 'You are an educational analyst providing constructive feedback on student performance. Write in a professional, encouraging tone suitable for students and parents.'
-          },
           {
             role: 'user',
             content: prompt
           }
         ],
-        max_tokens: 500,
-        temperature: 0.7
+        system: 'You are an educational analyst providing constructive feedback on student performance. Write in a professional, encouraging tone suitable for students and parents.'
       });
 
-      return response.choices[0].message.content;
+      return response.content[0].type === 'text' ? response.content[0].text : generateTemplateAnalysis(reportCard, performance, recommendations);
     } catch (error) {
-      console.warn('LLM analysis failed, using template-based analysis:', error.message);
+      console.warn('Cerebras AI analysis failed, using template-based analysis:', error.message);
     }
   }
 
