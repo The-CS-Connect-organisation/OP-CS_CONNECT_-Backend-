@@ -37,6 +37,9 @@ app.use(
         env.CORS_ORIGIN,
         // Always allow both deployed frontends
         'https://the-cs-connect-organisation.github.io',
+        // Allow local dev servers to connect to the remote API
+        'http://localhost:5173',
+        'http://localhost:3000'
       ].filter(Boolean);
       // In development, allow any localhost port
       if (env.NODE_ENV !== 'production' && /^http:\/\/localhost:\d+$/.test(origin)) {
@@ -50,6 +53,17 @@ app.use(
     credentials: true,
   })
 );
+
+app.get('/api/debug-errors', async (req, res) => {
+  try {
+    const { db } = await import('./config/firebase.js');
+    const snap = await db.ref('error_logs').limitToLast(5).once('value');
+    res.json(snap.val());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.use(express.json({ limit: '200kb' }));
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
