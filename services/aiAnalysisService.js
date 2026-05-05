@@ -5,11 +5,12 @@ import { env } from '../config/env.js';
 let cerebras = null;
 try {
   if (env.CEREBRAS_API_KEY) {
-    const { default: Anthropic } = await import('@anthropic-ai/sdk');
-    cerebras = new Anthropic({
+    const axios = await import('axios');
+    cerebras = {
       apiKey: env.CEREBRAS_API_KEY,
-      baseURL: 'https://api.cerebras.ai/v1'
-    });
+      baseURL: 'https://api.cerebras.ai/v1',
+      client: axios.default
+    };
   }
 } catch (error) {
   console.warn('Cerebras AI not available, using template-based analysis');
@@ -229,23 +230,36 @@ export const generateRecommendations = (performance, trends = null) => {
 // WRITTEN ANALYSIS GENERATOR
 // ============================================================================
 export const generateWrittenAnalysis = async (reportCard, performance, recommendations) => {
-  // Try to use Cerebras AI if available
+  // Try to use Cerebras AI Qwen if available
   if (cerebras) {
     try {
       const prompt = buildAnalysisPrompt(reportCard, performance, recommendations);
-      const response = await cerebras.messages.create({
-        model: 'claude-3-5-sonnet',
-        max_tokens: 500,
-        messages: [
-          {
-            role: 'user',
-            content: prompt
+      const response = await cerebras.client.post(
+        `${cerebras.baseURL}/chat/completions`,
+        {
+          model: 'qwen-7b',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an educational analyst providing constructive feedback on student performance. Write in a professional, encouraging tone suitable for students and parents.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          max_tokens: 500,
+          temperature: 0.7
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${cerebras.apiKey}`,
+            'Content-Type': 'application/json'
           }
-        ],
-        system: 'You are an educational analyst providing constructive feedback on student performance. Write in a professional, encouraging tone suitable for students and parents.'
-      });
+        }
+      );
 
-      return response.content[0].type === 'text' ? response.content[0].text : generateTemplateAnalysis(reportCard, performance, recommendations);
+      return response.data.choices[0].message.content;
     } catch (error) {
       console.warn('Cerebras AI analysis failed, using template-based analysis:', error.message);
     }
