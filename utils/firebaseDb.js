@@ -101,12 +101,27 @@ export const createRecord = async (path, data) => {
  */
 export const updateRecord = async (path, data) => {
   try {
-    await db.ref(path).update({
-      ...data,
-      updated_at: new Date().toISOString(),
-    });
+    // Check if record exists
     const snapshot = await db.ref(path).once('value');
-    return snapshot.val();
+    const exists = snapshot.exists();
+    
+    if (exists) {
+      // Record exists, use update
+      await db.ref(path).update({
+        ...data,
+        updated_at: new Date().toISOString(),
+      });
+    } else {
+      // Record doesn't exist, use set
+      await db.ref(path).set({
+        ...data,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    }
+    
+    const updatedSnapshot = await db.ref(path).once('value');
+    return updatedSnapshot.val();
   } catch (error) {
     logger.error('Error updating record', { path, error: error.message });
     throw error;
