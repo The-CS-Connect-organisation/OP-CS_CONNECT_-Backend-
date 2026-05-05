@@ -12,6 +12,8 @@ import busRoutes from './routes/busRoutes.js';
 import teacherRoutes from './routes/teacherRoutes.js';
 import studentAssistantRoutes from './routes/studentAssistantRoutes.js';
 import studentRoutes from './routes/studentRoutes.js';
+import reportCardRoutes from './routes/reportCardRoutes.js';
+import aiAnalysisRoutes from './routes/aiAnalysisRoutes.js';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { setIO, getIO } from './utils/socket.js';
@@ -89,6 +91,8 @@ app.use('/api/bus', busRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/student-assistant', studentAssistantRoutes);
 app.use('/api/student', studentRoutes);
+app.use('/api/report-cards', reportCardRoutes);
+app.use('/api/ai-analysis', aiAnalysisRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

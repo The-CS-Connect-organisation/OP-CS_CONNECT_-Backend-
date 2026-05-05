@@ -65,6 +65,7 @@ export const bootstrapDefaultUsers = async () => {
     if (entry.role === 'student') {
       await db.ref(`student_profiles/${userId}`).set({
         userId: userId,
+        parentEmail: 'parent@schoolsync.edu', // Link to parent by email
         admissionNumber: 'ADM2024001',
         rollNumber: '1',
         class: '10',

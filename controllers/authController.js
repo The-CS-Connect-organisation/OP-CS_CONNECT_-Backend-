@@ -20,8 +20,29 @@ const enrichUser = async (user) => {
   if (user.role === 'student') {
     const profile = await getRecord(`student_profiles/${user.id}`);
     if (profile) {
-      user.class = `${profile.grade}-${profile.section}`;
-      user.grade = profile.grade;
+      // Auto-increment class at start of Indian academic year (April 1st)
+      // Indian academic year: April 1 - March 31
+      let classNum = parseInt(profile.class || profile.grade || '1');
+      const lastIncrementDate = profile.lastClassIncrementDate ? new Date(profile.lastClassIncrementDate) : null;
+      const currentDate = new Date();
+      
+      // Academic year starts on April 1st
+      const currentYear = currentDate.getFullYear();
+      const academicYearStart = new Date(currentYear, 3, 1); // April 1st of current year
+      
+      // If we're on or past April 1st and haven't incremented this academic year, increment the class
+      if (currentDate >= academicYearStart && (!lastIncrementDate || lastIncrementDate < academicYearStart)) {
+        classNum = Math.min(classNum + 1, 12); // Cap at class 12
+        await updateRecord(`student_profiles/${user.id}`, {
+          class: classNum.toString(),
+          grade: classNum.toString(),
+          lastClassIncrementDate: currentDate.toISOString(),
+          updated_at: currentDate.toISOString(),
+        });
+      }
+      
+      user.class = `${classNum}-${profile.section || 'A'}`;
+      user.grade = classNum.toString();
       user.section = profile.section;
       user.rollNo = profile.roll_number;
       user.attendancePercent = profile.attendance_percent;
