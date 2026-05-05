@@ -6,23 +6,16 @@ const seed = async () => {
   console.log('🚀 Seeding Cornerstone School data to Firebase...\n');
 
   try {
-    // ── Clear old data ──
-    console.log('🧹 Cleaning up seeded users (keeping only Alicia Morgan)...');
+    // ── Check if admin already exists ──
+    console.log('🧹 Checking for existing admin user...');
     
-    // Get all existing users
-    const snapshot = await db.ref('users').once('value');
-    const existingUsers = snapshot.val() || {};
+    const snapshot = await db.ref('users').orderByChild('email').equalTo('admin@schoolsync.edu').once('value');
+    const existingAdmins = snapshot.val() || {};
     
-    // Delete all users except Alicia Morgan (admin@schoolsync.edu)
-    for (const userId in existingUsers) {
-      const user = existingUsers[userId];
-      if (user.email !== 'admin@schoolsync.edu') {
-        await db.ref(`users/${userId}`).remove();
-        console.log(`   ✓ Deleted ${user.name} (${user.email})`);
-      }
+    if (Object.keys(existingAdmins).length > 0) {
+      console.log('   ✓ Admin user already exists, skipping seed');
+      process.exit(0);
     }
-    
-    console.log('   ✓ Cleanup complete');
 
     // ═══════════════════════════════════════════
     // 1. USERS - ONLY ALICIA MORGAN (ADMIN)
