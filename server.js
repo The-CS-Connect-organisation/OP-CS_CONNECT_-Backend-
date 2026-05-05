@@ -69,7 +69,17 @@ const start = async () => {
     });
     socket.on('call:signal', ({ peerId, type, payload }) => {
       if (!socket.userId || !peerId || !type) return;
-      const room = dmRoomId(socket.userId, peerId);
+      // Sanitize peerId the same way the frontend does
+      const sanitizedPeerId = String(peerId).replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 64);
+      // Emit directly to the peer's user room — no need for call:join
+      socket.to(`user:${sanitizedPeerId}`).emit('call:signal', {
+        fromUserId: socket.userId,
+        type,
+        payload,
+        timestamp: new Date().toISOString()
+      });
+      // Also try the DM room as fallback
+      const room = dmRoomId(socket.userId, sanitizedPeerId);
       socket.to(room).emit('call:signal', {
         fromUserId: socket.userId,
         type,
