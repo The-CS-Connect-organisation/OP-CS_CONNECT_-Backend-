@@ -23,8 +23,8 @@ router.post('/reset-password', resetPassword);
 // Delete User (admin only)
 router.delete('/users/:userId', requireAuth, allowRoles('admin'), deleteUser);
 
-// One-time seed endpoint - creates missing demo users + bus + route + driver profile
-router.post('/seed-demo-users', asyncHandler(async (req, res) => {
+// One-time seed endpoint - creates missing demo users + bus + route + driver profile (admin only)
+router.post('/seed-demo-users', requireAuth, allowRoles('admin'), asyncHandler(async (req, res) => {
   const demoUsers = [
     { name: 'Rajesh Kumar',  email: 'driver@schoolsync.edu',  role: 'driver',  password: 'driver123' },
     { name: 'Suresh Patel',  email: 'driver2@schoolsync.edu', role: 'driver',  password: 'driver123' },

@@ -6,6 +6,7 @@ import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { bootstrapDefaultUsers } from './seed/bootstrapDefaults.js';
 import { verifyToken } from './utils/jwt.js';
+import { trackConnect, trackDisconnect, trackRoom } from './utils/socket.js';
 
 const dmRoomId = (a, b) => {
   const [x, y] = [String(a), String(b)].sort();
@@ -50,6 +51,7 @@ const start = async () => {
   io.on('connection', (socket) => {
     if (socket.userId) {
       socket.join(`user:${socket.userId}`);
+      trackConnect(socket.userId, socket.id);
       logger.info('Socket client connected', { id: socket.id, userId: socket.userId });
     } else {
       logger.info('Socket client connected (guest, no user room)', { id: socket.id });
@@ -57,12 +59,12 @@ const start = async () => {
     socket.on('join:class', (classId) => {
       if (!socket.userId || !classId) return;
       socket.join(`class:${classId}`);
+      trackRoom(socket.userId, classId);
     });
     socket.on('call:join', ({ peerId }) => {
       if (!socket.userId || !peerId) return;
       const room = dmRoomId(socket.userId, peerId);
       socket.join(room);
-      // Notify others that we joined
       socket.to(room).emit('call:peer-joined', { peerId: socket.userId });
     });
     socket.on('call:signal', ({ peerId, type, payload }) => {
@@ -75,7 +77,10 @@ const start = async () => {
         timestamp: new Date().toISOString()
       });
     });
-    socket.on('disconnect', () => logger.info('Socket client disconnected', { id: socket.id }));
+    socket.on('disconnect', () => {
+      trackDisconnect(socket.userId);
+      logger.info('Socket client disconnected', { id: socket.id });
+    });
   });
   setSocketServer(io);
   const port = env.PORT || 5000;

@@ -14,7 +14,9 @@ export const generalLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: 'Too many requests from this IP, please try again later.',
-  skip: (req) => req.user?.role === 'admin', // Skip for admins
+  // Note: admin skip is intentionally removed — req.user is not populated
+  // at the /api middleware level (auth runs per-route). IP-based limiting
+  // is the correct approach here and applies equally to all roles.
 });
 
 /**

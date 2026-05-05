@@ -253,14 +253,16 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
     created_at: new Date().toISOString(),
   });
 
-  // In production this would send an email. For demo, return the OTP in the response.
-  res.json({
+  // In production this sends an email. OTP is only returned in non-production for testing.
+  const responsePayload = {
     success: true,
-    message: 'Reset code sent to your email.',
-    // Demo only - remove in production:
-    demo_otp: otp,
-    user_id: user.id,
-  });
+    message: 'If that email exists, a reset code has been sent.',
+  };
+  if (process.env.NODE_ENV !== 'production') {
+    responsePayload.demo_otp = otp;
+    responsePayload.user_id = user.id;
+  }
+  res.json(responsePayload);
 });
 
 export const verifyResetOtp = asyncHandler(async (req, res) => {
