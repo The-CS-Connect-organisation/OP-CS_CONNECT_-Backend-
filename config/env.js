@@ -33,8 +33,8 @@ const envSchema = z.object({
   GROQ_API_KEY: z.string().default(''),
   GEMINI_API_KEY: z.string().default(''),
 
-  // Stream Chat
-  STREAM_API_KEY: z.string().default('n9v8bfwy45pn'),
+  // Stream (Chat + Video) — supply both from GetStream Dashboard; never commit real values.
+  STREAM_API_KEY: z.string().default(''),
   STREAM_API_SECRET: z.string().default(''),
 });
 

@@ -18,15 +18,16 @@ router.post('/token', (req, res) => {
       return res.status(400).json({ error: 'userId is required' });
     }
 
-    if (!env.STREAM_API_SECRET) {
+    if (!env.STREAM_API_SECRET || !env.STREAM_API_KEY) {
       return res.status(503).json({
-        error: 'STREAM_API_SECRET not configured. Use dev tokens on the client.',
+        error:
+          'GetStream is not configured on the server (STREAM_API_KEY and STREAM_API_SECRET).',
       });
     }
 
     const serverClient = StreamChat.getInstance(
       env.STREAM_API_KEY,
-      env.STREAM_API_SECRET
+      env.STREAM_API_SECRET,
     );
 
     // Sanitize userId (GetStream accepts alphanum, _, -)
