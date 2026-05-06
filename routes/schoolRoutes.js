@@ -52,11 +52,13 @@ const upload = multer({ limits: { fileSize: 10 * 1024 * 1024 } });
 // Public endpoints - no auth required
 router.get('/stream-token', getStreamToken);
 router.get('/clubs', getAllClubs);
+
+router.use(requireAuth);
+
+// Messages (authenticated — use req.user.id)
 router.get('/messages', listMessages);
 router.post('/messages', sendMessage);
 router.patch('/messages/:messageId/read', markMessageRead);
-
-router.use(requireAuth);
 
 router.post('/classes', allowRoles('admin'), validateRequest(createClassSchema), createClassRoom);
 router.post('/students/profiles', allowRoles('admin'), validateRequest(createStudentProfileSchema), createStudentProfile);

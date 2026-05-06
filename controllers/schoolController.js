@@ -194,20 +194,16 @@ export const listMessages = asyncHandler(async (req, res) => {
   const otherUserId = req.query.otherUserId;
   if (!otherUserId) throw new ApiError(400, 'Query otherUserId is required');
   
-  // Get user ID from header, query param, or req.user (if authenticated)
-  const userId = req.headers['x-user-id'] || req.query.userId || req.user?.id;
-  if (!userId) throw new ApiError(400, 'userId is required (via header x-user-id, query param, or auth)');
+  const userId = req.user.id;
 
   const messages = await queryRecords('messages', (msg) => {
-    const isBetweenUsers =
+    return (
       (msg.sender_id === userId && msg.recipient_id === otherUserId) ||
-      (msg.sender_id === otherUserId && msg.recipient_id === userId);
-    return isBetweenUsers;
+      (msg.sender_id === otherUserId && msg.recipient_id === userId)
+    );
   });
 
-  // Sort by created_at ascending
   messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-
   res.json({ success: true, messages: messages.slice(-500) });
 });
 
@@ -461,14 +457,11 @@ export const listAnnouncements = asyncHandler(async (req, res) => {
 
 // ── Messaging ──
 export const sendMessage = asyncHandler(async (req, res) => {
-  if (!req.body.classId && !req.body.recipientId) {
-    throw new ApiError(400, 'recipientId is required for direct messages (or provide classId for class messages)');
+  if (!req.body.recipientId && !req.body.classId) {
+    throw new ApiError(400, 'recipientId is required for direct messages');
   }
 
-  // Get user ID from header, query param, or req.user (if authenticated)
-  const userId = req.headers['x-user-id'] || req.query.userId || req.user?.id;
-  if (!userId) throw new ApiError(400, 'userId is required (via header x-user-id, query param, or auth)');
-
+  const userId = req.user.id;
   const messageId = Date.now().toString();
   const message = {
     id: messageId,

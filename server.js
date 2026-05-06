@@ -61,6 +61,17 @@ const start = async () => {
       socket.join(`class:${classId}`);
       trackRoom(socket.userId, classId);
     });
+    // Typing indicators — relay to the target user
+    socket.on('typing:start', ({ toUserId }) => {
+      if (!socket.userId || !toUserId) return;
+      const sanitized = String(toUserId).replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 64);
+      socket.to(`user:${sanitized}`).emit('typing:start', { userId: socket.userId });
+    });
+    socket.on('typing:stop', ({ toUserId }) => {
+      if (!socket.userId || !toUserId) return;
+      const sanitized = String(toUserId).replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 64);
+      socket.to(`user:${sanitized}`).emit('typing:stop', { userId: socket.userId });
+    });
     socket.on('call:join', ({ peerId }) => {
       if (!socket.userId || !peerId) return;
       const room = dmRoomId(socket.userId, peerId);
