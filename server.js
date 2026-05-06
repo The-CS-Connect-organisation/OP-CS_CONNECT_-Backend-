@@ -61,6 +61,17 @@ const start = async () => {
       socket.join(`class:${classId}`);
       trackRoom(socket.userId, classId);
     });
+    // Online presence
+    socket.on('user:online', (data) => {
+      if (data?.userId) {
+        socket.broadcast.emit('user:online', { userId: data.userId });
+      }
+    });
+    socket.on('online:request', () => {
+      // Send back list of currently connected users
+      const onlineList = getConnectedUsers();
+      socket.emit('online:list', { users: onlineList });
+    });
     // Typing indicators — relay to the target user
     socket.on('typing:start', ({ toUserId }) => {
       if (!socket.userId || !toUserId) return;
@@ -99,6 +110,9 @@ const start = async () => {
       });
     });
     socket.on('disconnect', () => {
+      if (socket.userId) {
+        socket.broadcast.emit('user:offline', { userId: socket.userId });
+      }
       trackDisconnect(socket.userId);
       logger.info('Socket client disconnected', { id: socket.id });
     });
