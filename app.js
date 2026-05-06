@@ -16,6 +16,7 @@ import reportCardRoutes from './routes/reportCardRoutes.js';
 import aiAnalysisRoutes from './routes/aiAnalysisRoutes.js';
 import notificationsRoutes from './routes/notificationsRoutes.js';
 import friendRoutes from './routes/friendRoutes.js';
+import userPrefsRoutes from './routes/userPrefsRoutes.js';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { setIO, getIO } from './utils/socket.js';
@@ -114,6 +115,7 @@ app.use('/api/report-cards', reportCardRoutes);
 app.use('/api/ai-analysis', aiAnalysisRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/friends', friendRoutes);
+app.use('/api/user-prefs', userPrefsRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
