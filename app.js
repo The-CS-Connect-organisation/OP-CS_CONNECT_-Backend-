@@ -24,6 +24,9 @@ import { generalLimiter, authLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
 
+// Trust Render's proxy so rate-limiter and IP detection work correctly
+app.set('trust proxy', 1);
+
 export const setSocketServer = (io) => {
   setIO(io);
 };

@@ -6,7 +6,7 @@ import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { bootstrapDefaultUsers } from './seed/bootstrapDefaults.js';
 import { verifyToken } from './utils/jwt.js';
-import { trackConnect, trackDisconnect, trackRoom } from './utils/socket.js';
+import { trackConnect, trackDisconnect, trackRoom, getConnectedUsers } from './utils/socket.js';
 
 const dmRoomId = (a, b) => {
   const [x, y] = [String(a), String(b)].sort();
