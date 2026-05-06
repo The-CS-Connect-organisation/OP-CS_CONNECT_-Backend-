@@ -28,7 +28,7 @@ import {
   getUser,
   listUsers,
 } from '../controllers/schoolController.js';
-import { getAllClubs, createClub, joinClub, sendClubMessage, uploadResearchPaper, getClubLeaderboard } from '../controllers/clubsController.js';
+import { getAllClubs, createClub, joinClub, sendClubMessage, getClubMessages, uploadResearchPaper, getClubLeaderboard } from '../controllers/clubsController.js';
 import { saveStudyPlan, getMyStudyPlans } from '../controllers/studyPlannerController.js';
 import { allowRoles, requireAuth } from '../middleware/auth.js';
 import { validateRequest } from '../middleware/validateRequest.js';
@@ -89,6 +89,7 @@ router.get('/timetables', allowRoles('student', 'teacher', 'admin', 'parent'), g
 // ── Communities & Clubs ──
 router.post('/clubs', allowRoles('student', 'teacher', 'admin'), createClub);
 router.post('/clubs/:clubId/join', allowRoles('student', 'teacher', 'admin'), joinClub);
+router.get('/clubs/:clubId/messages', allowRoles('student', 'teacher', 'admin'), getClubMessages);
 router.post('/clubs/:clubId/messages', allowRoles('student', 'teacher', 'admin'), sendClubMessage);
 router.post('/clubs/:clubId/research', allowRoles('student', 'teacher', 'admin'), upload.array('files', 1), uploadResearchPaper);
 router.get('/clubs/leaderboard', allowRoles('student', 'teacher', 'admin'), getClubLeaderboard);

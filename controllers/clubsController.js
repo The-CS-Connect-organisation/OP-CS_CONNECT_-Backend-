@@ -57,6 +57,17 @@ export const joinClub = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @desc    Get messages for a club
+ * @route   GET /api/school/clubs/:clubId/messages
+ */
+export const getClubMessages = asyncHandler(async (req, res) => {
+  const clubId = req.params.clubId;
+  const messages = await getRecords(`community_messages/${clubId}`);
+  messages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  res.json({ success: true, messages: messages.slice(-200) });
+});
+
+/**
  * @desc    Add a message to a club channel
  * @route   POST /api/school/clubs/:clubId/messages
  */
@@ -71,15 +82,18 @@ export const sendClubMessage = asyncHandler(async (req, res) => {
     channel: channel || 'general',
     sender_id: req.user.id,
     sender_name: req.user.name,
+    user: { id: req.user.id, name: req.user.name },
     content,
     created_at: new Date().toISOString()
   };
 
   await updateRecord(`community_messages/${clubId}/${messageId}`, message);
   
-  // Real-time broadcast
+  // Real-time broadcast to all club members
   if (req.io) {
     req.io.to(`club:${clubId}`).emit('club:message', message);
+    // Also emit to all connected users (fallback if they haven't joined the room)
+    req.io.emit('club:message', message);
   }
 
   res.status(201).json({ success: true, message });
