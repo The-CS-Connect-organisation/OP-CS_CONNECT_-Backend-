@@ -168,24 +168,57 @@ export const upsertRecord = async (path, data) => {
 };
 
 /**
- * Query records with filtering
+ * Query records with filtering (Polymorphic: supports optimized object filters or legacy function filters)
  * @param {string} path - Database path
- * @param {Function} filterFn - Filter function
+ * @param {Object|Function} filterArg - Filter criteria object { key: value } or filter function
  * @returns {Promise<Array>}
  */
-export const queryRecords = async (path, filterFn) => {
+export const queryRecords = async (path, filterArg) => {
   try {
-    const snapshot = await db.ref(path).once('value');
-    const data = snapshot.val();
+    let query = db.ref(path);
+    let records = [];
 
-    if (!data) return [];
+    if (typeof filterArg === 'object' && filterArg !== null) {
+      // Optimized Server-Side Filtering (Hybrid)
+      const filterKeys = Object.keys(filterArg);
+      let remainingFilters = { ...filterArg };
 
-    const records = Object.entries(data).map(([id, value]) => ({
-      id,
-      ...value,
-    }));
+      if (filterKeys.length > 0) {
+        // Firebase Realtime DB only supports ONE orderByChild/equalTo at a time
+        const firstKey = filterKeys[0];
+        query = query.orderByChild(firstKey).equalTo(filterArg[firstKey]);
+        delete remainingFilters[firstKey];
+      }
 
-    return records.filter(filterFn);
+      const snapshot = await query.once('value');
+      const data = snapshot.val();
+      if (!data) return [];
+
+      records = Object.entries(data).map(([id, value]) => ({ id, ...value }));
+
+      // Apply remaining filters in-memory
+      if (Object.keys(remainingFilters).length > 0) {
+        records = records.filter(record => 
+          Object.entries(remainingFilters).every(([key, value]) => record[key] === value)
+        );
+      }
+    } else if (typeof filterArg === 'function') {
+      // Legacy In-Memory Filtering (O(N) - avoid in production at scale)
+      const snapshot = await query.once('value');
+      const data = snapshot.val();
+      if (!data) return [];
+
+      records = Object.entries(data).map(([id, value]) => ({ id, ...value }));
+      records = records.filter(filterArg);
+    } else {
+      // Get all records
+      const snapshot = await query.once('value');
+      const data = snapshot.val();
+      if (!data) return [];
+      records = Object.entries(data).map(([id, value]) => ({ id, ...value }));
+    }
+
+    return records;
   } catch (error) {
     logger.error('Error querying records', { path, error: error.message });
     throw error;

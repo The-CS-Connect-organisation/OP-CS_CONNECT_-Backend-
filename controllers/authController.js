@@ -107,7 +107,7 @@ export const signup = asyncHandler(async (req, res) => {
   const { name, email, password, role } = req.body;
 
   // Check if email already exists
-  const existingUsers = await queryRecords('users', (u) => u.email === email.toLowerCase().trim());
+  const existingUsers = await queryRecords('users', { email: email.toLowerCase().trim() });
 
   if (existingUsers.length > 0) {
     throw new ApiError(409, 'Email already registered');
