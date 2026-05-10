@@ -563,7 +563,18 @@ export const getReportCard = asyncHandler(async (req, res) => {
 
 // ── Timetable ──
 export const getTimetable = asyncHandler(async (req, res) => {
-  const classId = req.query.classId || req.query.class_id;
+  let classId = req.query.classId || req.query.class_id;
+  // Fall back to user's enrolled class if no classId provided
+  if (!classId && req.user?.class) {
+    classId = req.user.class;
+  }
+  if (!classId) {
+    // Try to get the student's class from their profile
+    try {
+      const profile = await getRecord(`student_profiles/${req.user.id}`);
+      if (profile?.class) classId = profile.class;
+    } catch {}
+  }
   if (!classId) throw new ApiError(400, 'classId is required');
 
   const timetable = await getRecord(`timetables/${classId}`);

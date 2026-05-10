@@ -61,6 +61,12 @@ router.get('/messages', listMessages);
 router.post('/messages', sendMessage);
 router.patch('/messages/:messageId/read', markMessageRead);
 
+router.get('/classes', allowRoles('admin', 'teacher', 'student', 'parent'), asyncHandler(async (req, res) => {
+  const { getRecords } = await import('../utils/firebaseDb.js');
+  const classes = await getRecords('class_rooms');
+  res.json({ success: true, classes });
+}));
+
 router.post('/classes', allowRoles('admin'), validateRequest(createClassSchema), createClassRoom);
 router.post('/students/profiles', allowRoles('admin'), validateRequest(createStudentProfileSchema), createStudentProfile);
 router.post('/teachers/profiles', allowRoles('admin'), validateRequest(createTeacherProfileSchema), createTeacherProfile);
