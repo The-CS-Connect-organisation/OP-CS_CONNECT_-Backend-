@@ -30,6 +30,7 @@ import {
 } from '../controllers/schoolController.js';
 import { getAllClubs, createClub, joinClub, sendClubMessage, getClubMessages, uploadResearchPaper, getClubLeaderboard } from '../controllers/clubsController.js';
 import { saveStudyPlan, getMyStudyPlans } from '../controllers/studyPlannerController.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 import { allowRoles, requireAuth } from '../middleware/auth.js';
 import { validateRequest } from '../middleware/validateRequest.js';
 import {
@@ -97,5 +98,13 @@ router.get('/clubs/leaderboard', allowRoles('student', 'teacher', 'admin'), getC
 // ── Study Planner ──
 router.post('/study-plans', allowRoles('student'), saveStudyPlan);
 router.get('/study-plans', allowRoles('student'), getMyStudyPlans);
+
+// ── Notes (student-accessible teacher notes) ──
+router.get('/notes', allowRoles('student', 'teacher', 'admin', 'parent'), asyncHandler(async (req, res) => {
+  const { getRecords } = await import('../utils/firebaseDb.js');
+  const notes = await getRecords('class_notes');
+  notes.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  res.json({ success: true, notes: notes.slice(0, 100) });
+}));
  
  export default router;

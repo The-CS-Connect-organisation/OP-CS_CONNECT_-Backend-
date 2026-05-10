@@ -36,8 +36,8 @@ import {
 
 const router = Router();
 
-// Apply authentication to all student assistant routes - only students can access
-router.use(allowRoles('student'));
+// Apply authentication to all student assistant routes
+router.use(allowRoles('student', 'teacher', 'admin', 'parent'));
 
 // ============================================================================
 // AI DOUBT RESOLUTION
