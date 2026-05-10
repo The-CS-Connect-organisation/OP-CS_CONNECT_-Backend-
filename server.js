@@ -5,6 +5,7 @@ import { logger } from './utils/logger.js';
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
 import { bootstrapDefaultUsers } from './seed/bootstrapDefaults.js';
+import { seedAllData } from './seed/comprehensiveSeed.js';
 import { verifyToken } from './utils/jwt.js';
 import { trackConnect, trackDisconnect, trackRoom, getConnectedUsers } from './utils/socket.js';
 
@@ -19,6 +20,7 @@ let io;
 const start = async () => {
   await connectDatabase();
   await bootstrapDefaultUsers();
+  await seedAllData();
   const httpServer = createServer(app);
   io = new Server(httpServer, {
     cors: {
