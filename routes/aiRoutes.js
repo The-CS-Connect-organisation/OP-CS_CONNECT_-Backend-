@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { chat, getHistory } from '../controllers/aiController.js';
-import { requireAuth, optionalAuth } from '../middleware/auth.js';
+import { chat, getHistory, getAiStats, getAiTools, getRecentQueries } from '../controllers/aiController.js';
+import { requireAuth, optionalAuth, allowRoles } from '../middleware/auth.js';
 import { validateRequest } from '../middleware/validateRequest.js';
 import { z } from 'zod';
 
@@ -20,5 +20,8 @@ const chatSchema = z.object({
 
 router.post('/chat', optionalAuth, validateRequest(chatSchema), chat);
 router.get('/history', requireAuth, getHistory);
+router.get('/stats', allowRoles('admin'), getAiStats);
+router.get('/tools', allowRoles('admin'), getAiTools);
+router.get('/recent-queries', allowRoles('admin'), getRecentQueries);
 
 export default router;

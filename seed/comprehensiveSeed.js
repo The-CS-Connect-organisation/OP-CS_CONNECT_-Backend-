@@ -1,8 +1,8 @@
 import { db } from '../config/firebase.js';
 import { logger } from '../utils/logger.js';
 
-const SEED_VERSION = 3;
-const SEED_FLAG_PATH = '_meta/seed_v3_done';
+const SEED_VERSION = 4;
+const SEED_FLAG_PATH = '_meta/seed_v4_done';
 
 /**
  * Comprehensive seed data for SchoolSync
@@ -408,8 +408,174 @@ export const seedAllData = async () => {
     }
     logger.info('Student profiles seeded');
 
+    // ── 9. Exams and Questions ──
+    const exams = [
+      {
+        id: 'exam-101',
+        name: 'Mathematics Mid-Term Assessment',
+        classId: 'class-10-a',
+        class_name: '10-A',
+        subject: 'Mathematics',
+        createdBy: 'teacher-1',
+        teacher_name: 'Rajesh Kumar',
+        max_marks: 50,
+        duration_minutes: 60,
+        status: 'active',
+        type: 'written',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: 'exam-102',
+        name: 'Physics Quiz - Chapter 3',
+        classId: 'class-10-a',
+        class_name: '10-A',
+        subject: 'Physics',
+        createdBy: 'teacher-2',
+        teacher_name: 'James Anderson',
+        max_marks: 25,
+        duration_minutes: 30,
+        status: 'active',
+        type: 'mcq',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: 'exam-103',
+        name: 'Chemistry Practical Exam',
+        classId: 'class-10-a',
+        class_name: '10-A',
+        subject: 'Chemistry',
+        createdBy: 'teacher-1',
+        teacher_name: 'Rajesh Kumar',
+        max_marks: 40,
+        duration_minutes: 90,
+        status: 'active',
+        type: 'practical',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: 'exam-104',
+        name: 'English Grammar Test',
+        classId: 'class-10-a',
+        class_name: '10-A',
+        subject: 'English',
+        createdBy: 'teacher-3',
+        teacher_name: 'Emily Chen',
+        max_marks: 30,
+        duration_minutes: 45,
+        status: 'active',
+        type: 'mcq',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        id: 'exam-105',
+        name: 'Biology - Cell Division Quiz',
+        classId: 'class-10-a',
+        class_name: '10-A',
+        subject: 'Biology',
+        createdBy: 'teacher-3',
+        teacher_name: 'Emily Chen',
+        max_marks: 20,
+        duration_minutes: 30,
+        status: 'active',
+        type: 'mcq',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ];
+
+    for (const exam of exams) {
+      await db.ref(`exams/${exam.id}`).update(exam);
+    }
+    logger.info('Exams seeded');
+
+    const questions = [
+      // Mathematics - Quadratic Equations (exam-101)
+      { id: 'q-101-1', exam_id: 'exam-101', subject: 'Mathematics', class_name: '10-A', type: 'mcq', text: 'Which of the following is the standard form of a quadratic equation?', options: JSON.stringify(['ax + b = 0', 'ax² + bx + c = 0', 'a + bx + c = 0', 'ax³ + bx² + cx + d = 0']), correct_answer: 'ax² + bx + c = 0', marks: 2, created_at: new Date().toISOString() },
+      { id: 'q-101-2', exam_id: 'exam-101', subject: 'Mathematics', class_name: '10-A', type: 'mcq', text: 'Find the roots of x² - 5x + 6 = 0', options: JSON.stringify(['2 and 3', '1 and 6', '-2 and -3', '3 and 4']), correct_answer: '2 and 3', marks: 3, created_at: new Date().toISOString() },
+      { id: 'q-101-3', exam_id: 'exam-101', subject: 'Mathematics', class_name: '10-A', type: 'written', text: 'Solve by factorization: x² + 7x + 12 = 0. Show all steps.', correct_answer: 'x = -3, x = -4', marks: 5, created_at: new Date().toISOString() },
+      { id: 'q-101-4', exam_id: 'exam-101', subject: 'Mathematics', class_name: '10-A', type: 'mcq', text: 'The discriminant of 2x² - 4x + 2 = 0 is:', options: JSON.stringify(['16', '0', '8', '-8']), correct_answer: '0', marks: 2, created_at: new Date().toISOString() },
+      { id: 'q-101-5', exam_id: 'exam-101', subject: 'Mathematics', class_name: '10-A', type: 'written', text: 'Use the quadratic formula to solve: 2x² - 5x + 2 = 0', correct_answer: 'x = 2 or x = 0.5', marks: 5, created_at: new Date().toISOString() },
+
+      // Physics - Laws of Motion (exam-102)
+      { id: 'q-102-1', exam_id: 'exam-102', subject: 'Physics', class_name: '10-A', type: 'mcq', text: 'According to Newton\'s First Law, an object at rest will remain at rest unless acted upon by:', options: JSON.stringify(['Gravity', 'An external force', 'Internal forces', 'Friction only']), correct_answer: 'An external force', marks: 2, created_at: new Date().toISOString() },
+      { id: 'q-102-2', exam_id: 'exam-102', subject: 'Physics', class_name: '10-A', type: 'mcq', text: 'F = ma is Newton\'s Second Law, where F is force, m is mass, and a is:', options: JSON.stringify(['Area', 'Acceleration', 'Angle', 'Altitude']), correct_answer: 'Acceleration', marks: 2, created_at: new Date().toISOString() },
+      { id: 'q-102-3', exam_id: 'exam-102', subject: 'Physics', class_name: '10-A', type: 'mcq', text: 'If a body of mass 5 kg is accelerating at 3 m/s², the force is:', options: JSON.stringify(['15 N', '8 N', '2 N', '18 N']), correct_answer: '15 N', marks: 3, created_at: new Date().toISOString() },
+      { id: 'q-102-4', exam_id: 'exam-102', subject: 'Physics', class_name: '10-A', type: 'mcq', text: 'Newton\'s Third Law states that every action has:', options: JSON.stringify(['An equal reaction', 'A greater reaction', 'A smaller reaction', 'No reaction']), correct_answer: 'An equal reaction', marks: 3, created_at: new Date().toISOString() },
+
+      // Chemistry - Chemical Bonding (exam-103)
+      { id: 'q-103-1', exam_id: 'exam-103', subject: 'Chemistry', class_name: '10-A', type: 'mcq', text: 'Ionic bonds are formed by:', options: JSON.stringify(['Sharing of electrons', 'Transfer of electrons', 'Proton exchange', 'Neutron sharing']), correct_answer: 'Transfer of electrons', marks: 2, created_at: new Date().toISOString() },
+      { id: 'q-103-2', exam_id: 'exam-103', subject: 'Chemistry', class_name: '10-A', type: 'written', text: 'Write the electron dot structure for sodium chloride (NaCl) formation.', correct_answer: 'Na gives electron to Cl, forming Na+ and Cl-', marks: 5, created_at: new Date().toISOString() },
+      { id: 'q-103-3', exam_id: 'exam-103', subject: 'Chemistry', class_name: '10-A', type: 'mcq', text: 'Covalent bonds involve:', options: JSON.stringify(['Metal-metallic bonds', 'Sharing of electron pairs', 'Electron transfer', 'Electrostatic attraction']), correct_answer: 'Sharing of electron pairs', marks: 2, created_at: new Date().toISOString() },
+
+      // English - Grammar (exam-104)
+      { id: 'q-104-1', exam_id: 'exam-104', subject: 'English', class_name: '10-A', type: 'mcq', text: 'Identify the tense: "She has completed her homework."', options: JSON.stringify(['Simple Present', 'Present Perfect', 'Past Perfect', 'Future Perfect']), correct_answer: 'Present Perfect', marks: 2, created_at: new Date().toISOString() },
+      { id: 'q-104-2', exam_id: 'exam-104', subject: 'English', class_name: '10-A', type: 'mcq', text: 'Which sentence uses the correct article? "He is ___ honest man."', options: JSON.stringify(['a', 'an', 'the', 'no article']), correct_answer: 'an', marks: 2, created_at: new Date().toISOString() },
+
+      // Biology - Cell Division (exam-105)
+      { id: 'q-105-1', exam_id: 'exam-105', subject: 'Biology', class_name: '10-A', type: 'mcq', text: 'The process by which a cell divides into two identical daughter cells is called:', options: JSON.stringify(['Mitosis', 'Meiosis', 'Binary fission', 'Budding']), correct_answer: 'Mitosis', marks: 2, created_at: new Date().toISOString() },
+      { id: 'q-105-2', exam_id: 'exam-105', subject: 'Biology', class_name: '10-A', type: 'mcq', text: 'During which phase of mitosis do chromosomes align at the cell equator?', options: JSON.stringify(['Prophase', 'Metaphase', 'Anaphase', 'Telophase']), correct_answer: 'Metaphase', marks: 2, created_at: new Date().toISOString() },
+    ];
+
+    for (const q of questions) {
+      await db.ref(`questions/${q.id}`).update(q);
+    }
+    logger.info('Questions seeded');
+
+    // ── 10. AI Interactions for Admin Dashboard ──
+    const features = ['doubt_solver', 'essay_scorer', 'math_tutor', 'language_partner', 'study_planner'];
+    const models = ['cerebras', 'groq'];
+    const prompts = [
+      'Can you explain photosynthesis?',
+      'Help me with this quadratic equation: x² - 5x + 6 = 0',
+      'Write a short essay on climate change',
+      'What is the difference between mitosis and meiosis?',
+      'How do I prepare for my math exam?',
+      'Explain Newton\'s laws of motion',
+      'Help me understand chemical bonding',
+      'What are the types of sentences in English grammar?',
+    ];
+
+    const interactionSeeds = [];
+    for (let i = 0; i < 50; i++) {
+      const studentIds = ['student-1', 'student-2', 'student-3'];
+      const date = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
+      interactionSeeds.push({
+        id: `ai-int-${i}`,
+        user_id: studentIds[i % 3],
+        feature: features[i % features.length],
+        prompt: prompts[i % prompts.length],
+        response: 'Here\'s a detailed explanation based on your question...',
+        model: models[i % models.length],
+        prompt_tokens: 50 + Math.floor(Math.random() * 200),
+        completion_tokens: 100 + Math.floor(Math.random() * 500),
+        total_tokens: 150 + Math.floor(Math.random() * 700),
+        response_time: 800 + Math.floor(Math.random() * 2000),
+        created_at: date.toISOString(),
+      });
+    }
+    for (const interaction of interactionSeeds) {
+      await db.ref(`ai_interactions/${interaction.id}`).update(interaction);
+    }
+    logger.info('AI interactions seeded');
+
+    // ── 11. Communities for NexusHub ──
+    const communities = [
+      { id: 'club_stem', name: 'STEM Pioneers', type: 'STEM', color: '#6366f1', creator_id: 'admin-1', members: ['student-1', 'student-2', 'student-3', 'teacher-1'], channels: ['general', 'code-share', 'projects'], extensions: ['leaderboard'], created_at: new Date().toISOString() },
+      { id: 'club_sports', name: 'Athletics United', type: 'Sports', color: '#10b981', creator_id: 'admin-1', members: ['student-1', 'student-2'], channels: ['general', 'match-discussion'], extensions: [], created_at: new Date().toISOString() },
+      { id: 'club_arts', name: 'Creative Collective', type: 'Arts', color: '#f59e0b', creator_id: 'admin-1', members: ['student-3', 'teacher-3'], channels: ['general', 'gallery'], extensions: ['leaderboard'], created_at: new Date().toISOString() },
+      { id: 'club_social', name: 'Green Earth Initiative', type: 'Social', color: '#ef4444', creator_id: 'admin-1', members: ['student-1', 'student-3'], channels: ['general', 'volunteer'], extensions: [], created_at: new Date().toISOString() },
+    ];
+    for (const com of communities) {
+      await db.ref(`communities/${com.id}`).update(com);
+      await db.ref(`community_activity/${com.id}`).update({ points: Math.floor(Math.random() * 500) });
+    }
+    logger.info('Communities for NexusHub seeded');
+
     await db.ref(SEED_FLAG_PATH).set(SEED_VERSION);
-    logger.info('Comprehensive seed complete — all data created');
   } catch (error) {
     logger.error('Seed failed:', { message: error.message });
     throw error;
