@@ -1,36 +1,28 @@
 import admin from 'firebase-admin';
-import { env } from './env.js';
-import { logger } from '../utils/logger.js';
+import { readFileSync } from 'fs';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-// Initialize Firebase Admin SDK
-// Handle private key: if it has literal \n strings, convert them to actual newlines
-let privateKey = env.FIREBASE_PRIVATE_KEY.trim();
-if (!privateKey.includes('\n')) {
-  // If no actual newlines, try to replace escaped \n strings
-  privateKey = privateKey.replace(/\\n/g, '\n');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+let db = null;
+let auth = null;
+
+try {
+  const saPath = resolve(__dirname, '../service-account.json');
+  const serviceAccount = JSON.parse(readFileSync(saPath, 'utf8'));
+
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: serviceAccount.database_url || `https://${serviceAccount.project_id}-default-rtdb.firebaseio.com`,
+  });
+
+  db = admin.database();
+  auth = admin.auth();
+
+  console.log('Firebase Admin SDK initialized', { projectId: serviceAccount.project_id });
+} catch (err) {
+  console.warn('Firebase not configured (service-account.json not found or invalid):', err.message);
 }
 
-const serviceAccount = {
-  type: 'service_account',
-  project_id: env.FIREBASE_PROJECT_ID,
-  private_key_id: 'key-id',
-  private_key: privateKey,
-  client_email: env.FIREBASE_CLIENT_EMAIL,
-  client_id: 'client-id',
-  auth_uri: 'https://accounts.google.com/o/oauth2/auth',
-  token_uri: 'https://oauth2.googleapis.com/token',
-  auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
-};
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: env.FIREBASE_DATABASE_URL.trim(),
-});
-
-export const db = admin.database();
-export const auth = admin.auth();
-
-logger.info('Firebase Admin SDK initialized', {
-  projectId: env.FIREBASE_PROJECT_ID,
-  databaseUrl: env.FIREBASE_DATABASE_URL,
-});
+export { db, auth };
