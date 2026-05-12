@@ -353,6 +353,6 @@ export const seedExtendedData = async () => {
     logger.info('Extended seed complete!');
   } catch (error) {
     logger.error('Extended seed failed:', { message: error.message });
-    throw error;
+    // Don't throw — let server stay up in degraded mode
   }
 };

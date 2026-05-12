@@ -578,6 +578,6 @@ export const seedAllData = async () => {
     await db.ref(SEED_FLAG_PATH).set(SEED_VERSION);
   } catch (error) {
     logger.error('Seed failed:', { message: error.message });
-    throw error;
+    // Don't throw — let server stay up in degraded mode
   }
 };

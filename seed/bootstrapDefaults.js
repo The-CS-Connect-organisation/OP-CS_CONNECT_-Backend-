@@ -45,42 +45,54 @@ const provisionStreamUser = async (userId, name, role) => {
 };
 
 export const bootstrapDefaultUsers = async () => {
-  const flagSnap = await db.ref(BOOTSTRAP_FLAG_PATH).once('value');
-  if (flagSnap.val() === BOOTSTRAP_VERSION) {
-    logger.info('Bootstrap already completed — skipping');
+  try {
+    const flagSnap = await db.ref(BOOTSTRAP_FLAG_PATH).once('value');
+    if (flagSnap.val() === BOOTSTRAP_VERSION) {
+      logger.info('Bootstrap already completed — skipping');
+      return;
+    }
+  } catch (err) {
+    logger.warn('Bootstrap check failed (DB may be unavailable) — skipping bootstrap');
     return;
   }
 
   logger.info('Running first-time bootstrap — creating 15 demo users...');
 
   for (const entry of DEMO_USERS) {
-    const existing = await db.ref('users').orderByChild('email').equalTo(entry.email).once('value');
-    if (existing.exists()) {
-      logger.info(`User ${entry.email} already exists, skipping`);
-      continue;
+    try {
+      const existing = await db.ref('users').orderByChild('email').equalTo(entry.email).once('value');
+      if (existing.exists()) {
+        logger.info(`User ${entry.email} already exists, skipping`);
+        continue;
+      }
+
+      const passwordHash = await hash(entry.password, 12);
+      const userId = `${entry.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      await db.ref(`users/${userId}`).set({
+        id: userId,
+        name: entry.name,
+        email: entry.email,
+        role: entry.role,
+        is_active: true,
+        password_hash: passwordHash,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+
+      const streamUserId = userId.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 64);
+      await provisionStreamUser(streamUserId, entry.name, entry.role);
+
+      logger.info(`Created demo user: ${entry.email}`);
+    } catch (err) {
+      logger.warn(`Failed to create user ${entry.email} — skipping`, { message: err.message });
     }
-
-    const passwordHash = await hash(entry.password, 12);
-    const userId = `${entry.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-    await db.ref(`users/${userId}`).set({
-      id: userId,
-      name: entry.name,
-      email: entry.email,
-      role: entry.role,
-      is_active: true,
-      password_hash: passwordHash,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
-
-    // Provision in GetStream with sanitized ID
-    const streamUserId = userId.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 64);
-    await provisionStreamUser(streamUserId, entry.name, entry.role);
-
-    logger.info(`Created demo user: ${entry.email}`);
   }
 
-  await db.ref(BOOTSTRAP_FLAG_PATH).set(BOOTSTRAP_VERSION);
+  try {
+    await db.ref(BOOTSTRAP_FLAG_PATH).set(BOOTSTRAP_VERSION);
+  } catch (err) {
+    logger.warn('Could not set bootstrap flag', { message: err.message });
+  }
   logger.info('Bootstrap complete — 15 demo users created and provisioned in GetStream');
 };
