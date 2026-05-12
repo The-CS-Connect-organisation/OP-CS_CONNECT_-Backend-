@@ -1,8 +1,8 @@
 import { db } from '../config/firebase.js';
 import { logger } from '../utils/logger.js';
 
-const SEED_VERSION = 7;
-const SEED_FLAG_PATH = '_meta/seed_v7_done';
+const SEED_VERSION = 8;
+const SEED_FLAG_PATH = '_meta/seed_v8_done';
 
 /**
  * Extended seed data for SchoolSync
@@ -345,6 +345,111 @@ export const seedExtendedData = async () => {
     };
     await db.ref(`study_activity/student-1`).update(studyActivity);
     logger.info('Study activity seeded');
+
+    // ── 11. Subjects (K-12) ──
+    const subjects = [
+      { id: 'sub-math',    name: 'Mathematics',    code: 'MATH',    class_levels: ['1','2','3','4','5','6','7','8','9','10','11','12'], color: '#ef4444' },
+      { id: 'sub-eng',     name: 'English',         code: 'ENG',     class_levels: ['1','2','3','4','5','6','7','8','9','10','11','12'], color: '#3b82f6' },
+      { id: 'sub-hindi',   name: 'Hindi',           code: 'HIN',     class_levels: ['1','2','3','4','5','6','7','8','9','10','11','12'], color: '#f97316' },
+      { id: 'sub-science', name: 'Science',         code: 'SCI',     class_levels: ['1','2','3','4','5','6','7','8','9','10'],          color: '#10b981' },
+      { id: 'sub-sst',     name: 'Social Studies',  code: 'SST',     class_levels: ['6','7','8','9','10'],                            color: '#8b5cf6' },
+      { id: 'sub-physics', name: 'Physics',         code: 'PHY',     class_levels: ['9','10','11','12'],                              color: '#06b6d4' },
+      { id: 'sub-chem',    name: 'Chemistry',       code: 'CHEM',    class_levels: ['9','10','11','12'],                              color: '#a855f7' },
+      { id: 'sub-bio',     name: 'Biology',         code: 'BIO',     class_levels: ['9','10','11','12'],                              color: '#22c55e' },
+      { id: 'sub-cs',      name: 'Computer Science', code: 'CS',     class_levels: ['6','7','8','9','10','11','12'],                  color: '#0ea5e9' },
+      { id: 'sub-arts',    name: 'Art & Craft',     code: 'ART',     class_levels: ['1','2','3','4','5','6','7','8','9','10','11','12'], color: '#ec4899' },
+      { id: 'sub-pe',      name: 'Physical Ed.',    code: 'PE',      class_levels: ['1','2','3','4','5','6','7','8','9','10','11','12'], color: '#f59e0b' },
+      { id: 'sub-economics',name: 'Economics',      code: 'ECO',     class_levels: ['11','12'],                                      color: '#64748b' },
+      { id: 'sub-accountancy',name: 'Accountancy',   code: 'ACC',     class_levels: ['11','12'],                                      color: '#78716c' },
+      { id: 'sub-commerce', name: 'Commerce',       code: 'COM',     class_levels: ['11','12'],                                      color: '#84cc16' },
+    ];
+    for (const s of subjects) await db.ref(`subjects/${s.id}`).update({ ...s, created_at: new Date().toISOString() });
+    logger.info('Subjects seeded (K-12)');
+
+    // ── 12. Class Rooms (K-12) ──
+    const classes = [];
+    for (let grade = 1; grade <= 12; grade++) {
+      for (const section of ['A', 'B']) {
+        const classId = `class-${grade}-${section.toLowerCase()}`;
+        classes.push({
+          id: classId,
+          name: `${grade}-${section}`,
+          grade: String(grade),
+          section,
+          class_teacher_id: grade <= 5 ? 'teacher-1' : grade <= 8 ? 'teacher-2' : 'teacher-3',
+          created_at: new Date().toISOString(),
+        });
+      }
+    }
+    for (const c of classes) await db.ref(`class_rooms/${c.id}`).update(c);
+    logger.info('Class rooms seeded (K-12, 24 classes)');
+
+    // ── 13. Teacher → Subjects mapping (each teacher 2 subjects) ──
+    const teacherSubjects = [
+      { teacher_id: 'teacher-1', subjects: ['sub-math', 'sub-chem'],    class_ids: ['class-10-a','class-10-b','class-11-a','class-11-b'] },
+      { teacher_id: 'teacher-2', subjects: ['sub-physics', 'sub-cs'],   class_ids: ['class-10-a','class-10-b','class-12-a','class-12-b'] },
+      { teacher_id: 'teacher-3', subjects: ['sub-eng', 'sub-sst'],      class_ids: ['class-9-a','class-9-b','class-8-a','class-8-b'] },
+    ];
+    for (const ts of teacherSubjects) await db.ref(`teacher_subjects/${ts.teacher_id}`).update({ ...ts, updated_at: new Date().toISOString() });
+    logger.info('Teacher-subject mappings seeded');
+
+    // ── 14. Student → Subject enrollment ──
+    const studentSubjects = [
+      { student_id: 'student-1', subjects: ['sub-math','sub-physics','sub-chem','sub-bio','sub-eng','sub-sst','sub-cs'], class_id: 'class-10-a' },
+      { student_id: 'student-2', subjects: ['sub-math','sub-physics','sub-chem','sub-bio','sub-eng','sub-sst','sub-cs'], class_id: 'class-10-a' },
+      { student_id: 'student-3', subjects: ['sub-math','sub-physics','sub-chem','sub-bio','sub-eng','sub-sst','sub-cs'], class_id: 'class-10-a' },
+    ];
+    for (const ss of studentSubjects) await db.ref(`student_subjects/${ss.student_id}`).update({ ...ss, updated_at: new Date().toISOString() });
+    logger.info('Student-subject enrollments seeded');
+
+    // ── 15. Timetable for 120 school days (Mon-Fri, 8 periods) ──
+    const periodTimings = [
+      { period: 1, start: '08:00', end: '08:45' },
+      { period: 2, start: '08:45', end: '09:30' },
+      { period: 3, start: '09:30', end: '10:15' },
+      { period: 4, start: '10:15', end: '11:00' },
+      { period: 5, start: '11:00', end: '11:45' },
+      { period: 6, start: '11:45', end: '12:30' },
+      { period: 7, start: '12:30', end: '13:15' },
+      { period: 8, start: '13:15', end: '14:00' },
+    ];
+    // 5-day rotating schedule (one row per week day Mon-Fri)
+    const class10aSchedule = [
+      ['sub-math','sub-eng','sub-science','sub-hindi','sub-cs','sub-arts','sub-pe',null],
+      ['sub-eng','sub-chem','sub-physics','sub-math','sub-eng','sub-sst','sub-math',null],
+      ['sub-science','sub-math','sub-hindi','sub-chem','sub-physics','sub-cs','sub-sst',null],
+      ['sub-hindi','sub-physics','sub-math','sub-eng','sub-sst','sub-chem','sub-arts',null],
+      ['sub-physics','sub-science','sub-eng','sub-math','sub-chem','sub-sst','sub-cs',null],
+    ];
+    const days = [];
+    const current = new Date('2026-05-11');
+    let d = new Date(current);
+    while (days.length < 120) {
+      if (d.getDay() >= 1 && d.getDay() <= 5) days.push(new Date(d));
+      d.setDate(d.getDate() + 1);
+    }
+    const class10aTimetable = {};
+    days.forEach((dayDate, idx) => {
+      const dateStr = dayDate.toISOString().split('T')[0];
+      const dayOfWeek = dayDate.getDay() - 1; // 0=Mon
+      const row = class10aSchedule[dayOfWeek];
+      class10aTimetable[dateStr] = { day: ['Monday','Tuesday','Wednesday','Thursday','Friday'][dayOfWeek], periods: [] };
+      for (let p = 0; p < 8; p++) {
+        const subjId = row[p] || null;
+        const subj = subjects.find(s => s.id === subjId);
+        const tm = teacherSubjects.find(t => t.subjects.includes(subjId));
+        class10aTimetable[dateStr].periods.push({
+          period: p + 1,
+          start: periodTimings[p].start,
+          end: periodTimings[p].end,
+          subject_id: subjId,
+          subject_name: subj?.name || '',
+          teacher_id: tm?.teacher_id || null,
+        });
+      }
+    });
+    await db.ref('timetables/class-10-a').update(class10aTimetable);
+    logger.info(`Timetable seeded: 120 school days, 8 periods for class-10-a`);
 
     await db.ref(SEED_FLAG_PATH).set(SEED_VERSION);
     logger.info('Extended seed complete!');
