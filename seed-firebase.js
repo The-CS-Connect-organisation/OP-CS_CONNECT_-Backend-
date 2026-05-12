@@ -43,8 +43,8 @@ function schoolDays120() {
   return days;
 }
 
-const SEED_VERSION = 10;
-const SEED_FLAG_PATH = '_meta/seed_v10_done';
+const SEED_VERSION = 11;
+const SEED_FLAG_PATH = '_meta/seed_v11_done';
 
 const seedFirebaseData = async function() {
   // Check if already seeded
@@ -76,15 +76,15 @@ const seedFirebaseData = async function() {
 
   const students = [
     { id: 'student-1', name: 'Priya Sharma',  class: '10-A', class_id: 'class-10-a', email: 'student@schoolsync.edu' },
-    { id: 'student-2', name: 'Aarav Menon',   class: '10-A', class_id: 'class-10-a', email: 'student2@schoolsync.edu' },
+    { id: 'student-2', name: 'Aarav Menon',  class: '10-A', class_id: 'class-10-a', email: 'student2@schoolsync.edu' },
     { id: 'student-3', name: 'Ishita Kapoor', class: '10-A', class_id: 'class-10-a', email: 'student3@schoolsync.edu' },
-    { id: 'student-4', name: 'Rohan Gupta',  class: '10-B', class_id: 'class-10-b', email: 'student4@schoolsync.edu' },
+    { id: 'student-4', name: 'Rohan Gupta',   class: '10-B', class_id: 'class-10-b', email: 'student4@schoolsync.edu' },
     { id: 'student-5', name: 'Ananya Singh',  class: '10-B', class_id: 'class-10-b', email: 'student5@schoolsync.edu' },
-    { id: 'student-6', name: 'Vivaan Patel',  class: '9-A',  class_id: 'class-9-a',  email: 'student6@schoolsync.edu' },
-    { id: 'student-7', name: 'Diya Sharma',   class: '9-A',  class_id: 'class-9-a',  email: 'student7@schoolsync.edu' },
-    { id: 'student-8', name: 'Arjun Reddy',   class: '11-A', class_id: 'class-11-a', email: 'student8@schoolsync.edu' },
-    { id: 'student-9', name: 'Myra Nair',     class: '11-A', class_id: 'class-11-a', email: 'student9@schoolsync.edu' },
-    { id: 'student-10',name: 'Kabir Mehta',   class: '12-A', class_id: 'class-12-a', email: 'student10@schoolsync.edu' },
+    { id: 'student-6', name: 'Vivaan Patel',  class: '10-B', class_id: 'class-10-b', email: 'student6@schoolsync.edu' },
+    { id: 'student-7', name: 'Diya Sharma',   class: '10-A', class_id: 'class-10-a', email: 'student7@schoolsync.edu' },
+    { id: 'student-8', name: 'Arjun Reddy',   class: '10-B', class_id: 'class-10-b', email: 'student8@schoolsync.edu' },
+    { id: 'student-9', name: 'Myra Nair',     class: '10-A', class_id: 'class-10-a', email: 'student9@schoolsync.edu' },
+    { id: 'student-10',name: 'Kabir Mehta',   class: '10-B', class_id: 'class-10-b', email: 'student10@schoolsync.edu' },
   ];
 
   const teachers = [
