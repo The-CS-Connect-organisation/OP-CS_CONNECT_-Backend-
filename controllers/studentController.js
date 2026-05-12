@@ -28,6 +28,8 @@ export const getStudentProfile = asyncHandler(async (req, res) => {
       phone: user.phone || '',
       avatar: user.avatar || '',
       grade: profile?.grade || '',
+      class: profile?.class || profile?.grade || '',
+      classId: profile?.class_id || profile?.classId || profile?.class || profile?.grade || '',
       section: profile?.section || '',
       rollNumber: profile?.roll_number || '',
       admissionNo: profile?.admission_no || '',
@@ -287,18 +289,34 @@ export const getStudentNotifications = asyncHandler(async (req, res) => {
 
 export const getStudentTimetable = asyncHandler(async (req, res) => {
   const studentId = req.user.id;
-
   const profile = await getRecord(`student_profiles/${studentId}`);
-  const rawClassId = profile?.class_id || `${profile?.grade}_${profile?.section}`;
+
   const normalizeClassId = (id) => {
     if (!id) return id;
     const normalized = String(id).replace(/^(\d+)-([A-Z])$/i, 'class-$1-$2').toLowerCase();
     return normalized === String(id).toLowerCase() ? id : normalized;
   };
 
-  const timetable = await getRecord(`timetables/${normalizeClassId(rawClassId)}`);
+  // Priority: class_id > normalized grade_section > try common class patterns
+  const rawClassId = profile?.class_id || normalizeClassId(`${profile?.grade}_${profile?.section}`);
+  const timetableKeys = [rawClassId, normalizeClassId(rawClassId), 'class-10-a', 'class-10-b'];
 
-  res.json({ success: true, timetable: timetable || {}, entries: Object.values(timetable || {}) });
+  let timetable = null;
+  for (const key of timetableKeys) {
+    if (!key) continue;
+    const tt = await getRecord(`timetables/${key}`);
+    if (tt && Object.keys(tt).length > 0) {
+      timetable = tt;
+      break;
+    }
+  }
+
+  // If timetable.entries is an array (flat format), use it directly
+  const entries = Array.isArray(timetable?.entries)
+    ? timetable.entries
+    : Object.values(timetable || {}).filter(v => v && typeof v === 'object' && v.day);
+
+  res.json({ success: true, timetable: timetable || {}, entries });
 });
 
 export default {

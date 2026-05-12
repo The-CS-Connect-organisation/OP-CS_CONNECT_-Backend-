@@ -583,18 +583,29 @@ export const getTimetable = asyncHandler(async (req, res) => {
     // Try to get the student's class from their profile
     try {
       const profile = await getRecord(`student_profiles/${req.user.id}`);
-      if (profile?.class) classId = profile.class;
+      if (profile?.class_id) classId = profile.class_id;
+      else if (profile?.class) classId = profile.class;
+      else if (profile?.grade) classId = `class-${profile.grade}-${profile.section || 'a'}`;
     } catch {}
   }
   if (!classId) throw new ApiError(400, 'classId is required');
 
-  // Normalize classId so "10-A" and "class-10-a" both resolve to same key
-  const normalizedClassId = normalizeClassId(classId);
+  const normalizeClassId = (id) => {
+    if (!id) return id;
+    const normalized = String(id).replace(/^(\d+)-([A-Z])$/i, 'class-$1-$2').toLowerCase();
+    return normalized === String(id).toLowerCase() ? id : normalized;
+  };
 
-  // Try normalized key first, then exact key
-  let timetable = await getRecord(`timetables/${normalizedClassId}`);
-  if (!timetable) {
-    timetable = await getRecord(`timetables/${classId}`);
+  // Try multiple key patterns
+  const keys = [classId, normalizeClassId(classId), 'class-10-a', 'class-10-b'].filter(Boolean);
+  let timetable = null;
+  for (const key of keys) {
+    const tt = await getRecord(`timetables/${key}`);
+    if (tt && Object.keys(tt).length > 0) {
+      timetable = tt;
+      classId = key;
+      break;
+    }
   }
 
   if (!timetable) return res.json({ success: true, entries: [] });
@@ -603,7 +614,7 @@ export const getTimetable = asyncHandler(async (req, res) => {
     ? JSON.parse(timetable.entries)
     : timetable.entries;
 
-  res.json({ success: true, classId: normalizedClassId, entries: entries || [] });
+  res.json({ success: true, classId, entries: entries || [] });
 });
 
 export const saveTimetable = asyncHandler(async (req, res) => {
@@ -705,6 +716,7 @@ export const getExpandedStudentProfile = asyncHandler(async (req, res) => {
       
       // Academic Information
       class: profile?.grade || profile?.class || '',
+      classId: profile?.class_id || profile?.classId || '',
       section: profile?.section || '',
       
       // Identification
