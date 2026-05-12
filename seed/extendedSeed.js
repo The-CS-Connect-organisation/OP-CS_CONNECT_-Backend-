@@ -1,8 +1,8 @@
 import { db } from '../config/firebase.js';
 import { logger } from '../utils/logger.js';
 
-const SEED_VERSION = 6;
-const SEED_FLAG_PATH = '_meta/seed_v6_done';
+const SEED_VERSION = 7;
+const SEED_FLAG_PATH = '_meta/seed_v7_done';
 
 /**
  * Extended seed data for SchoolSync
@@ -19,32 +19,22 @@ export const seedExtendedData = async () => {
   logger.info('Running extended seed...');
 
   try {
-    // ── 1. Create/Update Student Profile (linked to student-1) ──
-    const studentProfile1 = {
-      id: 'sp-1',
-      user_id: 'student-1',
-      grade: '10',
-      section: 'A',
-      roll_number: '01',
-      admission_no: 'ADM-2022-001847',
-      date_of_birth: '2008-03-15',
-      blood_group: 'O+',
-      religion: 'Hindu',
-      nationality: 'Indian',
-      mother_id: 'mother-1',
-      father_id: 'father-1',
-      aadhar_number: 'XXXX-XXXX-9012',
-      pen: 'PEN-2022-847562',
-      apaar_id: 'APAAR-2022-847562-IN',
-      subjects: ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography'],
-      attendance_percent: 95,
-      xp: 450,
-      badges: ['Top Scorer', 'Early Bird'],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    await db.ref(`student_profiles/sp-1`).update(studentProfile1);
-    logger.info('Student profile sp-1 updated');
+    // ── 1. Create/Update Student Profiles (keyed by user_id for direct lookup) ──
+    const studentProfiles = [
+      { key: 'student-1', user_id: 'student-1', grade: '10', section: 'A', roll_number: '01', class_id: 'class-10-a', class: '10-A', admission_no: 'ADM-2022-001847', date_of_birth: '2008-03-15', blood_group: 'O+', religion: 'Hindu', nationality: 'Indian', mother_id: 'mother-1', father_id: 'father-1', subjects: ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography'], attendance_percent: 95, xp: 450, badges: ['Top Scorer', 'Early Bird'] },
+      { key: 'student-2', user_id: 'student-2', grade: '10', section: 'A', roll_number: '02', class_id: 'class-10-a', class: '10-A', admission_no: 'ADM-2022-001848', date_of_birth: '2008-07-22', blood_group: 'B+', religion: 'Hindu', nationality: 'Indian', subjects: ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography'], attendance_percent: 98, xp: 620, badges: ['Top Scorer', 'Streak Master'] },
+      { key: 'student-3', user_id: 'student-3', grade: '10', section: 'A', roll_number: '03', class_id: 'class-10-a', class: '10-A', admission_no: 'ADM-2022-001849', date_of_birth: '2008-01-10', blood_group: 'A+', religion: 'Christian', nationality: 'Indian', subjects: ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography'], attendance_percent: 88, xp: 280, badges: [] },
+    ];
+
+    for (const sp of studentProfiles) {
+      const { key, ...data } = sp;
+      await db.ref(`student_profiles/${key}`).update({
+        ...data,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    }
+    logger.info('Student profiles seeded with user_id as key');
 
     // ── 2. Create Parent Records ──
     const mother = {
@@ -132,60 +122,58 @@ export const seedExtendedData = async () => {
     }
     logger.info('Attendance records seeded');
 
-    // ── 4. Announcements ──
+    // ── 4. Announcements (50 items linked to assignments) ──
     const announcements = [
-      {
-        id: 'ann-1',
-        title: 'Mid-Term Examination Schedule Released',
-        body: 'The mid-term examination schedule has been published. Please check the exam portal for detailed timings and seating arrangements. All students must carry their school ID cards.',
-        category: 'exam',
-        scope: 'all',
-        class_id: null,
-        created_by: 'admin-1',
-        pinned: true,
-        priority: 'high',
-        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: 'ann-2',
-        title: 'Annual Sports Day - Registrations Open',
-        body: 'Annual Sports Day will be held on May 25th. Students can register for various events including athletics, team sports, and creative activities. Last date for registration is May 18th.',
-        category: 'event',
-        scope: 'all',
-        class_id: null,
-        created_by: 'admin-1',
-        pinned: true,
-        priority: 'medium',
-        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: 'ann-3',
-        title: 'Chemistry Lab Safety Guidelines Updated',
-        body: 'Updated safety guidelines for chemistry practicals have been posted. All students must review these before attending the upcoming practical examination.',
-        category: 'academic',
-        scope: 'class',
-        class_id: 'class-10-a',
-        created_by: 'teacher-1',
-        pinned: false,
-        priority: 'low',
-        created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: 'ann-4',
-        title: 'Fee Payment Reminder - Final Due Date',
-        body: 'This is a reminder that the second term fee payment is due by May 15th. Parents who have not yet paid can use the online payment portal or visit the school office.',
-        category: 'administrative',
-        scope: 'all',
-        class_id: null,
-        created_by: 'admin-1',
-        pinned: false,
-        priority: 'high',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
+      { id: 'ann-1', title: 'Mid-Term Examination Schedule Released', body: 'The mid-term examination schedule has been published. Please check the exam portal for detailed timings and seating arrangements. All students must carry their school ID cards.', category: 'exam', scope: 'all', class_id: null, created_by: 'admin-1', pinned: true, priority: 'high', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-2', title: 'Annual Sports Day - Registrations Open', body: 'Annual Sports Day will be held on May 25th. Students can register for various events including athletics, team sports, and creative activities. Last date for registration is May 18th.', category: 'event', scope: 'all', class_id: null, created_by: 'admin-1', pinned: true, priority: 'medium', created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-3', title: 'Chemistry Lab Safety Guidelines Updated', body: 'Updated safety guidelines for chemistry practicals have been posted. All students must review these before attending the upcoming practical examination.', category: 'academic', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-1', pinned: false, priority: 'low', created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-4', title: 'Fee Payment Reminder - Final Due Date', body: 'This is a reminder that the second term fee payment is due by May 15th. Parents who have not yet paid can use the online payment portal or visit the school office.', category: 'administrative', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'high', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-5', title: 'Physics Assignment Due - Motion and Velocity Lab Report', body: 'Submit your lab report on motion and velocity by May 20th. Refer to assignment asgn-1001 for details.', category: 'academic', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-1', pinned: false, priority: 'high', assignment_id: 'asgn-1001', created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-6', title: 'Mathematics Quiz Tomorrow - Chapter 5', body: 'There will be a short quiz on Chapter 5 (Algebra) tomorrow. Prepare all formulas and practice problems from the textbook.', category: 'exam', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-1', pinned: false, priority: 'high', created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-7', title: 'School Holiday - Independence Day', body: 'School will remain closed on August 15th on account of Independence Day. Regular classes resume from August 16th.', category: 'holiday', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-8', title: 'English Essay Submission Reminder', body: 'Your essay on digital transformation is due in 2 days. Check assignment asgn-1004 on the portal for guidelines.', category: 'reminder', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-3', pinned: false, priority: 'high', assignment_id: 'asgn-1004', created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-9', title: 'Chemistry Lab Practical Examination', body: 'The chemistry practical examination will be conducted on May 22nd. Bring your lab coat and safety goggles. Practical assignment asgn-1003 covers all required experiments.', category: 'exam', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-1', pinned: false, priority: 'high', assignment_id: 'asgn-1003', created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-10', title: 'Computer Science Workshop Registration', body: 'A 3-day workshop on Python programming starts next week. Limited seats available. Register through the club portal.', category: 'event', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-11', title: 'Biology Field Trip to City Botanical Garden', body: 'Class 10 students are invited to a field trip on May 28th. Carry your field study notebook and water bottle. Permission slips due by May 20th.', category: 'event', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-3', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-12', title: 'Mathematics Assignment - Linear Equations', body: 'Complete exercises 1-20 from Chapter 6 on Linear Equations. Due date: May 18th.', category: 'academic', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-1', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-13', title: 'Annual Day Rehearsal Schedule', body: 'Annual day rehearsals begin from May 16th. Check the notice board for your stage slot and costume requirements.', category: 'schedule', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-14', title: 'Physics Test Results Released', body: 'Results of the Physics test conducted last week are now available on the student portal. Check your marks and contact the teacher for re-evaluation.', category: 'academic', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-2', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-15', title: 'Library Hours Extended During Exams', body: 'The library will remain open until 8 PM on all weekdays during the examination period for student reference.', category: 'administrative', scope: 'all', class_id: null, created_by: 'librarian-1', pinned: false, priority: 'low', created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-16', title: 'History Project Submission - Ancient Civilizations', body: 'Submit your group project on ancient civilizations by May 25th. Reference assignment asgn-1002 for requirements.', category: 'academic', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-3', pinned: false, priority: 'high', assignment_id: 'asgn-1002', created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-17', title: 'Class 10 Toppers Felicitation Ceremony', body: 'Top performers from the previous term will be felicitated on May 30th. Parents are invited to attend the ceremony at 10 AM in the main auditorium.', category: 'achievement', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-18', title: 'Bus Route Timings Updated', body: 'New bus timings have been uploaded to the parent portal. Please review and inform the transport office of any conflicts.', category: 'administrative', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'high', created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-19', title: 'Urgent: Chemistry Lab Safety Incident Report', body: 'A minor chemical spill was reported in Lab 3. All students must strictly follow safety protocols during practicals. New guidelines posted.', category: 'urgent', scope: 'class', class_id: 'class-10-a', created_by: 'admin-1', pinned: false, priority: 'high', created_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-20', title: 'PTM Date Announced - May 28th', body: 'Parent-Teacher Meeting for Term 2 will be held on May 28th from 9 AM to 2 PM. Parents must carry the progress report card.', category: 'administrative', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'high', created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-21', title: 'Yoga and Meditation Workshop', body: 'A wellness workshop on yoga and meditation will be conducted on May 24th for all students. Sign up through the student portal.', category: 'event', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'low', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-22', title: 'Geography Assignment - Climate Change Report', body: 'Prepare a 5-page report on climate change impacts. Submission deadline: May 22nd.', category: 'academic', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-3', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-23', title: 'Mathematics Chapter Test - May 20th', body: 'Chapter test on Trigonometry will be conducted on May 20th. Focus on formulas and application problems.', category: 'exam', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-1', pinned: false, priority: 'high', created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-24', title: 'School Magazine Submission Open', body: 'Submit your poems, short stories, and articles for the school magazine by May 31st. Email to magazine@schoolsync.edu.', category: 'event', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'low', created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-25', title: 'Health Camp - Eye and Dental Checkup', body: 'Free health checkup camp on May 26th in the school auditorium. All students are encouraged to participate.', category: 'health', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-26', title: 'Physics Assignment Due - Optics Lab', body: 'Submit your optics lab assignment covering reflection and refraction experiments. Due: May 21st.', category: 'academic', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-2', pinned: false, priority: 'high', created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-27', title: 'Computer Lab Upgradation Complete', body: 'The computer lab has been upgraded with new systems and software. Lab access resumes from May 16th.', category: 'administrative', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'low', created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-28', title: 'English Grammar Workshop', body: 'An interactive grammar workshop for Classes 9 and 10 on May 23rd. Register at the reception.', category: 'event', scope: 'all', class_id: null, created_by: 'teacher-3', pinned: false, priority: 'low', created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-29', title: 'Scholarship Applications Open', body: 'Applications for the merit scholarship are now open. Submit forms with required documents by May 25th.', category: 'administrative', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'high', created_at: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-30', title: 'Mandatory Assembly - Monday', body: 'All students must attend the Monday assembly without fail. Formations begin at 8:00 AM sharp.', category: 'schedule', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-31', title: 'Physics Olympiad Registration', body: 'National Physics Olympiad registrations are open. Interested students should contact the physics department by May 20th.', category: 'event', scope: 'all', class_id: null, created_by: 'teacher-2', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-32', title: 'Biology Diagrams Assignment', body: 'Draw and label diagrams of the human digestive system. Submission via portal by May 19th.', category: 'academic', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-3', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-33', title: 'Diwali Holiday Announcement', body: 'School will remain closed from November 1st to 7th for Diwali festivities. Classes resume on November 8th.', category: 'holiday', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'high', created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-34', title: 'Mathematics Remedial Classes', body: 'Extra mathematics classes for weak students every Saturday 9-11 AM. Meet teacher-1 in Room 201.', category: 'academic', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-1', pinned: false, priority: 'low', created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-35', title: 'Fire Drill Scheduled', body: 'A mandatory fire safety drill will be conducted on May 24th at 10 AM. Follow all safety instructions.', category: 'urgent', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'high', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-36', title: 'Chemistry Mole Concept Test', body: 'Test on mole concept and stoichiometry on May 19th. Prepare from Chapter 3 textbook.', category: 'exam', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-1', pinned: false, priority: 'high', created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-37', title: 'Student Council Elections', body: 'Student council elections for the academic year will be held on May 27th. Nomination forms available at admin office.', category: 'administrative', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-38', title: 'Science Exhibition Entries Invited', body: 'Annual science exhibition on June 5th. Submit your project proposals by May 22nd. Categories: physics, chemistry, biology, environmental science.', category: 'event', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-39', title: 'English Speaking Competition', body: 'Inter-class English elocution competition on May 29th. Topic: "Technology in Education". Register by May 23rd.', category: 'event', scope: 'all', class_id: null, created_by: 'teacher-3', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-40', title: 'Attendance Shortfall Warning', body: 'Students with attendance below 75% have been flagged. Parents will be contacted. Ensure regular school attendance.', category: 'urgent', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'high', created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-41', title: 'Geography Map Work Submission', body: 'Submit the filled outline maps of India and world continents by May 18th.', category: 'academic', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-3', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-42', title: 'Physics Periodic Motion Assignment', body: 'Complete the worksheet on simple harmonic motion. Reference textbook Chapter 8. Due: May 23rd.', category: 'academic', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-2', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-43', title: 'School Uniform Guidelines Updated', body: 'New uniform guidelines have been issued. Full details available on the parent portal. Implementation from June 1st.', category: 'administrative', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'low', created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-44', title: 'Art and Craft Exhibition', body: 'Showcase your paintings, sketches, and craft work in the annual exhibition. Submit entries by May 24th.', category: 'event', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'low', created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-45', title: 'Mathematics Model Paper Released', body: 'Sample model question papers for the annual exam are now available in the student portal.', category: 'exam', scope: 'all', class_id: null, created_by: 'teacher-1', pinned: false, priority: 'high', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-46', title: 'History Source Analysis Assignment', body: 'Write a 3-page analysis of primary sources from the Indian independence movement. Due May 24th.', category: 'academic', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-3', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-47', title: 'Water Conservation Drive', body: 'School is launching a water conservation campaign. Form groups and submit proposals by May 26th.', category: 'event', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'low', created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-48', title: 'Class Photo Day - May 29th', body: 'Individual and class photographs will be taken on May 29th. Wear clean uniform and be present on time.', category: 'schedule', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'medium', created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-49', title: 'Chemistry IUPAC Nomenclature Test', body: 'Quiz on IUPAC naming conventions for organic compounds on May 21st. Practice from handout provided.', category: 'exam', scope: 'class', class_id: 'class-10-a', created_by: 'teacher-1', pinned: false, priority: 'high', created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
+      { id: 'ann-50', title: 'Semester Fee Payment Window Closing', body: 'Last date to pay semester fees without penalty is May 15th. Pay online or at the accounts office before 4 PM.', category: 'administrative', scope: 'all', class_id: null, created_by: 'admin-1', pinned: false, priority: 'high', created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), updated_at: new Date().toISOString() },
     ];
 
     for (const ann of announcements) {
@@ -277,26 +265,26 @@ export const seedExtendedData = async () => {
     }
     logger.info('Submissions seeded');
 
-    // ── 7. Update user records with proper names ──
+    // ── 7. Update user records with proper names and profile images ──
     const users = [
-      { id: 'student-1', name: 'Priya Sharma',    email: 'student@schoolsync.edu',    phone: '+919876543210', class: '10-A' },
-      { id: 'student-2', name: 'Aarav Menon',     email: 'student2@schoolsync.edu',   phone: '+919876543220', class: '10-A' },
-      { id: 'student-3', name: 'Ishita Kapoor',   email: 'student3@schoolsync.edu',   phone: '+919876543230', class: '10-A' },
-      { id: 'teacher-1', name: 'Rajesh Kumar',   email: 'teacher@schoolsync.edu',   phone: '+919876543240', department: 'Mathematics', subjects: ['Mathematics', 'Chemistry'] },
-      { id: 'teacher-2', name: 'James Anderson', email: 'teacher2@schoolsync.edu',  phone: '+919876543250', department: 'Physics', subjects: ['Physics'] },
-      { id: 'teacher-3', name: 'Emily Chen',     email: 'teacher3@schoolsync.edu',  phone: '+919876543260', department: 'Languages', subjects: ['English', 'Biology', 'History'] },
-      { id: 'admin-1',   name: 'Alicia Morgan',   email: 'admin@schoolsync.edu',     phone: '+919876543299' },
-      { id: 'admin-2',   name: 'Rahul Venkat',    email: 'admin2@schoolsync.edu',    phone: '+919876543298' },
-      { id: 'admin-3',   name: 'Neha Kapoor',     email: 'admin3@schoolsync.edu',    phone: '+919876543297' },
-      { id: 'driver-1',  name: 'Amit Patel',     email: 'driver@schoolsync.edu',    phone: '+919876543280' },
-      { id: 'driver-2',  name: 'Suresh Singh',   email: 'driver2@schoolsync.edu',   phone: '+919876543281' },
-      { id: 'driver-3',  name: 'Mohan Das',     email: 'driver3@schoolsync.edu',   phone: '+919876543282' },
-      { id: 'parent-1',  name: 'Vikram Singh',   email: 'parent@schoolsync.edu',    phone: '+919876543211' },
-      { id: 'parent-2',  name: 'Priya Menon',    email: 'parent2@schoolsync.edu',   phone: '+919876543212' },
-      { id: 'parent-3',  name: 'Deepak Verma',   email: 'parent3@schoolsync.edu',   phone: '+919876543213' },
-      { id: 'librarian-1', name: 'Fatima Ansari', email: 'librarian@schoolsync.edu', phone: '+919876543250' },
-      { id: 'librarian-2', name: 'Sanjay Reddy', email: 'librarian2@schoolsync.edu', phone: '+919876543251' },
-      { id: 'librarian-3', name: 'Nisha Gupta', email: 'librarian3@schoolsync.edu', phone: '+919876543252' },
+      { id: 'student-1', name: 'Priya Sharma',    email: 'student@schoolsync.edu',    phone: '+919876543210', class: '10-A', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=priya' },
+      { id: 'student-2', name: 'Aarav Menon',     email: 'student2@schoolsync.edu',   phone: '+919876543220', class: '10-A', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=aarav' },
+      { id: 'student-3', name: 'Ishita Kapoor',   email: 'student3@schoolsync.edu',   phone: '+919876543230', class: '10-A', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ishita' },
+      { id: 'teacher-1', name: 'Rajesh Kumar',   email: 'teacher@schoolsync.edu',   phone: '+919876543240', department: 'Mathematics', subjects: ['Mathematics', 'Chemistry'], avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=rajesh' },
+      { id: 'teacher-2', name: 'James Anderson', email: 'teacher2@schoolsync.edu',  phone: '+919876543250', department: 'Physics', subjects: ['Physics'], avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=james' },
+      { id: 'teacher-3', name: 'Emily Chen',     email: 'teacher3@schoolsync.edu',  phone: '+919876543260', department: 'Languages', subjects: ['English', 'Biology', 'History'], avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=emily' },
+      { id: 'admin-1',   name: 'Alicia Morgan',   email: 'admin@schoolsync.edu',     phone: '+919876543299', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=alicia' },
+      { id: 'admin-2',   name: 'Rahul Venkat',    email: 'admin2@schoolsync.edu',    phone: '+919876543298', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=rahul' },
+      { id: 'admin-3',   name: 'Neha Kapoor',     email: 'admin3@schoolsync.edu',    phone: '+919876543297', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=neha' },
+      { id: 'driver-1',  name: 'Amit Patel',     email: 'driver@schoolsync.edu',    phone: '+919876543280', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=amit' },
+      { id: 'driver-2',  name: 'Suresh Singh',   email: 'driver2@schoolsync.edu',   phone: '+919876543281', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=suresh' },
+      { id: 'driver-3',  name: 'Mohan Das',     email: 'driver3@schoolsync.edu',   phone: '+919876543282', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=mohan' },
+      { id: 'parent-1',  name: 'Vikram Singh',   email: 'parent@schoolsync.edu',    phone: '+919876543211', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=vikram' },
+      { id: 'parent-2',  name: 'Priya Menon',    email: 'parent2@schoolsync.edu',   phone: '+919876543212', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=priya_m' },
+      { id: 'parent-3',  name: 'Deepak Verma',   email: 'parent3@schoolsync.edu',   phone: '+919876543213', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=deepak' },
+      { id: 'librarian-1', name: 'Fatima Ansari', email: 'librarian@schoolsync.edu', phone: '+919876543250', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=fatima' },
+      { id: 'librarian-2', name: 'Sanjay Reddy', email: 'librarian2@schoolsync.edu', phone: '+919876543251', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sanjay' },
+      { id: 'librarian-3', name: 'Nisha Gupta', email: 'librarian3@schoolsync.edu', phone: '+919876543252', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=nisha' },
     ];
 
     for (const user of users) {

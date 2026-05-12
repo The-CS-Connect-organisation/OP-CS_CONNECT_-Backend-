@@ -105,7 +105,7 @@ export const listStudents = asyncHandler(async (req, res) => {
   const total = enriched.length;
   const items = enriched.slice(skip, skip + limit);
 
-  res.json({ success: true, ...buildPaginatedResponse({ items, total, page, limit }) });
+  res.json({ success: true, students: items, items, total, page, limit });
 });
 
 // ── List Teachers ──
@@ -131,7 +131,7 @@ export const listTeachers = asyncHandler(async (req, res) => {
   const total = enriched.length;
   const items = enriched.slice(skip, skip + limit);
 
-  res.json({ success: true, ...buildPaginatedResponse({ items, total, page, limit }) });
+  res.json({ success: true, teachers: items, items, total, page, limit });
 });
 
 // ── Get User by ID ──
@@ -182,10 +182,14 @@ export const listUsers = asyncHandler(async (req, res) => {
   const total = sanitized.length;
   const items = sanitized.slice(skip, skip + limit);
 
-  res.json({ 
-    success: true, 
+  res.json({
+    success: true,
     users: items,
-    ...buildPaginatedResponse({ items, total, page, limit }) 
+    items,
+    total,
+    page,
+    limit,
+    ...buildPaginatedResponse({ items, total, page, limit })
   });
 });
 
@@ -452,7 +456,7 @@ export const listAnnouncements = asyncHandler(async (req, res) => {
   const total = announcements.length;
   const items = announcements.slice(skip, skip + limit);
 
-  res.json({ success: true, ...buildPaginatedResponse({ items, total, page, limit }) });
+  res.json({ success: true, announcements: items, items, total, page, limit });
 });
 
 // ── Messaging ──
@@ -562,6 +566,13 @@ export const getReportCard = asyncHandler(async (req, res) => {
 });
 
 // ── Timetable ──
+const normalizeClassId = (id) => {
+  if (!id) return id;
+  // Convert formats like "10-A" → "class-10-a", "class-10-a" stays "class-10-a"
+  const normalized = String(id).replace(/^(\d+)-([A-Z])$/i, 'class-$1-$2').toLowerCase();
+  return normalized === String(id).toLowerCase() ? id : normalized;
+};
+
 export const getTimetable = asyncHandler(async (req, res) => {
   let classId = req.query.classId || req.query.class_id;
   // Fall back to user's enrolled class if no classId provided
@@ -577,7 +588,14 @@ export const getTimetable = asyncHandler(async (req, res) => {
   }
   if (!classId) throw new ApiError(400, 'classId is required');
 
-  const timetable = await getRecord(`timetables/${classId}`);
+  // Normalize classId so "10-A" and "class-10-a" both resolve to same key
+  const normalizedClassId = normalizeClassId(classId);
+
+  // Try normalized key first, then exact key
+  let timetable = await getRecord(`timetables/${normalizedClassId}`);
+  if (!timetable) {
+    timetable = await getRecord(`timetables/${classId}`);
+  }
 
   if (!timetable) return res.json({ success: true, entries: [] });
 
@@ -585,7 +603,7 @@ export const getTimetable = asyncHandler(async (req, res) => {
     ? JSON.parse(timetable.entries)
     : timetable.entries;
 
-  res.json({ success: true, classId, entries: entries || [] });
+  res.json({ success: true, classId: normalizedClassId, entries: entries || [] });
 });
 
 export const saveTimetable = asyncHandler(async (req, res) => {
@@ -600,15 +618,18 @@ export const saveTimetable = asyncHandler(async (req, res) => {
     duplicateSlots.add(slot);
   }
 
+  // Normalize classId so timetable is stored consistently
+  const normalizedClassId = normalizeClassId(classId);
+
   const timetable = {
-    id: classId,
-    class_id: classId,
+    id: normalizedClassId,
+    class_id: normalizedClassId,
     entries: JSON.stringify(entries),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
 
-  await updateRecord(`timetables/${classId}`, timetable);
+  await updateRecord(`timetables/${normalizedClassId}`, timetable);
   res.json({ success: true, timetable });
 });
 

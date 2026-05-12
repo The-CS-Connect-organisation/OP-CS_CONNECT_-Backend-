@@ -1,5 +1,6 @@
 import app, { setSocketServer } from './app.js';
 import { connectDatabase } from './config/database.js';
+import { initRedis, closeRedis } from './config/redis.js';
 import { env } from './config/env.js';
 import { logger } from './utils/logger.js';
 import { createServer } from 'node:http';
@@ -19,6 +20,7 @@ let server;
 let io;
 
 const start = async () => {
+  await initRedis();
   await connectDatabase();
   await bootstrapDefaultUsers();
   await seedAllData();
@@ -136,6 +138,7 @@ const shutdown = async (signal) => {
     });
   }
   if (io) io.close();
+  await closeRedis();
   process.exit(0);
 };
 

@@ -1,9 +1,35 @@
 /**
  * Rate Limiting Middleware
  * Provides granular rate limiting for different endpoints
+ * Uses Redis when available, falls back to in-memory
  */
 
 import rateLimit from 'express-rate-limit';
+import { getRedisClient } from '../config/redis.js';
+
+/**
+ * Returns a Redis-compatible store for express-rate-limit
+ */
+const makeRedisStore = (prefix) => {
+  const client = getRedisClient();
+  if (!client) return undefined;
+
+  return {
+    async increment(key) {
+      const k = `${prefix}${key}`;
+      const hits = await client.incr(k);
+      if (hits === 1) await client.pexpire(k, 900000);
+      const ttl = await client.pttl(k);
+      return { totalHits: hits, resetTime: new Date(Date.now() + ttl) };
+    },
+    async decrement(key) {
+      const k = `${prefix}${key}`;
+      const hits = await client.decr(k);
+      if (hits < 0) await client.set(k, '0', 'PX', 900000);
+    },
+    async resetKey(key) { await client.del(`${prefix}${key}`); },
+  };
+};
 
 /**
  * General API rate limiter
@@ -14,9 +40,7 @@ export const generalLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: 'Too many requests from this IP, please try again later.',
-  // Note: admin skip is intentionally removed — req.user is not populated
-  // at the /api middleware level (auth runs per-route). IP-based limiting
-  // is the correct approach here and applies equally to all roles.
+  store: makeRedisStore('rl:general:'),
 });
 
 /**
@@ -28,6 +52,7 @@ export const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: 'Too many authentication attempts, please try again later.',
+  store: makeRedisStore('rl:auth:'),
 });
 
 /**

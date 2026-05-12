@@ -64,7 +64,7 @@ router.patch('/messages/:messageId/read', markMessageRead);
 router.get('/classes', allowRoles('admin', 'teacher', 'student', 'parent'), asyncHandler(async (req, res) => {
   const { getRecords } = await import('../utils/firebaseDb.js');
   const classes = await getRecords('class_rooms');
-  res.json({ success: true, classes });
+  res.json({ success: true, classes, classRooms: classes, items: classes });
 }));
 
 router.post('/classes', allowRoles('admin'), validateRequest(createClassSchema), createClassRoom);
