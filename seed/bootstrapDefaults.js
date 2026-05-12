@@ -6,7 +6,7 @@ import { StreamChat } from 'stream-chat';
 import { env } from '../config/env.js';
 
 const BOOTSTRAP_FLAG_PATH = '_meta/bootstrap_done';
-const BOOTSTRAP_VERSION = 3; // bump to re-run bootstrap with new users
+const BOOTSTRAP_VERSION = 4; // bump to re-run bootstrap with new users
 
 const DEMO_USERS = [
   // Students
