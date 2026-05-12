@@ -63,6 +63,7 @@ const enrichUser = async (user) => {
       
       user.class = `${classNum}-${profile.section || 'A'}`;
       user.grade = classNum.toString();
+      user.classId = profile.class_id || `class-${classNum}-${(profile.section || 'a').toLowerCase()}`;
       user.section = profile.section;
       user.rollNo = profile.roll_number;
       user.attendancePercent = profile.attendance_percent;
@@ -201,6 +202,17 @@ export const signup = asyncHandler(async (req, res) => {
     success: true,
     token,
     user: safeUser,
+    enriched: {
+      class: safeUser.class,
+      classId: safeUser.classId || safeUser.classroomId || '',
+      grade: safeUser.grade,
+      section: safeUser.section,
+      classroomId: safeUser.classroomId,
+      xp: safeUser.xp,
+      level: safeUser.level,
+      badges: safeUser.badges,
+      attendancePercent: safeUser.attendancePercent,
+    },
   });
 });
 
@@ -255,6 +267,7 @@ export const login = asyncHandler(async (req, res) => {
     // Also send enriched fields so frontend gets class, grade, classroomId, xp etc.
     enriched: {
       class: safeUser.class,
+      classId: safeUser.classId || safeUser.classroomId || '',
       grade: safeUser.grade,
       section: safeUser.section,
       classroomId: safeUser.classroomId,
