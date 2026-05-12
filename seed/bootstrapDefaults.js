@@ -6,7 +6,7 @@ import { StreamChat } from 'stream-chat';
 import { env } from '../config/env.js';
 
 const BOOTSTRAP_FLAG_PATH = '_meta/bootstrap_done';
-const BOOTSTRAP_VERSION = 5; // bump to re-run bootstrap with deterministic IDs
+const BOOTSTRAP_VERSION = 6; // bump to re-run bootstrap with deterministic IDs
 
 // 18 demo users — 3 of each role, with deterministic IDs
 const DEMO_USERS = [
