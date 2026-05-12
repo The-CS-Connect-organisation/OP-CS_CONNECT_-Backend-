@@ -2,13 +2,18 @@ import { db } from './firebase.js';
 import { logger } from '../utils/logger.js';
 
 export const connectDatabase = async () => {
+  // Try the RTDB connection with a hard timeout — if it hangs, don't block server startup
   try {
-    // Test Firebase connection by reading from users collection
-    const usersRef = db.ref('users');
-    await usersRef.limitToFirst(1).once('value');
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('RTDB connection timed out after 8s')), 8000)
+    );
+    await Promise.race([
+      db.ref('users').limitToFirst(1).once('value'),
+      timeout,
+    ]);
     logger.info('Firebase Realtime Database connected');
   } catch (err) {
-    logger.error('Firebase connection error', { message: err.message });
+    logger.warn('Firebase RTDB connection deferred — will retry on first request', { message: err.message });
   }
 };
 
