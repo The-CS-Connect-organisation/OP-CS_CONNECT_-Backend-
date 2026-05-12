@@ -1,26 +1,11 @@
 /**
  * Direct Firebase seeder - FAST version with batch writes
- * Run with: node seed-firebase.js
+ * Reuses Firebase app initialized by config/firebase.js (server.js)
  */
-import admin from 'firebase-admin';
+import { db } from './config/firebase.js';
 import pkg from 'bcryptjs';
 const { hash } = pkg;
-import { readFileSync } from 'fs';
 
-const envPath = new URL('.env', import.meta.url);
-const envContent = readFileSync(envPath, 'utf8');
-const env = {};
-envContent.split('\n').forEach(line => {
-  const [key, ...vals] = line.split('=');
-  if (key && vals.length) env[key.trim()] = vals.join('=').trim();
-});
-
-const privateKey = env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-admin.initializeApp({
-  credential: admin.credential.cert({ type: 'service_account', project_id: env.FIREBASE_PROJECT_ID, private_key: privateKey, client_email: env.FIREBASE_CLIENT_EMAIL }),
-  databaseURL: env.FIREBASE_DATABASE_URL,
-});
-const db = admin.database();
 const now = () => new Date().toISOString();
 
 // Deterministic seeded random
