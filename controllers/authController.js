@@ -252,6 +252,18 @@ export const login = asyncHandler(async (req, res) => {
     success: true,
     token,
     user: safeUser,
+    // Also send enriched fields so frontend gets class, grade, classroomId, xp etc.
+    enriched: {
+      class: safeUser.class,
+      grade: safeUser.grade,
+      section: safeUser.section,
+      classroomId: safeUser.classroomId,
+      xp: safeUser.xp,
+      level: safeUser.level,
+      badges: safeUser.badges,
+      attendancePercent: safeUser.attendancePercent,
+      subjects: safeUser.subjects,
+    },
   });
 });
 
