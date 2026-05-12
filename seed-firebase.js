@@ -58,7 +58,21 @@ function schoolDays120() {
   return days;
 }
 
-async function seed() {
+export const SEED_VERSION = 10;
+const SEED_FLAG_PATH = '_meta/seed_v10_done';
+
+async function seedFirebaseData() {
+  // Check if already seeded
+  try {
+    const flagSnap = await db.ref(SEED_FLAG_PATH).once('value');
+    if (flagSnap.val() === SEED_VERSION) {
+      console.log('Firebase seed already applied (v' + SEED_VERSION + ') — skipping. Delete ' + SEED_FLAG_PATH + ' in Firebase RTDB to re-seed.');
+      return;
+    }
+  } catch (err) {
+    console.warn('Seed flag check failed, proceeding...');
+  }
+
   console.log('Starting fast Firebase seed...');
   const days = schoolDays120();
   const subjects = [
@@ -236,7 +250,7 @@ async function seed() {
         const subj = subjects[Math.floor(r() * subjects.length)];
         const maxMarks = 100;
         const obtained = Math.floor(r() * maxMarks * 0.4 + maxMarks * 0.5);
-        markWrites.push({ path: `marks/mark-${s.id}-${i}-${m}`, data: { id: `mark-${s.id}-${i}-${m}`, student_id: s.id, class_id: s.class_id, subject_id: subj.id, subject_name: subj.name, obtained_marks: obtained, max_marks: maxMarks, type: 'assignment', title: `${subj.name} ${titles[Math.floor(r() * titles.length)]}`, date: dateStr, created_at: now(), updated_at: now() } });
+        markWrites.push({ path: `marks/mark-${s.id}-${i}-${m}`, data: { id: `mark-${s.id}-${i}-${m}`, student_id: s.id, class_id: s.class_id, subject_id: subj.id, subject_name: subj.name, score: obtained, obtained_marks: obtained, maxMarks: maxMarks, max_marks: maxMarks, type: 'assignment', title: `${subj.name} ${titles[Math.floor(r() * titles.length)]}`, date: dateStr, created_at: now(), updated_at: now() } });
       }
     }
   }
@@ -418,7 +432,14 @@ async function seed() {
   console.log('  • 8 badges');
   console.log('  • Timetable (120 days × 8 periods)');
   console.log('  • 50 announcements, goals, notifications');
-  process.exit(0);
+  console.log('\n✅ Firebase seed complete!');
+
+  // Mark as done
+  await db.ref(SEED_FLAG_PATH).set(SEED_VERSION);
 }
 
-seed().catch(e => { console.error('Seed failed:', e); process.exit(1); });
+// Run standalone: node seed-firebase.js
+const isMain = typeof process !== 'undefined' && process.argv[1]?.includes('seed-firebase');
+if (isMain) {
+  seedFirebaseData().catch(e => { console.error('Seed failed:', e); process.exit(1); });
+}
