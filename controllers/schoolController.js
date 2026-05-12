@@ -406,7 +406,7 @@ export const getAttendanceReport = asyncHandler(async (req, res) => {
     return res.status(200).send(csvRows.join('\n'));
   }
 
-  return res.json({ success: true, records });
+  return res.json({ success: true, records, items: records });
 });
 
 // ── Announcements ──

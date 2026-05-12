@@ -112,7 +112,7 @@ export const getStudentStats = asyncHandler(async (req, res) => {
 export const getLeaderboard = asyncHandler(async (req, res) => {
   const { classId } = req.params;
 
-  const classRoom = await getRecord(`classrooms/${classId}`);
+  const classRoom = await getRecord(`class_rooms/${classId}`);
   if (!classRoom) throw new ApiError(404, 'Class not found');
   if (!classRoom.privacy_leaderboard_enabled && req.user.role === 'student') {
     throw new ApiError(403, 'Leaderboard is disabled for this class');

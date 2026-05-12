@@ -106,6 +106,19 @@ export const getStudentDashboard = asyncHandler(async (req, res) => {
   );
   const unreadCount = notifications.filter(n => !n.read_by?.includes(studentId)).length;
 
+  // Leaderboard (class rank)
+  const classRoomId = profile?.class_id || (profile?.grade ? `class-${profile.grade}-${(profile.section || 'A').toLowerCase()}` : null);
+  let rank = null;
+  let totalStudents = 0;
+  if (classRoomId) {
+    const enrollments = await queryRecords('classroom_students', e => e.classroom_id === classRoomId);
+    totalStudents = enrollments.length;
+    const profiles = await queryRecords('student_profiles', p => enrollments.some(e => e.student_id === p.user_id));
+    profiles.sort((a, b) => (b.xp || 0) - (a.xp || 0));
+    const myRank = profiles.findIndex(p => p.user_id === studentId);
+    if (myRank >= 0) rank = myRank + 1;
+  }
+
   res.json({
     success: true,
     dashboard: {
@@ -115,7 +128,10 @@ export const getStudentDashboard = asyncHandler(async (req, res) => {
         section: profile?.section || '',
         attendancePercent: attendanceRate,
         xp: profile?.xp || 0,
+        level: profile?.level || 1,
         badges: profile?.badges || [],
+        rank,
+        totalStudents,
       },
       stats: {
         totalAssignments: myAssignments.length,
@@ -140,20 +156,21 @@ export const getStudentGrades = asyncHandler(async (req, res) => {
 
   let marks = await queryRecords('marks', m => m.student_id === studentId);
 
-  if (subject) marks = marks.filter(m => m.subject === subject);
+  if (subject) marks = marks.filter(m => (m.subject || m.subject_name) === subject);
   if (term) marks = marks.filter(m => m.term === term);
 
-  marks.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  marks.sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date));
 
   // Subject-wise summary
   const subjectSummary = {};
   marks.forEach(mark => {
-    if (!subjectSummary[mark.subject]) {
-      subjectSummary[mark.subject] = { scores: [], total: 0, count: 0 };
+    const subj = mark.subject || mark.subject_name || 'Unknown';
+    if (!subjectSummary[subj]) {
+      subjectSummary[subj] = { scores: [], total: 0, count: 0 };
     }
-    subjectSummary[mark.subject].scores.push(Number(mark.score));
-    subjectSummary[mark.subject].total += Number(mark.score);
-    subjectSummary[mark.subject].count += 1;
+    subjectSummary[subj].scores.push(Number(mark.score || mark.obtained_marks || 0));
+    subjectSummary[subj].total += Number(mark.score || mark.obtained_marks || 0);
+    subjectSummary[subj].count += 1;
   });
 
   const summary = Object.entries(subjectSummary).map(([subj, data]) => ({
@@ -164,7 +181,7 @@ export const getStudentGrades = asyncHandler(async (req, res) => {
     count: data.count,
   }));
 
-  res.json({ success: true, marks, summary });
+  res.json({ success: true, marks, summary, items: marks });
 });
 
 // ============================================================================
@@ -191,6 +208,7 @@ export const getStudentAttendance = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     records,
+    items: records,
     summary: {
       total: records.length,
       present,
@@ -230,7 +248,7 @@ export const getStudentAssignments = asyncHandler(async (req, res) => {
   const filtered = status ? enriched.filter(a => a.status === status) : enriched;
   filtered.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
 
-  res.json({ success: true, assignments: filtered });
+  res.json({ success: true, assignments: filtered, items: filtered });
 });
 
 // ============================================================================
@@ -271,12 +289,16 @@ export const getStudentTimetable = asyncHandler(async (req, res) => {
   const studentId = req.user.id;
 
   const profile = await getRecord(`student_profiles/${studentId}`);
-  const classId = profile?.class_id || `${profile?.grade}_${profile?.section}`;
+  const rawClassId = profile?.class_id || `${profile?.grade}_${profile?.section}`;
+  const normalizeClassId = (id) => {
+    if (!id) return id;
+    const normalized = String(id).replace(/^(\d+)-([A-Z])$/i, 'class-$1-$2').toLowerCase();
+    return normalized === String(id).toLowerCase() ? id : normalized;
+  };
 
-  const timetables = await getRecords('timetables');
-  const timetable = timetables.find(t => t.class_id === classId) || null;
+  const timetable = await getRecord(`timetables/${normalizeClassId(rawClassId)}`);
 
-  res.json({ success: true, timetable });
+  res.json({ success: true, timetable: timetable || {}, entries: Object.values(timetable || {}) });
 });
 
 export default {
