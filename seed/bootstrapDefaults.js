@@ -68,18 +68,35 @@ export const bootstrapDefaultUsers = async () => {
   for (const entry of DEMO_USERS) {
     try {
       const userId = makeUserId(entry.role, entry.suffix);
+      const expectedEmail = entry.email.toLowerCase();
 
       // Check by email (handles upgrades from random-ID versions)
-      const byEmail = await db.ref('users').orderByChild('email').equalTo(entry.email.toLowerCase()).once('value');
+      const byEmail = await db.ref('users').orderByChild('email').equalTo(expectedEmail).once('value');
       if (byEmail.exists()) {
         logger.info(`User ${entry.email} already exists, skipping`);
         continue;
       }
 
-      // Check by canonical ID (for re-runs)
+      // Check by canonical ID — if exists with wrong email, update it
       const byId = await db.ref(`users/${userId}`).once('value');
       if (byId.exists()) {
-        logger.info(`User ${userId} already exists, skipping`);
+        const existing = byId.val();
+        if (existing.email === expectedEmail) {
+          logger.info(`User ${userId} already correct, skipping`);
+          continue;
+        }
+        // Email mismatch — update to correct email + re-hash password
+        const passwordHash = await hash(entry.password, 12);
+        await db.ref(`users/${userId}`).update({
+          email: expectedEmail,
+          password_hash: passwordHash,
+          name: entry.name,
+          role: entry.role,
+          updated_at: new Date().toISOString(),
+        });
+        logger.info(`Updated user ${userId} to ${entry.email}`);
+        const streamUserId = userId.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 64);
+        await provisionStreamUser(streamUserId, entry.name, entry.role);
         continue;
       }
 
