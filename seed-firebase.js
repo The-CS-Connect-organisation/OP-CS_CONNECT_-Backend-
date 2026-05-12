@@ -58,10 +58,10 @@ function schoolDays120() {
   return days;
 }
 
-export const SEED_VERSION = 10;
+const SEED_VERSION = 10;
 const SEED_FLAG_PATH = '_meta/seed_v10_done';
 
-async function seedFirebaseData() {
+const seedFirebaseData = async function() {
   // Check if already seeded
   try {
     const flagSnap = await db.ref(SEED_FLAG_PATH).once('value');
@@ -438,8 +438,4 @@ async function seedFirebaseData() {
   await db.ref(SEED_FLAG_PATH).set(SEED_VERSION);
 }
 
-// Run standalone: node seed-firebase.js
-const isMain = typeof process !== 'undefined' && process.argv[1]?.includes('seed-firebase');
-if (isMain) {
-  seedFirebaseData().catch(e => { console.error('Seed failed:', e); process.exit(1); });
-}
+export { seedFirebaseData };
