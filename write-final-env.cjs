@@ -1,0 +1,28 @@
+const fs = require('fs');
+
+const pk = '-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDjpnoH6wkY8HNm\nTPmV0Z6P9TaRZLB8nZ2nnZa2grdvVGFBku7ckCw3BG+xnXEcmg7K28ITxSJBA4A3\nLcDrcMyREuUybKYMmlIKJciCj8FnxiLF57ZmcrU+Af3qx/5DXkV5UAR81FrzGFCT\nuCLhvAdyxMh8lQiHE4qLPAUIRfzJsmjAQMEb4UCa+bhuu4WoWVgiRlztO7NExlV2\nQCwIaykIuqhlC1uGyrmpYXBLqFgbgk+yWq7sEAoCjvDRXeIPsGlp4XglKkIcesy1\nBAxkpO13xlpUDqbTD5BIm/kVcKuARRsBbx+40BlA2/Ae1nq8HvKCeUwBeE9L7qaF\n1qGFoworAgMBAAECggEAVm1QrQrlZEt9dFxK8T8o9LyC4AYbHuR0AzvICThtTd36\nInwXJTOzJZwQj50XYWV3sjpmXz0beRVMKya6tGgZsgY7b75h+CzqcqHPkwniwnQt\npXcH/7MS7hyxet48wPTcaWcgnQe+E8aqaLqiu5K4PTFKcEngd+/KTHwX6QExLJ1Q\n38g0oVaVjl2gsgbkmUi9wZ6vDor9IIRjOXVt0f2JUkq7CRlmrUDLgCl0nUOUJsyT\nsm9fKwIpfkzQCqbSlTUO8hf2lMoCCVjUqQdLam/+OKzXixN21HM7kHBBoehMTewn\nC4QnAJ4X9HuzDWP5Z6wh97aHLylNbsEvqyJ9UaP9GQKBgQD27HG5upRd8ucjXoF7\nDiDqj4FZz4+ZwQc3pD4g+lipUdwglWpphbxvgOBoFMClQLZrfNq/7xnnuqwUd/WO\nJF1WAOiFliNL9S69s6LlVERMDXzNA8gt0cBWKL6bBWgWg3RBg9fQPsLwvIwfny5A\nYdmwR4LNbjJOJy6/f3QvSam19QKBgQDsBKuUPag4wVSDbn+hLgSfY4nlIan2hEF1\nux5bBuBosHqxdms1VBU/YDWAxfYEQdVCdLRHFBPP/B1xUYxTlvVnRh/np6nJT3y5\ns3Dj4TVmVtxvZ4Sb2C8No2k+zZPnH0d4tKKSUPoQ+uKvHsvkQhNcYvDThjY0bFgf\nnGqxfVOLnwKBgQC5Q+aAR/GSG/I4o2va/FrOIyYWUJmZ7y6PHPhQngVv5S+YcwMI\ncYNU1gmJjiiM1OUJ+P/YCnoRWApMwUTIhZhSMxRDRsbs8uVDCEksb/FebrA40qGb\nX0lEXAXHImNaoP7VOSrv4Gc7YPxxrWlyfPhsPvtxT0EHSnbUz7hI0qg3EQKBgAeb\nHuxoEEPD9zVFGlfXY86/JnJ74z5OhM2GejP0xMaa6VlOt6XAT+766r57orIAbR73\nI9gmjXzmYwyD1EHdW4s4d06/2HjkVuClJ74wQ8hIhFISw/NBxEJsQbgEZ//KwkLh\nj1unwGdLroJ2O5vfhUA08A3hBV4rH6vlHosZvteBAoGBAJquqiHMapOcxYtMRV74\nzVPrBPxgd1803vY3ovTni4goXig5qh9c2IgQQmANYc0WEmVeAl/FJ/C1Hb2V70cA\nmR2EX7iu3NVV7yBVdZDK1SBOdfvGVVnY24lWI8mJ7k+jxM2oeoUs6d0PG/MyAUoq\nD4GwYo41wriZbeKQMRqiECRY\n-----END PRIVATE KEY-----\n';
+
+const escapedPk = pk.replace(/\\/g, '\\\\').replace(/\n/g, '\\n');
+
+const env = [
+  'PORT=5000',
+  'NODE_ENV=production',
+  'CORS_ORIGIN=https://the-cs-connect-organisation.github.io',
+  '',
+  'JWT_SECRET=12a36a4779fa49402147716f69f4bcf2eb4954eb03553b5e55d4aa2fe96606e72b390e333df7c43900f7b328470bd5150a7e2de3d85d272ef89fdb4de29a3b26',
+  '',
+  'FIREBASE_PROJECT_ID=schoolsync-op-csconnect',
+  'FIREBASE_CLIENT_EMAIL=firebase-adminsdk-fbsvc@schoolsync-op-csconnect.iam.gserviceaccount.com',
+  'FIREBASE_PRIVATE_KEY="' + escapedPk + '"',
+  'FIREBASE_DATABASE_URL=https://schoolsync-op-csconnect-default-rtdb.asia-southeast1.firebasedatabase.app',
+  '',
+  'CEREBRAS_API_KEY=csk-m2vp8d5fp522xrvhkx2wfpp4kn46ey4xe38y9k65r9jmrerd',
+  'GEMINI_API_KEY=AIzaSyDgliRNkf_YFnHBR9KyN27dHtK8Oo6chO8',
+  'GROQ_API_KEY=placeholder',
+  '',
+  'STREAM_API_KEY=n9v8bfwy45pn',
+  'STREAM_API_SECRET=49kgqfqqfv8kfegqfu4zffrtbxxj5st7by5em83yprxzatk3feguh24zphab35mh',
+].join('\n');
+
+fs.writeFileSync('.env', env);
+console.log('Written .env with Singapore RTDB URL');

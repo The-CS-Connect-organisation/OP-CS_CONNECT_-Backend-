@@ -6,7 +6,7 @@ import { StreamChat } from 'stream-chat';
 import { env } from '../config/env.js';
 
 const BOOTSTRAP_FLAG_PATH = '_meta/bootstrap_done';
-const BOOTSTRAP_VERSION = 2; // bump to re-run bootstrap with new users
+const BOOTSTRAP_VERSION = 3; // bump to re-run bootstrap with new users
 
 const DEMO_USERS = [
   // Students
@@ -45,16 +45,18 @@ const provisionStreamUser = async (userId, name, role) => {
 };
 
 export const bootstrapDefaultUsers = async () => {
+  let alreadyDone = false;
   try {
     const flagSnap = await db.ref(BOOTSTRAP_FLAG_PATH).once('value');
     if (flagSnap.val() === BOOTSTRAP_VERSION) {
+      alreadyDone = true;
       logger.info('Bootstrap already completed — skipping');
-      return;
     }
   } catch (err) {
-    logger.warn('Bootstrap check failed (DB may be unavailable) — skipping bootstrap');
-    return;
+    logger.warn('Bootstrap check failed — proceeding to ensure all users exist', { message: err.message });
   }
+
+  if (alreadyDone) return;
 
   logger.info('Running first-time bootstrap — creating 15 demo users...');
 
