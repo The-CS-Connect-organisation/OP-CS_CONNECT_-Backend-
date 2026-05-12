@@ -117,15 +117,16 @@ async function seed() {
   const lHash = await hash('librarian123', 12);
 
   // ── USERS (batch) ─────────────────────────────────────────────────────────
+  const avatarSeed = (name) => `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
   const userWrites = [];
-  for (const s of students) userWrites.push({ path: `users/${s.id}`, data: { id: s.id, name: s.name, email: s.email, role: 'student', is_active: true, password_hash: pwHash, created_at: now(), updated_at: now() } });
-  for (const t of teachers) userWrites.push({ path: `users/${t.id}`, data: { id: t.id, name: t.name, email: t.email, role: 'teacher', is_active: true, password_hash: tHash, created_at: now(), updated_at: now() } });
-  for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/admin-${i}`, data: { id: `admin-${i}`, name: `Admin ${i}`, email: `admin${i}@schoolsync.edu`, role: 'admin', is_active: true, password_hash: aHash, created_at: now(), updated_at: now() } });
-  for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/driver-${i}`, data: { id: `driver-${i}`, name: `Driver ${i}`, email: `driver${i}@schoolsync.edu`, role: 'driver', is_active: true, password_hash: dHash, created_at: now(), updated_at: now() } });
-  for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/parent-${i}`, data: { id: `parent-${i}`, name: `Parent ${i}`, email: `parent${i}@schoolsync.edu`, role: 'parent', is_active: true, password_hash: pHash, created_at: now(), updated_at: now() } });
-  for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/librarian-${i}`, data: { id: `librarian-${i}`, name: `Librarian ${i}`, email: `librarian${i}@schoolsync.edu`, role: 'librarian', is_active: true, password_hash: lHash, created_at: now(), updated_at: now() } });
+  for (const s of students) userWrites.push({ path: `users/${s.id}`, data: { id: s.id, name: s.name, email: s.email, role: 'student', is_active: true, password_hash: pwHash, avatar: avatarSeed(s.name), created_at: now(), updated_at: now() } });
+  for (const t of teachers) userWrites.push({ path: `users/${t.id}`, data: { id: t.id, name: t.name, email: t.email, role: 'teacher', is_active: true, password_hash: tHash, avatar: avatarSeed(t.name), created_at: now(), updated_at: now() } });
+  for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/admin-${i}`, data: { id: `admin-${i}`, name: `Admin ${i}`, email: `admin${i}@schoolsync.edu`, role: 'admin', is_active: true, password_hash: aHash, avatar: avatarSeed(`admin${i}`), created_at: now(), updated_at: now() } });
+  for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/driver-${i}`, data: { id: `driver-${i}`, name: `Driver ${i}`, email: `driver${i}@schoolsync.edu`, role: 'driver', is_active: true, password_hash: dHash, avatar: avatarSeed(`driver${i}`), created_at: now(), updated_at: now() } });
+  for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/parent-${i}`, data: { id: `parent-${i}`, name: `Parent ${i}`, email: `parent${i}@schoolsync.edu`, role: 'parent', is_active: true, password_hash: pHash, avatar: avatarSeed(`parent${i}`), created_at: now(), updated_at: now() } });
+  for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/librarian-${i}`, data: { id: `librarian-${i}`, name: `Librarian ${i}`, email: `librarian${i}@schoolsync.edu`, role: 'librarian', is_active: true, password_hash: lHash, avatar: avatarSeed(`librarian${i}`), created_at: now(), updated_at: now() } });
   await batchWrite(userWrites);
-  console.log('✓ 18 users');
+  console.log('✓ 18 users with avatars');
 
   // ── SUBJECTS + CLASSES (batch) ────────────────────────────────────────────
   const miscWrites = [];
@@ -151,23 +152,37 @@ async function seed() {
   await batchWrite(profileWrites);
   console.log('✓ Student profiles + enrollments');
 
-  // ── TIMETABLE (120 days) ──────────────────────────────────────────────────
+  // ── TIMETABLE (flat entries — matches frontend normalizeTimetableResponse) ──
+  const allClassIds = ['class-10-a'];
   const ttWrites = [];
-  for (const dayDate of days) {
-    const dateStr = dayDate.toISOString().split('T')[0];
-    const dow = dayDate.getDay() - 1;
-    const row = scheduleRows[dow];
-    const periods = [];
-    for (let p = 0; p < 8; p++) {
-      const subjId = row[p];
-      const subj = subjects.find(s => s.id === subjId);
-      const tm = teachers.find(t => t.subjects.includes(subj?.name));
-      periods.push({ period: p + 1, start: periodTimings[p].start, end: periodTimings[p].end, subject_id: subjId || null, subject_name: subj?.name || '', teacher_id: tm?.id || null });
+  const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+  const BREAK_PERIODS = [4, 8]; // periods 4=break, 8=lunch
+  for (const cid of allClassIds) {
+    const flatEntries = [];
+    for (let d = 0; d < 5; d++) {
+      const row = scheduleRows[d];
+      for (let p = 0; p < 8; p++) {
+        const subjId = row[p];
+        const subj = subjId ? subjects.find(s => s.id === subjId) : null;
+        const tm = subj ? teachers.find(t => t.subjects.includes(subj.name)) : null;
+        flatEntries.push({
+          classId: cid,
+          day: DAYS[d],
+          period: String(p + 1),
+          subject: subj?.name || '',
+          subject_id: subjId || null,
+          teacherId: tm?.id || '',
+          room: p === 3 ? 'Room 101' : p === 5 ? 'Lab 1' : p === 7 ? 'Gym' : `Room ${101 + p}`,
+          startTime: periodTimings[p].start,
+          endTime: periodTimings[p].end,
+          isBreak: !subjId,
+        });
+      }
     }
-    ttWrites.push({ path: `timetables/class-10-a/${dateStr}`, data: { day: ['Monday','Tuesday','Wednesday','Thursday','Friday'][dow], date: dateStr, periods } });
+    ttWrites.push({ path: `timetables/${cid}`, data: { id: cid, classId: cid, entries: flatEntries, updated_at: now() } });
   }
   await batchWrite(ttWrites);
-  console.log('✓ Timetable: 120 days × 8 periods');
+  console.log('✓ Timetable: flat entries for class-10-a');
 
   // ── ATTENDANCE (120 days) ────────────────────────────────────────────────
   const attWrites = [];
@@ -227,6 +242,86 @@ async function seed() {
   }
   await batchWrite(markWrites);
   console.log(`✓ Marks: ${markWrites.length} records`);
+
+  // ── ASSIGNMENTS (30 for class-10-a) ───────────────────────────────────────
+  const classStudents = students.filter(s => s.class_id === 'class-10-a');
+  const assignmentWrites = [];
+  const assignTitles = [
+    'Linear Equations Practice Set','Motion and Force Worksheet','Chemical Reactions Lab Report',
+    'English Essay: My Favorite Memory','History Map Work Assignment','Physics Numerical Problems',
+    'Biology Diagram Labeling Test','Hindi Grammar Exercises','Social Studies Project Report',
+    'Computer Science Coding Challenge','Geometry Construction Homework','Human Body Systems Quiz',
+    'Revolutions in Europe Notes','Trigonometry Practice Problems','Periodic Table Memory Test',
+    'English Comprehension Passage','Geography Climate Report','Organic Chemistry Basics',
+    'Linear Programming Assignment','Sound Waves Experiment Log','Cell Division Diagram Test',
+    'Hindi Composition Writing','Democratic Rights Chapter Notes','Electrostatics Numericals',
+    'Ecosystem Project Work','Algebraic Expressions Set','Inertia and Momentum Lab',
+    'Nutrition in Humans Assignment','Civics Essay: Rights and Duties','Geometry Proofs Homework',
+  ];
+  const assignSubjects = ['Mathematics','Physics','Chemistry','English','History','Biology','Hindi','Social Studies','Computer Science'];
+  for (let i = 0; i < 30; i++) {
+    const dueDays = 2 + (i % 14); // 2 to 15 days ahead
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() - 60 + i * 4); // past and upcoming
+    const dueStr = dueDate.toISOString().split('T')[0];
+    const createdDate = new Date(dueDate);
+    createdDate.setDate(createdDate.getDate() - 7);
+    const subj = assignSubjects[i % assignSubjects.length];
+    const teacher = teachers.find(t => t.subjects.includes(subj)) || teachers[0];
+    assignmentWrites.push({
+      path: `assignments/assign-${i + 1}`,
+      data: {
+        id: `assign-${i + 1}`,
+        title: assignTitles[i],
+        description: `Complete the ${assignTitles[i]}. Submit before the due date.`,
+        subject: subj,
+        subject_id: subjects.find(s => s.name === subj)?.id || '',
+        class_id: 'class-10-a',
+        class: '10-A',
+        teacher_id: teacher.id,
+        teacher_name: teacher.name,
+        due_date: dueStr,
+        due_time: '23:59',
+        total_marks: 30,
+        status: new Date(dueStr) < new Date() ? 'closed' : 'active',
+        type: ['homework','project','lab','test'][i % 4],
+        created_at: createdDate.toISOString(),
+        updated_at: now(),
+      },
+    });
+  }
+  await batchWrite(assignmentWrites);
+  console.log(`✓ Assignments: ${assignmentWrites.length} records`);
+
+  // ── SUBMISSIONS (60% submitted, 40% pending) ───────────────────────────────
+  const submissionWrites = [];
+  for (const s of classStudents) {
+    const submitted = assignmentWrites.slice(0, 18); // first 18 assigned to this student
+    for (const a of submitted) {
+      const r = seededRand(parseInt(s.id.split('-')[1]) * 1000 + parseInt(a.path.split('-')[1]));
+      if (r() < 0.85) { // 85% of assigned submissions
+        const subDate = new Date(a.data.due_date);
+        subDate.setDate(subDate.getDate() - Math.floor(r() * 3));
+        const isLate = subDate > new Date(a.data.due_date);
+        const marks = isLate ? null : Math.floor(r() * 20 + 10); // 10-30 marks if on time
+        submissionWrites.push({
+          path: `submissions/sub-${s.id}-${a.data.id}`,
+          data: {
+            id: `sub-${s.id}-${a.data.id}`,
+            assignment_id: a.data.id,
+            student_id: s.id,
+            submitted_at: subDate.toISOString(),
+            is_late: isLate,
+            marks_obtained: marks,
+            feedback: marks !== null ? (marks >= 25 ? 'Excellent work!' : marks >= 20 ? 'Good effort, well done.' : 'Keep improving!') : null,
+            created_at: subDate.toISOString(),
+          },
+        });
+      }
+    }
+  }
+  await batchWrite(submissionWrites);
+  console.log(`✓ Submissions: ${submissionWrites.length} records`);
 
   // ── STUDY ACTIVITY ─────────────────────────────────────────────────────────
   const studyWrites = [];
