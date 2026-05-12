@@ -9,7 +9,6 @@ export const connectDatabase = async () => {
     logger.info('Firebase Realtime Database connected');
   } catch (err) {
     logger.error('Firebase connection error', { message: err.message });
-    throw new Error(`Firebase connection failed: ${err.message}`);
   }
 };
 
