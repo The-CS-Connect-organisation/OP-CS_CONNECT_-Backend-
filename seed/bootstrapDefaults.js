@@ -6,34 +6,36 @@ import { StreamChat } from 'stream-chat';
 import { env } from '../config/env.js';
 
 const BOOTSTRAP_FLAG_PATH = '_meta/bootstrap_done';
-const BOOTSTRAP_VERSION = 4; // bump to re-run bootstrap with new users
+const BOOTSTRAP_VERSION = 5; // bump to re-run bootstrap with deterministic IDs
 
+// 18 demo users — 3 of each role, with deterministic IDs
 const DEMO_USERS = [
   // Students
-  { name: 'Priya Sharma',    email: 'student@schoolsync.edu',  role: 'student', password: 'student123' },
-  { name: 'Aarav Menon',     email: 'student2@schoolsync.edu', role: 'student', password: 'student123' },
-  { name: 'Ishita Kapoor',   email: 'student3@schoolsync.edu', role: 'student', password: 'student123' },
+  { name: 'Priya Sharma',    email: 'student@schoolsync.edu',   role: 'student',  suffix: '1', password: 'student123' },
+  { name: 'Aarav Menon',     email: 'student2@schoolsync.edu',  role: 'student',  suffix: '2', password: 'student123' },
+  { name: 'Ishita Kapoor',   email: 'student3@schoolsync.edu',  role: 'student',  suffix: '3', password: 'student123' },
   // Teachers
-  { name: 'Rajesh Kumar',    email: 'teacher@schoolsync.edu',  role: 'teacher', password: 'teacher123' },
-  { name: 'James Anderson',  email: 'teacher2@schoolsync.edu', role: 'teacher', password: 'teacher123' },
-  { name: 'Emily Chen',      email: 'teacher3@schoolsync.edu', role: 'teacher', password: 'teacher123' },
+  { name: 'Rajesh Kumar',    email: 'teacher@schoolsync.edu',   role: 'teacher',  suffix: '1', password: 'teacher123' },
+  { name: 'James Anderson',  email: 'teacher2@schoolsync.edu', role: 'teacher',  suffix: '2', password: 'teacher123' },
+  { name: 'Emily Chen',      email: 'teacher3@schoolsync.edu', role: 'teacher',  suffix: '3', password: 'teacher123' },
   // Admins
-  { name: 'Alicia Morgan',   email: 'admin@schoolsync.edu',    role: 'admin',   password: 'admin123'   },
-  { name: 'Rahul Venkat',    email: 'admin2@schoolsync.edu',   role: 'admin',   password: 'admin123'   },
-  { name: 'Neha Kapoor',     email: 'admin3@schoolsync.edu',   role: 'admin',   password: 'admin123'   },
+  { name: 'Alicia Morgan',   email: 'admin@schoolsync.edu',     role: 'admin',    suffix: '1', password: 'admin123'   },
+  { name: 'Rahul Venkat',    email: 'admin2@schoolsync.edu',    role: 'admin',    suffix: '2', password: 'admin123'   },
+  { name: 'Neha Kapoor',     email: 'admin3@schoolsync.edu',    role: 'admin',    suffix: '3', password: 'admin123'   },
   // Drivers
-  { name: 'Amit Patel',      email: 'driver@schoolsync.edu',   role: 'driver',  password: 'driver123'  },
-  { name: 'Suresh Singh',    email: 'driver2@schoolsync.edu',  role: 'driver',  password: 'driver123'  },
-  { name: 'Mohan Das',       email: 'driver3@schoolsync.edu',  role: 'driver',  password: 'driver123'  },
+  { name: 'Amit Patel',      email: 'driver@schoolsync.edu',    role: 'driver',   suffix: '1', password: 'driver123'  },
+  { name: 'Suresh Singh',    email: 'driver2@schoolsync.edu',  role: 'driver',   suffix: '2', password: 'driver123'  },
+  { name: 'Mohan Das',       email: 'driver3@schoolsync.edu',  role: 'driver',   suffix: '3', password: 'driver123'  },
   // Parents
-  { name: 'Vikram Singh',    email: 'parent@schoolsync.edu',   role: 'parent',  password: 'parent123'  },
-  { name: 'Priya Menon',     email: 'parent2@schoolsync.edu',  role: 'parent',  password: 'parent123'  },
-  { name: 'Deepak Verma',    email: 'parent3@schoolsync.edu',  role: 'parent',  password: 'parent123'  },
+  { name: 'Vikram Singh',    email: 'parent@schoolsync.edu',   role: 'parent',   suffix: '1', password: 'parent123'  },
+  { name: 'Priya Menon',     email: 'parent2@schoolsync.edu',  role: 'parent',   suffix: '2', password: 'parent123'  },
+  { name: 'Deepak Verma',    email: 'parent3@schoolsync.edu',  role: 'parent',   suffix: '3', password: 'parent123'  },
+  // Librarians
+  { name: 'Fatima Ansari',   email: 'librarian@schoolsync.edu',   role: 'librarian', suffix: '1', password: 'librarian123' },
+  { name: 'Sanjay Reddy',   email: 'librarian2@schoolsync.edu',  role: 'librarian', suffix: '2', password: 'librarian123' },
+  { name: 'Nisha Gupta',    email: 'librarian3@schoolsync.edu',  role: 'librarian', suffix: '3', password: 'librarian123' },
 ];
 
-/**
- * Provision a user in GetStream so they can connect to chat.
- */
 const provisionStreamUser = async (userId, name, role) => {
   if (!env.STREAM_API_KEY || !env.STREAM_API_SECRET) return;
   try {
@@ -43,6 +45,9 @@ const provisionStreamUser = async (userId, name, role) => {
     logger.warn(`GetStream upsert failed for ${userId}`, { message: err.message });
   }
 };
+
+// Creates the canonical userId: "role-N" e.g. "student-1", "teacher-2"
+const makeUserId = (role, suffix) => `${role}-${suffix}`;
 
 export const bootstrapDefaultUsers = async () => {
   let alreadyDone = false;
@@ -58,23 +63,32 @@ export const bootstrapDefaultUsers = async () => {
 
   if (alreadyDone) return;
 
-  logger.info('Running first-time bootstrap — creating 15 demo users...');
+  logger.info(`Running bootstrap — creating ${DEMO_USERS.length} demo users...`);
 
   for (const entry of DEMO_USERS) {
     try {
-      const existing = await db.ref('users').orderByChild('email').equalTo(entry.email).once('value');
-      if (existing.exists()) {
+      const userId = makeUserId(entry.role, entry.suffix);
+
+      // Check by email (handles upgrades from random-ID versions)
+      const byEmail = await db.ref('users').orderByChild('email').equalTo(entry.email.toLowerCase()).once('value');
+      if (byEmail.exists()) {
         logger.info(`User ${entry.email} already exists, skipping`);
         continue;
       }
 
+      // Check by canonical ID (for re-runs)
+      const byId = await db.ref(`users/${userId}`).once('value');
+      if (byId.exists()) {
+        logger.info(`User ${userId} already exists, skipping`);
+        continue;
+      }
+
       const passwordHash = await hash(entry.password, 12);
-      const userId = `${entry.role}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       await db.ref(`users/${userId}`).set({
         id: userId,
         name: entry.name,
-        email: entry.email,
+        email: entry.email.toLowerCase(),
         role: entry.role,
         is_active: true,
         password_hash: passwordHash,
@@ -85,7 +99,7 @@ export const bootstrapDefaultUsers = async () => {
       const streamUserId = userId.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 64);
       await provisionStreamUser(streamUserId, entry.name, entry.role);
 
-      logger.info(`Created demo user: ${entry.email}`);
+      logger.info(`Created: ${entry.email} (${userId})`);
     } catch (err) {
       logger.warn(`Failed to create user ${entry.email} — skipping`, { message: err.message });
     }
@@ -96,5 +110,5 @@ export const bootstrapDefaultUsers = async () => {
   } catch (err) {
     logger.warn('Could not set bootstrap flag', { message: err.message });
   }
-  logger.info('Bootstrap complete — 15 demo users created and provisioned in GetStream');
+  logger.info('Bootstrap complete!');
 };

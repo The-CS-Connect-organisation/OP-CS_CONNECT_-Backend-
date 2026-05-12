@@ -1,8 +1,8 @@
 import { db } from '../config/firebase.js';
 import { logger } from '../utils/logger.js';
 
-const SEED_VERSION = 5;
-const SEED_FLAG_PATH = '_meta/seed_v5_done';
+const SEED_VERSION = 6;
+const SEED_FLAG_PATH = '_meta/seed_v6_done';
 
 /**
  * Extended seed data for SchoolSync
@@ -279,15 +279,24 @@ export const seedExtendedData = async () => {
 
     // ── 7. Update user records with proper names ──
     const users = [
-      { id: 'student-1', name: 'Aarav Menon', email: 'alex@schoolsync.edu', phone: '+919876543210', class: '10-A' },
-      { id: 'student-2', name: 'Priya Sharma', email: 'priya@schoolsync.edu', phone: '+919876543220', class: '10-A' },
-      { id: 'student-3', name: 'Arjun Patel', email: 'arjun@schoolsync.edu', phone: '+919876543230', class: '10-A' },
-      { id: 'teacher-1', name: 'Rajesh Kumar', email: 'james@schoolsync.edu', phone: '+919876543240', department: 'Mathematics', subjects: ['Mathematics', 'Chemistry'] },
-      { id: 'teacher-2', name: 'James Anderson', email: 'james.anderson@schoolsync.edu', phone: '+919876543250', department: 'Physics', subjects: ['Physics'] },
-      { id: 'teacher-3', name: 'Emily Chen', email: 'emily@schoolsync.edu', phone: '+919876543260', department: 'Languages', subjects: ['English', 'Biology', 'History'] },
-      { id: 'parent-1', name: 'Priya Menon', email: 'parent@schoolsync.edu', phone: '+919876543211' },
-      { id: 'admin-1', name: 'Admin User', email: 'admin@schoolsync.edu', phone: '+919876543299' },
-      { id: 'driver-1', name: 'Ramesh Driver', email: 'driver@schoolsync.edu', phone: '+919876543280' },
+      { id: 'student-1', name: 'Priya Sharma',    email: 'student@schoolsync.edu',    phone: '+919876543210', class: '10-A' },
+      { id: 'student-2', name: 'Aarav Menon',     email: 'student2@schoolsync.edu',   phone: '+919876543220', class: '10-A' },
+      { id: 'student-3', name: 'Ishita Kapoor',   email: 'student3@schoolsync.edu',   phone: '+919876543230', class: '10-A' },
+      { id: 'teacher-1', name: 'Rajesh Kumar',   email: 'teacher@schoolsync.edu',   phone: '+919876543240', department: 'Mathematics', subjects: ['Mathematics', 'Chemistry'] },
+      { id: 'teacher-2', name: 'James Anderson', email: 'teacher2@schoolsync.edu',  phone: '+919876543250', department: 'Physics', subjects: ['Physics'] },
+      { id: 'teacher-3', name: 'Emily Chen',     email: 'teacher3@schoolsync.edu',  phone: '+919876543260', department: 'Languages', subjects: ['English', 'Biology', 'History'] },
+      { id: 'admin-1',   name: 'Alicia Morgan',   email: 'admin@schoolsync.edu',     phone: '+919876543299' },
+      { id: 'admin-2',   name: 'Rahul Venkat',    email: 'admin2@schoolsync.edu',    phone: '+919876543298' },
+      { id: 'admin-3',   name: 'Neha Kapoor',     email: 'admin3@schoolsync.edu',    phone: '+919876543297' },
+      { id: 'driver-1',  name: 'Amit Patel',     email: 'driver@schoolsync.edu',    phone: '+919876543280' },
+      { id: 'driver-2',  name: 'Suresh Singh',   email: 'driver2@schoolsync.edu',   phone: '+919876543281' },
+      { id: 'driver-3',  name: 'Mohan Das',     email: 'driver3@schoolsync.edu',   phone: '+919876543282' },
+      { id: 'parent-1',  name: 'Vikram Singh',   email: 'parent@schoolsync.edu',    phone: '+919876543211' },
+      { id: 'parent-2',  name: 'Priya Menon',    email: 'parent2@schoolsync.edu',   phone: '+919876543212' },
+      { id: 'parent-3',  name: 'Deepak Verma',   email: 'parent3@schoolsync.edu',   phone: '+919876543213' },
+      { id: 'librarian-1', name: 'Fatima Ansari', email: 'librarian@schoolsync.edu', phone: '+919876543250' },
+      { id: 'librarian-2', name: 'Sanjay Reddy', email: 'librarian2@schoolsync.edu', phone: '+919876543251' },
+      { id: 'librarian-3', name: 'Nisha Gupta', email: 'librarian3@schoolsync.edu', phone: '+919876543252' },
     ];
 
     for (const user of users) {
