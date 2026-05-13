@@ -41,8 +41,8 @@ function schoolDays120() {
   return days;
 }
 
-const SEED_VERSION = 12;
-const SEED_FLAG_PATH = '_meta/seed_v12_done';
+const SEED_VERSION = 13;
+const SEED_FLAG_PATH = '_meta/seed_v13_done';
 
 const seedFirebaseData = async function() {
   // Check if already seeded
