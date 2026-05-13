@@ -69,8 +69,29 @@ npm start
 
 The server will:
 1. Connect to Firebase
-2. Bootstrap default users (development only)
+2. Run automatic seed script (creates users, students, teachers, classes, etc.)
 3. Start listening on port 5000
+
+## Re-Seeding Data
+
+To regenerate fresh seed data (after upgrading seed version):
+
+1. Open Firebase Console → Realtime Database
+2. Navigate to `_meta/seed_v100_done`
+3. Delete this key
+4. Restart the backend server
+
+The seed creates:
+- 150+ students (grades 6-12, sections A/B/C)
+- 35 teachers across subjects
+- 21 classes
+- 120 days of attendance records
+- XP/progression data for all students
+- Marks/grades, assignments, submissions
+- Timetables for all classes
+- Announcements, notifications, goals
+
+**Current Seed Version:** v100
 
 ## Database Structure
 

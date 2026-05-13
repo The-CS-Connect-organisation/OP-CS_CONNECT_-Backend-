@@ -41,8 +41,8 @@ function schoolDays120() {
   return days;
 }
 
-const SEED_VERSION = 16;
-const SEED_FLAG_PATH = '_meta/seed_v16_done';
+const SEED_VERSION = 100;
+const SEED_FLAG_PATH = '_meta/seed_v100_done';
 
 const seedFirebaseData = async function() {
   // Check if already seeded
@@ -72,24 +72,57 @@ const seedFirebaseData = async function() {
     { id: 'sub-pe',   name: 'Physical Ed.',  code: 'PE',   color: '#f59e0b' },
   ];
 
-  const students = [
-    { id: 'student-1', name: 'Priya Sharma',  class: '10-A', class_id: 'class-10-a', email: 'student@schoolsync.edu' },
-    { id: 'student-2', name: 'Aarav Menon',  class: '10-A', class_id: 'class-10-a', email: 'student2@schoolsync.edu' },
-    { id: 'student-3', name: 'Ishita Kapoor', class: '10-A', class_id: 'class-10-a', email: 'student3@schoolsync.edu' },
-    { id: 'student-4', name: 'Rohan Gupta',   class: '10-B', class_id: 'class-10-b', email: 'student4@schoolsync.edu' },
-    { id: 'student-5', name: 'Ananya Singh',  class: '10-B', class_id: 'class-10-b', email: 'student5@schoolsync.edu' },
-    { id: 'student-6', name: 'Vivaan Patel',  class: '10-B', class_id: 'class-10-b', email: 'student6@schoolsync.edu' },
-    { id: 'student-7', name: 'Diya Sharma',   class: '10-A', class_id: 'class-10-a', email: 'student7@schoolsync.edu' },
-    { id: 'student-8', name: 'Arjun Reddy',   class: '10-B', class_id: 'class-10-b', email: 'student8@schoolsync.edu' },
-    { id: 'student-9', name: 'Myra Nair',     class: '10-A', class_id: 'class-10-a', email: 'student9@schoolsync.edu' },
-    { id: 'student-10',name: 'Kabir Mehta',   class: '10-B', class_id: 'class-10-b', email: 'student10@schoolsync.edu' },
-  ];
+  // Generate 150 students across grades 6-12 with multiple sections
+  const firstNames = ['Aarav', 'Aanya', 'Aditya', 'Aisha', 'Arjun', 'Avni', 'Dev', 'Diya', 'Ishaan', 'Kavya', 'Mira', 'Neil', 'Priya', 'Reyansh', 'Saanvi', 'Vivaan', 'Yash', 'Zara', 'Arnav', 'Myra', 'Kabir', 'Ananya', 'Rohan', 'Sneha', 'Karan', 'Tara', 'Om', 'Navya', 'Aryan', 'Kiara', 'Veer', 'Sia', 'Ari', 'Laksh', 'Tanvi', 'Riya', 'Dhruv', 'Neha', 'Kabir', 'Anika', 'Rohan', 'Aadhya', 'Vihaan', 'Myra', 'Ayaan', 'Sara', 'Krish', 'Aditi', 'Arnav', 'Riya', 'Vivaan', 'Aarna', 'Atharv', 'Pari', 'Atharva', 'Myra', 'Yash', 'Aadhya'];
+  const lastNames = ['Sharma', 'Patel', 'Gupta', 'Singh', 'Kapoor', 'Nair', 'Mehta', 'Reddy', 'Chen', 'Kumar', 'Verma', 'Joshi', 'Shah', 'Trivedi', 'Mishra', 'Banerjee', 'Iyer', 'Rao', 'Sinha', 'Pandey'];
+  const students = [];
+  const grades = ['6', '7', '8', '9', '10', '11', '12'];
+  const sections = ['A', 'B', 'C'];
 
-  const teachers = [
-    { id: 'teacher-1', name: 'Rajesh Kumar',   email: 'teacher@schoolsync.edu',  subjects: ['Mathematics', 'Chemistry'] },
-    { id: 'teacher-2', name: 'James Anderson',  email: 'teacher2@schoolsync.edu', subjects: ['Physics', 'Computer Science'] },
-    { id: 'teacher-3', name: 'Emily Chen',      email: 'teacher3@schoolsync.edu', subjects: ['English', 'Social Studies'] },
+  let studentIdx = 1;
+  for (const grade of grades) {
+    for (const section of sections) {
+      for (let i = 0; i < 8; i++) { // 8 students per class section = 168 total
+        const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+        const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+        const classId = `class-${grade}-${section.toLowerCase()}`;
+        students.push({
+          id: `student-${studentIdx}`,
+          name: `${firstName} ${lastName}`,
+          class: `${grade}-${section}`,
+          class_id: classId,
+          email: `student${studentIdx}@schoolsync.edu`
+        });
+        studentIdx++;
+      }
+    }
+  }
+
+  // Generate 35 teachers across subjects
+  const teacherNames = [
+    'Rajesh Kumar', 'James Anderson', 'Emily Chen', 'Priya Sharma', 'Vikram Singh',
+    'Anita Gupta', 'Rajiv Menon', 'Sunita Rao', 'Ajay Patel', 'Kavita Sharma',
+    'Sanjay Verma', 'Meera Nair', 'Arun Joshi', 'Pooja Shah', 'Deepak Kumar',
+    'Neeraj Singh', 'Rashmi Kapoor', 'Vijay Gupta', 'Sakshi Sharma', 'Rahul Nair',
+    'Manish Patel', 'Anjali Singh', 'Ajit Kumar', 'Preeti Menon', 'Vikram Rao',
+    'Anu Sharma', 'Rohit Gupta', 'Kamini Singh', 'Milind Joshi', 'Swati Shah',
+    'Gautam Kumar', 'Charu Patel', 'Nitin Sharma', 'Riya Nair'
   ];
+  const teacherSubjects = [
+    ['Mathematics'], ['Physics'], ['Chemistry'], ['English'], ['Social Studies'],
+    ['Biology'], ['Computer Science'], ['Hindi'], ['Art & Craft'], ['Physical Ed.'],
+    ['Mathematics', 'Physics'], ['Chemistry', 'Biology'], ['English', 'Social Studies'],
+    ['Mathematics', 'Chemistry'], ['Physics', 'Computer Science']
+  ];
+  const teachers = [];
+  for (let i = 0; i < teacherNames.length; i++) {
+    teachers.push({
+      id: `teacher-${i + 1}`,
+      name: teacherNames[i],
+      email: `teacher${i + 1}@schoolsync.edu`,
+      subjects: teacherSubjects[i % teacherSubjects.length]
+    });
+  }
 
   const scheduleRows = [
     ['sub-math','sub-eng','sub-science','sub-hindi','sub-cs','sub-arts','sub-pe',null],
@@ -130,17 +163,27 @@ const seedFirebaseData = async function() {
   // ── SUBJECTS + CLASSES (batch) ────────────────────────────────────────────
   const miscWrites = [];
   for (const s of subjects) miscWrites.push({ path: `subjects/${s.id}`, data: { ...s, class_levels: ['1','2','3','4','5','6','7','8','9','10','11','12'], created_at: now() } });
-  for (let grade = 1; grade <= 12; grade++) {
-    for (const sec of ['A','B']) {
+  for (let grade = 6; grade <= 12; grade++) {
+    for (const sec of ['A','B','C']) {
       const cid = `class-${grade}-${sec.toLowerCase()}`;
-      miscWrites.push({ path: `class_rooms/${cid}`, data: { id: cid, name: `${grade}-${sec}`, grade: String(grade), section: sec, class_teacher_id: grade <= 5 ? 'teacher-1' : grade <= 8 ? 'teacher-2' : 'teacher-3', created_at: now() } });
+      const teacherIdx = (grade - 6) % teachers.length + 1;
+      miscWrites.push({ path: `class_rooms/${cid}`, data: { id: cid, name: `${grade}-${sec}`, grade: String(grade), section: sec, class_teacher_id: `teacher-${teacherIdx}`, created_at: now() } });
     }
   }
-  miscWrites.push({ path: 'teacher_subjects/teacher-1', data: { teacher_id: 'teacher-1', subjects: ['sub-math','sub-chem'], class_ids: ['class-10-a','class-10-b','class-11-a','class-11-b'], updated_at: now() } });
-  miscWrites.push({ path: 'teacher_subjects/teacher-2', data: { teacher_id: 'teacher-2', subjects: ['sub-physics','sub-cs'], class_ids: ['class-10-a','class-10-b','class-12-a','class-12-b'], updated_at: now() } });
-  miscWrites.push({ path: 'teacher_subjects/teacher-3', data: { teacher_id: 'teacher-3', subjects: ['sub-eng','sub-sst'], class_ids: ['class-9-a','class-9-b','class-8-a','class-8-b'], updated_at: now() } });
+  // Add teacher subject mappings for all teachers
+  for (let i = 0; i < teachers.length; i++) {
+    const t = teachers[i];
+    const classIds = [];
+    for (let g = 6; g <= 12; g++) {
+      if (i % 7 === g % 7) {
+        classIds.push(`class-${g}-a`);
+        classIds.push(`class-${g}-b`);
+      }
+    }
+    miscWrites.push({ path: `teacher_subjects/${t.id}`, data: { teacher_id: t.id, subjects: t.subjects.map(s => subjects.find(sub => sub.name === s)?.id || 'sub-math'), class_ids: classIds, updated_at: now() } });
+  }
   await batchWrite(miscWrites);
-  console.log('✓ Subjects (13), classes (24), teacher mappings');
+  console.log('✓ Subjects (13), classes (21), teacher mappings');
 
   // ── STUDENT PROFILES + ENROLLMENTS ───────────────────────────────────────
   const profileWrites = [];
@@ -152,7 +195,7 @@ const seedFirebaseData = async function() {
   console.log('✓ Student profiles + enrollments');
 
   // ── TIMETABLE (flat entries — matches frontend normalizeTimetableResponse) ──
-  const allClassIds = ['class-10-a', 'class-10-b'];
+  const allClassIds = ['class-6-a', 'class-6-b', 'class-7-a', 'class-7-b', 'class-8-a', 'class-8-b', 'class-9-a', 'class-9-b', 'class-10-a', 'class-10-b', 'class-10-c', 'class-11-a', 'class-11-b', 'class-12-a', 'class-12-b'];
   const ttWrites = [];
   const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
   const BREAK_PERIODS = [4, 8]; // periods 4=break, 8=lunch
@@ -256,7 +299,7 @@ const seedFirebaseData = async function() {
     'Nutrition in Humans Assignment','Civics Essay: Rights and Duties','Geometry Proofs Homework',
   ];
   const assignSubjects = ['Mathematics','Physics','Chemistry','English','History','Biology','Hindi','Social Studies','Computer Science'];
-  const classesToSeed = ['class-10-a', 'class-10-b'];
+  const classesToSeed = ['class-6-a', 'class-6-b', 'class-7-a', 'class-7-b', 'class-8-a', 'class-8-b', 'class-9-a', 'class-9-b', 'class-10-a', 'class-10-b', 'class-10-c', 'class-11-a', 'class-11-b', 'class-12-a', 'class-12-b'];
   const assignmentWrites = [];
   let assignCounter = 1;
   for (const classId of classesToSeed) {
@@ -387,13 +430,14 @@ const seedFirebaseData = async function() {
     'Chemistry IUPAC Nomenclature Test','Semester Fee Payment Window Closing',
   ];
   const categories = ['exam','event','academic','administrative','urgent','reminder','holiday','health'];
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 100; i++) {
     const d = new Date(days[Math.min(i, days.length - 1)]);
-    d.setDate(d.getDate() - Math.floor(i * 2.4));
-    annWrites.push({ path: `announcements/ann-${i+1}`, data: { id:`ann-${i+1}`, title:annTitles[i], body:`Details for: ${annTitles[i]}. Please check the school portal for complete information.`, category: categories[i % categories.length], scope:'all', class_id:null, created_by: i%2===0?'admin-1':'teacher-1', pinned: i < 4, priority: ['high','medium','low'][i%3], created_at: d.toISOString(), updated_at: now() } });
+    d.setDate(d.getDate() - Math.floor(i * 1.2));
+    const title = annTitles[i % annTitles.length] + (i >= annTitles.length ? ` (Update ${Math.floor(i/annTitles.length) + 1})` : '');
+    annWrites.push({ path: `announcements/ann-${i+1}`, data: { id:`ann-${i+1}`, title: title, body:`Details for: ${title}. Please check the school portal for complete information.`, category: categories[i % categories.length], scope:'all', class_id:null, created_by: i%2===0?'admin-1':`teacher-${(i % teachers.length) + 1}`, pinned: i < 5, priority: ['high','medium','low'][i%3], created_at: d.toISOString(), updated_at: now() } });
   }
   await batchWrite(annWrites);
-  console.log('✓ 50 announcements');
+  console.log('✓ 100 announcements');
 
   // ── GOALS + NOTIFICATIONS ──────────────────────────────────────────────────
   const misc2Writes = [];
@@ -406,24 +450,35 @@ const seedFirebaseData = async function() {
     'Your Physics assignment has been graded - 28/30','New announcement: Annual Sports Day',
     'Reminder: Mathematics assignment due in 2 days','Congratulations! You earned the "Top Scorer" badge',
     'Your essay has been submitted successfully','New homework posted: Chapter 5 exercises',
+    'Your Chemistry lab report has been graded - 95/100','Important: Mid-term exams schedule released',
+    'Your Mathematics quiz results are out - 88/100','Reminder: Submit your English essay by Friday',
+    'You have been promoted to Level 5!','New study material uploaded for Physics',
+    'Your attendance this month is 95%','Parent-Teacher meeting scheduled for next week',
   ];
-  for (let i = 0; i < 6; i++) {
-    const d = new Date(); d.setHours(d.getHours() - i*6);
-    misc2Writes.push({ path: `notifications/notif-${i+1}`, data: { id:`notif-${i+1}`, userId:'student-1', message:notifMsgs[i], type:['grade','announcement','reminder','achievement','submission','homework'][i], read: i > 2, createdAt: d.toISOString() } });
+  // Create more notifications for multiple students
+  let notifIdx = 1;
+  for (let sIdx = 0; sIdx < Math.min(20, students.length); sIdx++) {
+    const s = students[sIdx];
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(); d.setHours(d.getHours() - (sIdx * 24 + i * 6));
+      const msgIdx = (sIdx + i) % notifMsgs.length;
+      misc2Writes.push({ path: `notifications/notif-${notifIdx}`, data: { id:`notif-${notifIdx}`, userId:s.id, message:notifMsgs[msgIdx], type:['grade','announcement','reminder','achievement','submission','homework'][msgIdx % 6], read: i > 2, createdAt: d.toISOString() } });
+      notifIdx++;
+    }
   }
   await batchWrite(misc2Writes);
   console.log('✓ Goals + notifications');
 
   console.log('\n✅ Firebase seed complete!');
-  console.log('  • 18 users (all roles)');
-  console.log('  • 13 subjects, 24 classes, 3 teacher-subject mappings');
-  console.log('  • 10 students with 120 days of attendance, XP, marks, study activity');
+  console.log(`  • ${students.length + teachers.length + 12} users (all roles)`);
+  console.log('  • 13 subjects, 21 classes, teacher-subject mappings');
+  console.log(`  • ${students.length} students with 120 days of attendance, XP, marks, study activity`);
   console.log('  • XP progression daily logs (all 120 days)');
   console.log('  • Leaderboard ranked by XP');
   console.log('  • 8 badges');
-  console.log('  • Timetable (120 days × 8 periods)');
-  console.log('  • 50 announcements, goals, notifications');
-  console.log('\n✅ Firebase seed complete!');
+  console.log('  • Timetable (15 classes × 5 days × 8 periods)');
+  console.log('  • 100 announcements, goals, notifications');
+  console.log('\n✅ MASSIVE Firebase seed complete!');
 
   // Mark as done
   await db.ref(SEED_FLAG_PATH).set(SEED_VERSION);
