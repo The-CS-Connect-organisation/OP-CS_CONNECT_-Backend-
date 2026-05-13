@@ -41,8 +41,8 @@ function schoolDays120() {
   return days;
 }
 
-const SEED_VERSION = 15;
-const SEED_FLAG_PATH = '_meta/seed_v15_done';
+const SEED_VERSION = 16;
+const SEED_FLAG_PATH = '_meta/seed_v16_done';
 
 const seedFirebaseData = async function() {
   // Check if already seeded
@@ -299,8 +299,9 @@ const seedFirebaseData = async function() {
 
   // ── SUBMISSIONS (60% submitted, 40% pending) ───────────────────────────────
   const submissionWrites = [];
-  for (const s of classStudents) {
-    const submitted = assignmentWrites.slice(0, 18); // first 18 assigned to this student
+  for (const s of students) {
+    const studentClassAssignments = assignmentWrites.filter(a => a.data.class_id === s.class_id);
+    const submitted = studentClassAssignments.slice(0, 18); // first 18 for student's class
     for (const a of submitted) {
       const r = seededRand(parseInt(s.id.split('-')[1]) * 1000 + parseInt(a.path.split('-')[1]));
       if (r() < 0.85) { // 85% of assigned submissions
