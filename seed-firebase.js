@@ -41,8 +41,8 @@ function schoolDays120() {
   return days;
 }
 
-const SEED_VERSION = 14;
-const SEED_FLAG_PATH = '_meta/seed_v14_done';
+const SEED_VERSION = 15;
+const SEED_FLAG_PATH = '_meta/seed_v15_done';
 
 const seedFirebaseData = async function() {
   // Check if already seeded
@@ -152,7 +152,7 @@ const seedFirebaseData = async function() {
   console.log('✓ Student profiles + enrollments');
 
   // ── TIMETABLE (flat entries — matches frontend normalizeTimetableResponse) ──
-  const allClassIds = ['class-10-a'];
+  const allClassIds = ['class-10-a', 'class-10-b'];
   const ttWrites = [];
   const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
   const BREAK_PERIODS = [4, 8]; // periods 4=break, 8=lunch
@@ -242,9 +242,7 @@ const seedFirebaseData = async function() {
   await batchWrite(markWrites);
   console.log(`✓ Marks: ${markWrites.length} records`);
 
-  // ── ASSIGNMENTS (30 for class-10-a) ───────────────────────────────────────
-  const classStudents = students.filter(s => s.class_id === 'class-10-a');
-  const assignmentWrites = [];
+  // ── ASSIGNMENTS (30 for EACH CLASS: class-10-a AND class-10-b ───────────────
   const assignTitles = [
     'Linear Equations Practice Set','Motion and Force Worksheet','Chemical Reactions Lab Report',
     'English Essay: My Favorite Memory','History Map Work Assignment','Physics Numerical Problems',
@@ -258,36 +256,43 @@ const seedFirebaseData = async function() {
     'Nutrition in Humans Assignment','Civics Essay: Rights and Duties','Geometry Proofs Homework',
   ];
   const assignSubjects = ['Mathematics','Physics','Chemistry','English','History','Biology','Hindi','Social Studies','Computer Science'];
-  for (let i = 0; i < 30; i++) {
-    const dueDays = 2 + (i % 14); // 2 to 15 days ahead
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() - 60 + i * 4); // past and upcoming
-    const dueStr = dueDate.toISOString().split('T')[0];
-    const createdDate = new Date(dueDate);
-    createdDate.setDate(createdDate.getDate() - 7);
-    const subj = assignSubjects[i % assignSubjects.length];
-    const teacher = teachers.find(t => t.subjects.includes(subj)) || teachers[0];
-    assignmentWrites.push({
-      path: `assignments/assign-${i + 1}`,
-      data: {
-        id: `assign-${i + 1}`,
-        title: assignTitles[i],
-        description: `Complete the ${assignTitles[i]}. Submit before the due date.`,
-        subject: subj,
-        subject_id: subjects.find(s => s.name === subj)?.id || '',
-        class_id: 'class-10-a',
-        class: '10-A',
-        teacher_id: teacher.id,
-        teacher_name: teacher.name,
-        due_date: dueStr,
-        due_time: '23:59',
-        total_marks: 30,
-        status: new Date(dueStr) < new Date() ? 'closed' : 'active',
-        type: ['homework','project','lab','test'][i % 4],
-        created_at: createdDate.toISOString(),
-        updated_at: now(),
-      },
-    });
+  const classesToSeed = ['class-10-a', 'class-10-b'];
+  const assignmentWrites = [];
+  let assignCounter = 1;
+  for (const classId of classesToSeed) {
+    const className = classId.replace('class-', '').replace('-', '-').toUpperCase();
+    for (let i = 0; i < 30; i++) {
+      const dueDays = 2 + (i % 14);
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() - 60 + i * 4);
+      const dueStr = dueDate.toISOString().split('T')[0];
+      const createdDate = new Date(dueDate);
+      createdDate.setDate(createdDate.getDate() - 7);
+      const subj = assignSubjects[i % assignSubjects.length];
+      const teacher = teachers.find(t => t.subjects.includes(subj)) || teachers[0];
+      assignmentWrites.push({
+        path: `assignments/assign-${assignCounter}`,
+        data: {
+          id: `assign-${assignCounter}`,
+          title: assignTitles[i],
+          description: `Complete the ${assignTitles[i]}. Submit before the due date.`,
+          subject: subj,
+          subject_id: subjects.find(s => s.name === subj)?.id || '',
+          class_id: classId,
+          class: className,
+          teacher_id: teacher.id,
+          teacher_name: teacher.name,
+          due_date: dueStr,
+          due_time: '23:59',
+          total_marks: 30,
+          status: new Date(dueStr) < new Date() ? 'closed' : 'active',
+          type: ['homework','project','lab','test'][i % 4],
+          created_at: createdDate.toISOString(),
+          updated_at: now(),
+        },
+      });
+      assignCounter++;
+    }
   }
   await batchWrite(assignmentWrites);
   console.log(`✓ Assignments: ${assignmentWrites.length} records`);
