@@ -94,6 +94,57 @@ const tryProviders = async (providers, messages) => {
 };
 
 export const chatWithFallback = async ({ messages, mode = 'balanced' }) => {
+  // If mode is a specific model ID, create a custom provider list for it
+  if (mode && !['balanced', 'advanced'].includes(mode)) {
+    // Try to find which provider can handle this model
+    const customProviders = [];
+    
+    // Check Cerebras models
+    const cerebrasModels = ['llama3.1-8b', 'qwen-3-235b-a22b-instruct-2507'];
+    if (cerebrasModels.includes(mode) && env.CEREBRAS_API_KEY) {
+      customProviders.push({
+        name: 'Cerebras',
+        url: 'https://api.cerebras.ai/v1/chat/completions',
+        key: env.CEREBRAS_API_KEY,
+        model: mode,
+      });
+    }
+    
+    // Check Groq models
+    const groqModels = [
+      'llama-3.1-8b-instant', 'llama-3.3-70b-versatile',
+      'allam-2-7b', 'canopylabs/orpheus-arabic-saudi', 'canopylabs/orpheus-v1-english',
+      'groq/compound', 'groq/compound-mini',
+      'meta-llama/llama-4-scout-17b-16e-instruct',
+      'meta-llama/llama-prompt-guard-2-22m', 'meta-llama/llama-prompt-guard-2-86m',
+      'openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'openai/gpt-oss-safeguard-20b',
+      'qwen/qwen3-32b', 'whisper-large-v3', 'whisper-large-v3-turbo'
+    ];
+    if (groqModels.includes(mode) && env.GROQ_API_KEY) {
+      customProviders.push({
+        name: 'Groq',
+        url: 'https://api.groq.com/openai/v1/chat/completions',
+        key: env.GROQ_API_KEY,
+        model: mode,
+      });
+    }
+    
+    // Fallback to Gemini if model not found
+    if (customProviders.length === 0 && env.GEMINI_API_KEY) {
+      customProviders.push({
+        name: 'Gemini',
+        url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+        key: env.GEMINI_API_KEY,
+        model: 'gemini-2.0-flash',
+      });
+    }
+    
+    if (customProviders.length > 0) {
+      return tryProviders(customProviders, messages);
+    }
+  }
+  
+  // Original balanced/advanced modes
   const providers = mode === 'advanced' ? ADVANCED_PROVIDERS : BALANCED_PROVIDERS;
   return tryProviders(providers, messages);
 };
