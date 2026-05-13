@@ -41,8 +41,8 @@ function schoolDays120() {
   return days;
 }
 
-const SEED_VERSION = 13;
-const SEED_FLAG_PATH = '_meta/seed_v13_done';
+const SEED_VERSION = 14;
+const SEED_FLAG_PATH = '_meta/seed_v14_done';
 
 const seedFirebaseData = async function() {
   // Check if already seeded
@@ -109,6 +109,7 @@ const seedFirebaseData = async function() {
   const pwHash = await hash('student123', 12);
   const tHash = await hash('teacher123', 12);
   const aHash = await hash('admin123', 12);
+  const mHash = await hash('manager123', 12);
   const dHash = await hash('driver123', 12);
   const pHash = await hash('parent123', 12);
   const lHash = await hash('librarian123', 12);
@@ -119,11 +120,12 @@ const seedFirebaseData = async function() {
   for (const s of students) userWrites.push({ path: `users/${s.id}`, data: { id: s.id, name: s.name, email: s.email, role: 'student', is_active: true, password_hash: pwHash, avatar: avatarSeed(s.name), created_at: now(), updated_at: now() } });
   for (const t of teachers) userWrites.push({ path: `users/${t.id}`, data: { id: t.id, name: t.name, email: t.email, role: 'teacher', is_active: true, password_hash: tHash, avatar: avatarSeed(t.name), created_at: now(), updated_at: now() } });
   for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/admin-${i}`, data: { id: `admin-${i}`, name: `Admin ${i}`, email: `admin${i}@schoolsync.edu`, role: 'admin', is_active: true, password_hash: aHash, avatar: avatarSeed(`admin${i}`), created_at: now(), updated_at: now() } });
+  userWrites.push({ path: 'users/manager-1', data: { id: 'manager-1', name: 'Sonia Verma', email: 'manager@schoolsync.edu', role: 'manager', is_active: true, password_hash: mHash, avatar: avatarSeed('Sonia Verma'), created_at: now(), updated_at: now() } });
   for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/driver-${i}`, data: { id: `driver-${i}`, name: `Driver ${i}`, email: `driver${i}@schoolsync.edu`, role: 'driver', is_active: true, password_hash: dHash, avatar: avatarSeed(`driver${i}`), created_at: now(), updated_at: now() } });
   for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/parent-${i}`, data: { id: `parent-${i}`, name: `Parent ${i}`, email: `parent${i}@schoolsync.edu`, role: 'parent', is_active: true, password_hash: pHash, avatar: avatarSeed(`parent${i}`), created_at: now(), updated_at: now() } });
   for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/librarian-${i}`, data: { id: `librarian-${i}`, name: `Librarian ${i}`, email: `librarian${i}@schoolsync.edu`, role: 'librarian', is_active: true, password_hash: lHash, avatar: avatarSeed(`librarian${i}`), created_at: now(), updated_at: now() } });
   await batchWrite(userWrites);
-  console.log('✓ 18 users with avatars');
+  console.log('✓ 19 users with avatars');
 
   // ── SUBJECTS + CLASSES (batch) ────────────────────────────────────────────
   const miscWrites = [];
