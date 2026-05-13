@@ -14,7 +14,12 @@ import { getRecord, getRecords, queryRecords, updateRecord } from '../utils/fire
 export const getStudentProfile = asyncHandler(async (req, res) => {
   const studentId = req.user.id;
 
-  const profile = await getRecord(`student_profiles/${studentId}`);
+  // Try direct key first (seed-firebase.js format), then query by user_id
+  let profile = await getRecord(`student_profiles/${studentId}`);
+  if (!profile) {
+    const profiles = await queryRecords('student_profiles', (p) => p.user_id === studentId);
+    profile = profiles[0] || null;
+  }
   const user = await getRecord(`users/${studentId}`);
 
   if (!user) throw new ApiError(404, 'Student not found');
@@ -67,10 +72,13 @@ export const updateStudentProfile = asyncHandler(async (req, res) => {
 export const getStudentDashboard = asyncHandler(async (req, res) => {
   const studentId = req.user.id;
 
-  const [profile, user] = await Promise.all([
-    getRecord(`student_profiles/${studentId}`),
-    getRecord(`users/${studentId}`),
-  ]);
+  // Try direct key first, then query by user_id
+  let profile = await getRecord(`student_profiles/${studentId}`);
+  if (!profile) {
+    const profiles = await queryRecords('student_profiles', (p) => p.user_id === studentId);
+    profile = profiles[0] || null;
+  }
+  const user = await getRecord(`users/${studentId}`);
 
   // Assignments
   const allAssignments = await getRecords('assignments');

@@ -37,17 +37,22 @@ const toSafeUser = (row) => ({
 // Fetch and attach profile data to the user object
 const enrichUser = async (user) => {
   if (user.role === 'student') {
-    const profile = await getRecord(`student_profiles/${user.id}`);
+    // Try direct key first (seed-firebase.js format), then query by user_id
+    let profile = await getRecord(`student_profiles/${user.id}`);
+    if (!profile) {
+      // Query by user_id for comprehensiveSeed.js format
+      const profiles = await queryRecords('student_profiles', (p) => p.user_id === user.id);
+      profile = profiles[0] || null;
+    }
     if (profile) {
-      // Use class from profile as-is — no auto-incrementing
       user.class = profile.class || profile.grade ? `${profile.grade || profile.class}-${profile.section || 'A'}` : '10-A';
       user.grade = profile.grade || profile.class?.split('-')[0] || '10';
       user.classId = profile.class_id || `class-${profile.grade || profile.class?.split('-')[0] || '10'}-${(profile.section || 'a').toLowerCase()}`;
       user.section = profile.section || 'A';
       user.rollNo = profile.roll_number;
       user.attendancePercent = profile.attendance_percent;
-      user.xp = 0;
-      user.badges = [];
+      user.xp = profile.xp || 0;
+      user.badges = profile.badges || [];
       user.subjects = profile.subjects;
       user.parentName = profile.parent_name;
       user.parentPhone = profile.parent_phone;
@@ -58,7 +63,12 @@ const enrichUser = async (user) => {
       user.classroomId = enrollments[0].classroom_id;
     }
   } else if (user.role === 'teacher') {
-    const profile = await getRecord(`teacher_profiles/${user.id}`);
+    // Try direct key first, then query by user_id
+    let profile = await getRecord(`teacher_profiles/${user.id}`);
+    if (!profile) {
+      const profiles = await queryRecords('teacher_profiles', (p) => p.user_id === user.id);
+      profile = profiles[0] || null;
+    }
     if (profile) {
       user.subjects = profile.subjects;
       user.phone = profile.phone;
@@ -67,13 +77,21 @@ const enrichUser = async (user) => {
     const classrooms = await queryRecords('classroom_teachers', (c) => c.teacher_id === user.id);
     user.classroomIds = classrooms.map(c => c.classroom_id);
   } else if (user.role === 'parent') {
-    const profile = await getRecord(`parent_profiles/${user.id}`);
+    let profile = await getRecord(`parent_profiles/${user.id}`);
+    if (!profile) {
+      const profiles = await queryRecords('parent_profiles', (p) => p.user_id === user.id);
+      profile = profiles[0] || null;
+    }
     if (profile) {
       user.childIds = profile.child_ids;
       user.phone = profile.phone;
     }
   } else if (user.role === 'driver') {
-    const profile = await getRecord(`driver_profiles/${user.id}`);
+    let profile = await getRecord(`driver_profiles/${user.id}`);
+    if (!profile) {
+      const profiles = await queryRecords('driver_profiles', (p) => p.user_id === user.id);
+      profile = profiles[0] || null;
+    }
     if (profile) {
       user.busNumber = profile.bus_number;
       user.licensePlate = profile.license_plate;
