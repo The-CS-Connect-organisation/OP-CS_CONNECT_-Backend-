@@ -36,6 +36,9 @@ const envSchema = z.object({
   // Stream (Chat + Video) — supply both from GetStream Dashboard; never commit real values.
   STREAM_API_KEY: z.string().default(''),
   STREAM_API_SECRET: z.string().default(''),
+
+  // Redis (optional)
+  REDIS_URL: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(cleanEnv);

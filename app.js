@@ -23,6 +23,7 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { setIO, getIO } from './utils/socket.js';
 import { sanitizeInput } from './middleware/sanitizer.js';
 import { generalLimiter, authLimiter } from './middleware/rateLimiter.js';
+import { requireAuth, allowRoles } from './middleware/auth.js';
 
 const app = express();
 
@@ -60,7 +61,7 @@ app.use(
   })
 );
 
-app.get('/api/debug-errors', async (req, res) => {
+app.get('/api/debug-errors', requireAuth, allowRoles('admin'), async (req, res) => {
   try {
     const { db } = await import('./config/firebase.js');
     const snap = await db.ref('error_logs').limitToLast(5).once('value');

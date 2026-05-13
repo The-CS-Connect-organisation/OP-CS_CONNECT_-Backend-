@@ -32,8 +32,16 @@ const start = async () => {
     cors: {
       origin: (origin, callback) => {
         if (!origin) return callback(null, true);
-        if (origin === env.CORS_ORIGIN) return callback(null, true);
+        const allowed = [
+          env.CORS_ORIGIN,
+          'https://the-cs-connect-organisation.github.io',
+          'http://localhost:5173',
+          'http://localhost:3000',
+        ].filter(Boolean);
         if (env.NODE_ENV !== 'production' && /^http:\/\/localhost:\d+$/.test(origin)) {
+          return callback(null, true);
+        }
+        if (allowed.some(o => origin === o || origin.startsWith(o))) {
           return callback(null, true);
         }
         return callback(new Error('Not allowed by CORS'));

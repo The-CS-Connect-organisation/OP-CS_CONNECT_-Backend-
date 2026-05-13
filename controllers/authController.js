@@ -8,7 +8,6 @@ import { createRecord } from '../utils/firebaseDb.js';
 import { StreamChat } from 'stream-chat';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
-import { db } from '../config/firebase.js';
 
 // Provision user in GetStream so they can connect to chat
 const provisionStreamUser = async (userId, name, role) => {
@@ -206,10 +205,6 @@ export const login = asyncHandler(async (req, res) => {
 
   if (users.length === 0) {
     logger.warn('Login failed — no user found for email', { email: normalizedEmail });
-    // DEBUG: list all user emails in Firebase
-    const allSnap = await db.ref('users').once('value');
-    const allEmails = allSnap.val() ? Object.values(allSnap.val()).map(u => u.email) : [];
-    logger.warn('All emails in Firebase users/', { emails: allEmails });
     throw new ApiError(401, 'Invalid email or password');
   }
 
@@ -222,14 +217,8 @@ export const login = asyncHandler(async (req, res) => {
 
   const isPasswordValid = user.password_hash ? await compare(password, user.password_hash) : false;
 
-  // TEMP FIX: If hash mismatch, re-hash with the provided password and update.
-  // Handles cases where users were seeded without proper bcrypt hashes.
   if (!isPasswordValid) {
-    logger.warn('Password mismatch — re-hashing and updating user', { userId: user.id, email: user.email });
-    const pwHash = await hash(password, 12);
-    await updateRecord(`users/${user.id}`, { password_hash: pwHash });
-    logger.info('Password re-hashed successfully', { userId: user.id });
-    // After re-hash, treat as valid and proceed
+    throw new ApiError(401, 'Invalid email or password');
   }
 
   const token = signToken({ sub: user.id, role: user.role });
@@ -260,10 +249,16 @@ export const login = asyncHandler(async (req, res) => {
   });
 });
 
-export const me = asyncHandler(async (_req, res) => {
+export const me = asyncHandler(async (req, res) => {
+  const user = req.user;
+  if (!user) {
+    throw new ApiError(401, 'Not authenticated');
+  }
+  const safeUser = toSafeUser(user);
+  await enrichUser(safeUser);
   res.json({
     success: true,
-    message: 'Auth API is healthy',
+    user: safeUser,
   });
 });
 
