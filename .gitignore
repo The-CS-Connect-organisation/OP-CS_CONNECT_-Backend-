@@ -3,3 +3,12 @@ node_modules/
 dist/
 .DS_Store
 Thumbs.db
+.env
+service-account.json
+*.cjs
+*.mjs
+!seed-firebase.js
+!run-seed.js
+.graphify*
+.mcp.json
+escaped-key.txt

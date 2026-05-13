@@ -14,11 +14,9 @@ function seededRand(seed) {
   return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
 }
 
-// XP → Level
+// XP → Level (1000 XP per level)
 function xpToLevel(xp) {
-  const levels = [0, 100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500, 5500, 6600, 7800];
-  for (let i = levels.length - 1; i >= 0; i--) if (xp >= levels[i]) return i + 1;
-  return 1;
+  return Math.floor(xp / 1000) + 1;
 }
 
 // Batch write (max 500 per batch to be safe)
@@ -43,8 +41,8 @@ function schoolDays120() {
   return days;
 }
 
-const SEED_VERSION = 11;
-const SEED_FLAG_PATH = '_meta/seed_v11_done';
+const SEED_VERSION = 12;
+const SEED_FLAG_PATH = '_meta/seed_v12_done';
 
 const seedFirebaseData = async function() {
   // Check if already seeded
