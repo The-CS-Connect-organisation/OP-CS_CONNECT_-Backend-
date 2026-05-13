@@ -5,7 +5,7 @@
 
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
-import { getRecord, getRecords, queryRecords, createRecord, updateRecord, deleteRecord } from '../utils/firebaseDb.js';
+import { getRecord, getRecords, queryRecords, createRecord, updateRecord, deleteRecord, getStudentProfileByUserId } from '../utils/firebaseDb.js';
 import { emitToUser } from '../utils/socket.js';
 
 // ============================================================================
@@ -104,7 +104,7 @@ export const generateStudyPlan = asyncHandler(async (req, res) => {
   const { days = 7, focusAreas = [], examDate } = req.body;
   
   // Get student's academic data
-  const studentProfile = await getRecord(`student_profiles/${studentId}`);
+  const studentProfile = await getStudentProfileByUserId(studentId);
   if (!studentProfile) {
     throw new ApiError(404, 'Student profile not found');
   }
@@ -191,14 +191,14 @@ export const updateStudyPlanProgress = asyncHandler(async (req, res) => {
     completed: progress >= 100,
   });
   
-  // Award XP for completing tasks
-  if (completed) {
-    const profile = await getRecord(`student_profiles/${plan.student_id}`);
-    if (profile) {
-      await updateRecord(`student_profiles/${plan.student_id}`, {
-        xp: (profile.xp || 0) + 10,
-      });
-    }
+// Award XP for completing tasks
+   if (completed) {
+     const profile = await getStudentProfileByUserId(plan.student_id);
+     if (profile) {
+       await updateRecord(`student_profiles/${profile.id}`, {
+         xp: (profile.xp || 0) + 10,
+       });
+     }
   }
   
   res.json({ success: true, progress });
@@ -719,8 +719,8 @@ function calculateLongestStreak(uniqueDays) {
 }
 
 async function updateWeakTopics(studentId, subject, topic, percentage) {
-  // Update student's weak topics based on test performance
-  const profile = await getRecord(`student_profiles/${studentId}`);
+   // Update student's weak topics based on test performance
+   const profile = await getStudentProfileByUserId(studentId);
   if (profile) {
     const weakTopics = profile.weak_topics || {};
     if (!weakTopics[subject]) {

@@ -1,7 +1,7 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { buildPaginatedResponse, parsePagination } from '../utils/pagination.js';
-import { getRecord, getRecords, queryRecords, createRecord, updateRecord, deleteRecord, batchWrite } from '../utils/firebaseDb.js';
+import { getRecord, getRecords, queryRecords, createRecord, updateRecord, deleteRecord, batchWrite, getStudentProfileByUserId } from '../utils/firebaseDb.js';
 import { getIO } from '../utils/socket.js';
 
 // ============================================================================
@@ -235,17 +235,17 @@ export const bulkGradeSubmissions = asyncHandler(async (req, res) => {
     })
   );
   
-  // Award XP for graded submissions
-  await Promise.all(
-    updatedSubmissions.filter(Boolean).map(async (submission) => {
-      const profile = await getRecord(`student_profiles/${submission.student_id}`);
-      if (profile) {
-        await updateRecord(`student_profiles/${submission.student_id}`, {
-          xp: (profile.xp || 0) + 15, // XP for getting work graded
-        });
-      }
-    })
-  );
+// Award XP for graded submissions
+   await Promise.all(
+     updatedSubmissions.filter(Boolean).map(async (submission) => {
+       const profile = await getStudentProfileByUserId(submission.student_id);
+       if (profile) {
+         await updateRecord(`student_profiles/${profile.id}`, {
+           xp: (profile.xp || 0) + 15, // XP for getting work graded
+         });
+       }
+     })
+   );
   
   // Emit real-time update
   const io = getIO();
@@ -408,12 +408,12 @@ export const getClassTrends = asyncHandler(async (req, res) => {
 export const getStudentProgress = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
   const { term } = req.query;
-  
-  const student = await getRecord(`student_profiles/${studentId}`);
+
+  const student = await getStudentProfileByUserId(studentId);
   if (!student) {
     throw new ApiError(404, 'Student profile not found');
   }
-  
+
   const user = await getRecord(`users/${student.user_id}`);
   
   // Get all marks
@@ -1019,7 +1019,7 @@ export const generateStudentReport = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'studentId is required');
   }
   
-  const student = await getRecord(`student_profiles/${studentId}`);
+  const student = await getStudentProfileByUserId(studentId);
   if (!student) {
     throw new ApiError(404, 'Student profile not found');
   }

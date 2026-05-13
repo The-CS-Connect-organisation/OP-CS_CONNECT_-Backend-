@@ -3,7 +3,7 @@ import { env } from '../config/env.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { buildPaginatedResponse, parsePagination } from '../utils/pagination.js';
-import { getRecord, getRecords, queryRecords, createRecord, updateRecord, deleteRecord, batchWrite } from '../utils/firebaseDb.js';
+import { getRecord, getRecords, queryRecords, createRecord, updateRecord, deleteRecord, batchWrite, getStudentProfileByUserId, getTeacherProfileByUserId } from '../utils/firebaseDb.js';
 
 const gradeFromPercentage = (percentage) => {
   if (percentage >= 90) return 'A';
@@ -289,15 +289,15 @@ export const submitAssignment = asyncHandler(async (req, res) => {
 
   await updateRecord(`submissions/${submissionId}`, submission);
 
-  // Award XP for on-time submissions
-  if (!isLate) {
-    const profile = await getRecord(`student_profiles/${req.user.id}`);
-    if (profile) {
-      await updateRecord(`student_profiles/${req.user.id}`, {
-        xp: (profile.xp || 0) + 10,
-      });
-    }
-  }
+// Award XP for on-time submissions
+   if (!isLate) {
+     const profile = await getStudentProfileByUserId(req.user.id);
+     if (profile) {
+       await updateRecord(`student_profiles/${profile.id}`, {
+         xp: (profile.xp || 0) + 10,
+       });
+     }
+   }
 
   res.status(201).json({ success: true, submission });
 });
@@ -316,20 +316,20 @@ export const gradeSubmission = asyncHandler(async (req, res) => {
 
   await updateRecord(`submissions/${req.params.submissionId}`, updated);
 
-  // Award badge for perfect score
-  if (req.body.marks >= 100) {
-    const profile = await getRecord(`student_profiles/${submission.student_id}`);
-    if (profile) {
-      const badges = Array.isArray(profile.badges) ? profile.badges : [];
-      if (!badges.includes('Top Scorer')) {
-        badges.push('Top Scorer');
-      }
-      await updateRecord(`student_profiles/${submission.student_id}`, {
-        xp: (profile.xp || 0) + 25,
-        badges,
-      });
-    }
-  }
+// Award badge for perfect score
+   if (req.body.marks >= 100) {
+     const profile = await getStudentProfileByUserId(submission.student_id);
+     if (profile) {
+       const badges = Array.isArray(profile.badges) ? profile.badges : [];
+       if (!badges.includes('Top Scorer')) {
+         badges.push('Top Scorer');
+       }
+       await updateRecord(`student_profiles/${profile.id}`, {
+         xp: (profile.xp || 0) + 25,
+         badges,
+       });
+     }
+   }
 
   res.json({ success: true, submission: updated });
 });
@@ -362,18 +362,18 @@ export const markAttendance = asyncHandler(async (req, res) => {
 
   // Recalculate attendance percentages
   await Promise.all(
-    entries.map(async (entry) => {
-      const records = await queryRecords('attendance_records', (r) => r.student_id === entry.studentId);
-      const presentOrLate = records.filter(r => ['present', 'late'].includes(r.status)).length;
-      const attendancePercent = records.length > 0 ? Math.round((presentOrLate / records.length) * 100) : 100;
+entries.map(async (entry) => {
+       const records = await queryRecords('attendance_records', (r) => r.student_id === entry.studentId);
+       const presentOrLate = records.filter(r => ['present', 'late'].includes(r.status)).length;
+       const attendancePercent = records.length > 0 ? Math.round((presentOrLate / records.length) * 100) : 100;
 
-      const profile = await getRecord(`student_profiles/${entry.studentId}`);
-      if (profile) {
-        await updateRecord(`student_profiles/${entry.studentId}`, {
-          attendance_percent: attendancePercent,
-        });
-      }
-    })
+       const profile = await getStudentProfileByUserId(entry.studentId);
+       if (profile) {
+         await updateRecord(`student_profiles/${profile.id}`, {
+           attendance_percent: attendancePercent,
+         });
+       }
+     })
   );
 
   res.json({ success: true, message: 'Attendance updated' });
@@ -579,15 +579,15 @@ export const getTimetable = asyncHandler(async (req, res) => {
   if (!classId && req.user?.class) {
     classId = req.user.class;
   }
-  if (!classId) {
-    // Try to get the student's class from their profile
-    try {
-      const profile = await getRecord(`student_profiles/${req.user.id}`);
-      if (profile?.class_id) classId = profile.class_id;
-      else if (profile?.class) classId = profile.class;
-      else if (profile?.grade) classId = `class-${profile.grade}-${profile.section || 'a'}`;
-    } catch {}
-  }
+if (!classId) {
+     // Try to get the student's class from their profile
+     try {
+       const profile = await getStudentProfileByUserId(req.user.id);
+       if (profile?.class_id) classId = profile.class_id;
+       else if (profile?.class) classId = profile.class;
+       else if (profile?.grade) classId = `class-${profile.grade}-${profile.section || 'a'}`;
+     } catch {}
+   }
   if (!classId) throw new ApiError(400, 'classId is required');
 
   const normalizeClassId = (id) => {
@@ -678,9 +678,9 @@ export const getLeaderboard = asyncHandler(async (req, res) => {
 export const getExpandedStudentProfile = asyncHandler(async (req, res) => {
   const studentId = req.params.studentId || req.user.id;
 
-  // Get user and profile data
-  const user = await getRecord(`users/${studentId}`);
-  const profile = await getRecord(`student_profiles/${studentId}`);
+// Get user and profile data
+   const user = await getRecord(`users/${studentId}`);
+   const profile = await getStudentProfileByUserId(studentId);
 
   if (!user) throw new ApiError(404, 'Student not found');
 

@@ -1,4 +1,4 @@
-import { getRecord, queryRecords, updateRecord } from '../utils/firebaseDb.js';
+import { getRecord, queryRecords, updateRecord, getStudentProfileByUserId } from '../utils/firebaseDb.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 
@@ -41,22 +41,22 @@ export const awardXP = asyncHandler(async (req, res) => {
   const xpAmount = amount || XP_ACTIONS[action] || 0;
   if (xpAmount <= 0) throw new ApiError(400, 'Invalid XP action or amount');
 
-  const profile = await getRecord(`student_profiles/${userId}`);
-  if (!profile) throw new ApiError(404, 'Student profile not found');
+const profile = await getStudentProfileByUserId(userId);
+   if (!profile) throw new ApiError(404, 'Student profile not found');
 
-  const newXP = (profile.xp || 0) + xpAmount;
-  const oldLevel = getLevelFromXP(profile.xp || 0);
-  const newLevel = getLevelFromXP(newXP);
-  const levelUp = newLevel.level > oldLevel.level;
+   const newXP = (profile.xp || 0) + xpAmount;
+   const oldLevel = getLevelFromXP(profile.xp || 0);
+   const newLevel = getLevelFromXP(newXP);
+   const levelUp = newLevel.level > oldLevel.level;
 
-  // Check badge unlocks
-  const badges = Array.isArray(profile.badges) ? [...profile.badges] : [];
-  if (newXP >= 100 && !badges.includes('First Steps')) badges.push('First Steps');
-  if (newXP >= 500 && !badges.includes('Rising Star')) badges.push('Rising Star');
-  if (newXP >= 1000 && !badges.includes('Scholar')) badges.push('Scholar');
-  if (newXP >= 2500 && !badges.includes('Legend')) badges.push('Legend');
+   // Check badge unlocks
+   const badges = Array.isArray(profile.badges) ? [...profile.badges] : [];
+   if (newXP >= 100 && !badges.includes('First Steps')) badges.push('First Steps');
+   if (newXP >= 500 && !badges.includes('Rising Star')) badges.push('Rising Star');
+   if (newXP >= 1000 && !badges.includes('Scholar')) badges.push('Scholar');
+   if (newXP >= 2500 && !badges.includes('Legend')) badges.push('Legend');
 
-  await updateRecord(`student_profiles/${userId}`, { xp: newXP, badges });
+   await updateRecord(`student_profiles/${profile.id}`, { xp: newXP, badges });
 
   res.json({ success: true, xpAwarded: xpAmount, newTotal: newXP, levelUp, newLevel, badges });
 });
@@ -64,7 +64,7 @@ export const awardXP = asyncHandler(async (req, res) => {
 export const getStudentStats = asyncHandler(async (req, res) => {
   const { studentId } = req.params;
 
-  const profile = await getRecord(`student_profiles/${studentId}`);
+  const profile = await getStudentProfileByUserId(studentId);
   if (!profile) throw new ApiError(404, 'Student profile not found');
 
   // Get class rank

@@ -264,3 +264,53 @@ export const onRecordChange = (path, callback) => {
   // Return unsubscribe function
   return () => ref.off('value');
 };
+
+// ============================================================================
+// PROFILE LOOKUP HELPERS (handle both key formats from different seed scripts)
+// ============================================================================
+
+/**
+ * Get student profile by userId - tries both direct key and user_id query
+ */
+export const getStudentProfileByUserId = async (userId) => {
+  // Try direct key first (seed-firebase.js format)
+  let profile = await getRecord(`student_profiles/${userId}`);
+  if (profile) return profile;
+  
+  // Query by user_id (comprehensiveSeed.js format)
+  const profiles = await queryRecords('student_profiles', (p) => p.user_id === userId);
+  return profiles[0] || null;
+};
+
+/**
+ * Get teacher profile by userId - tries both key formats
+ */
+export const getTeacherProfileByUserId = async (userId) => {
+  let profile = await getRecord(`teacher_profiles/${userId}`);
+  if (profile) return profile;
+  
+  const profiles = await queryRecords('teacher_profiles', (p) => p.user_id === userId);
+  return profiles[0] || null;
+};
+
+/**
+ * Get parent profile by userId - tries both key formats
+ */
+export const getParentProfileByUserId = async (userId) => {
+  let profile = await getRecord(`parent_profiles/${userId}`);
+  if (profile) return profile;
+  
+  const profiles = await queryRecords('parent_profiles', (p) => p.user_id === userId);
+  return profiles[0] || null;
+};
+
+/**
+ * Get driver profile by userId - tries both key formats
+ */
+export const getDriverProfileByUserId = async (userId) => {
+  let profile = await getRecord(`driver_profiles/${userId}`);
+  if (profile) return profile;
+  
+  const profiles = await queryRecords('driver_profiles', (p) => p.user_id === userId);
+  return profiles[0] || null;
+};
