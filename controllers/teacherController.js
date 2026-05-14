@@ -9,17 +9,22 @@ import { getIO } from '../utils/socket.js';
 // ============================================================================
 
 export const getClassAttendanceView = asyncHandler(async (req, res) => {
-  const { classId } = req.params;
+  let { classId } = req.params;
   const { date } = req.query;
-  
+
   if (!classId) {
     throw new ApiError(400, 'classId is required');
   }
-  
+
+  // Normalize classId (e.g., '10-A' -> 'class-10-a')
+  if (!classId.startsWith('class-')) {
+    classId = `class-${classId.toLowerCase()}`;
+  }
+
   const attendanceDate = date || new Date().toISOString().split('T')[0];
-  
+
   // Get all students in the class
-  const enrollments = await queryRecords('classroom_students', (e) => e.classroom_id === classId);
+  const enrollments = await queryRecords('classroom_students', (e) => e.classroom_id === classId || e.classroom_id === req.params.classId);
   const studentIds = enrollments.map((e) => e.student_id);
   
   if (!studentIds.length) {
@@ -75,12 +80,17 @@ export const getClassAttendanceView = asyncHandler(async (req, res) => {
 });
 
 export const bulkMarkAttendance = asyncHandler(async (req, res) => {
-  const { classId, date, entries } = req.body;
-  
+  let { classId, date, entries } = req.body;
+
   if (!classId || !date || !Array.isArray(entries)) {
     throw new ApiError(400, 'classId, date, and entries array are required');
   }
-  
+
+  // Normalize classId (e.g., '10-A' -> 'class-10-a')
+  if (!classId.startsWith('class-')) {
+    classId = `class-${classId.toLowerCase()}`;
+  }
+
   const normalizedDate = date.split('T')[0];
   const teacherId = req.user.id;
   
