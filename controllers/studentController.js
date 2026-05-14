@@ -5,7 +5,7 @@
 
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
-import { getRecord, getRecords, queryRecords, updateRecord } from '../utils/firebaseDb.js';
+import { getRecord, getRecords, queryRecords, updateRecord, getStudentProfileByUserId } from '../utils/firebaseDb.js';
 
 // ============================================================================
 // STUDENT PROFILE
@@ -297,7 +297,12 @@ export const getStudentNotifications = asyncHandler(async (req, res) => {
 
 export const getStudentTimetable = asyncHandler(async (req, res) => {
   const studentId = req.user.id;
-  const profile = await getRecord(`student_profiles/${studentId}`);
+  // Try direct key first (seed-firebase.js format), then query by user_id
+  let profile = await getRecord(`student_profiles/${studentId}`);
+  if (!profile) {
+    const profiles = await queryRecords('student_profiles', (p) => p.user_id === studentId);
+    profile = profiles[0] || null;
+  }
 
   const normalizeClassId = (id) => {
     if (!id) return id;
