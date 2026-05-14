@@ -82,7 +82,7 @@ export const getStudentDashboard = asyncHandler(async (req, res) => {
 
   // Assignments
   const allAssignments = await getRecords('assignments');
-  const classId = profile?.class_id || `${profile?.grade}_${profile?.section}`;
+  const classId = profile?.class_id || `class-${profile?.grade || '10'}-${(profile?.section || 'a').toLowerCase()}`;
   const myAssignments = allAssignments.filter(a => a.class_id === classId || a.class === classId);
 
   // Submissions
@@ -237,8 +237,13 @@ export const getStudentAssignments = asyncHandler(async (req, res) => {
   const studentId = req.user.id;
   const { status } = req.query;
 
-  const profile = await getRecord(`student_profiles/${studentId}`);
-  const classId = profile?.class_id || `${profile?.grade}_${profile?.section}`;
+  // Try direct key first (seed-firebase.js format), then query by user_id
+  let profile = await getRecord(`student_profiles/${studentId}`);
+  if (!profile) {
+    const profiles = await queryRecords('student_profiles', (p) => p.user_id === studentId);
+    profile = profiles[0] || null;
+  }
+  const classId = profile?.class_id || `${profile?.grade || '10'}-${profile?.section || 'a'}`;
 
   const allAssignments = await getRecords('assignments');
   const myAssignments = allAssignments.filter(a => a.class_id === classId || a.class === classId);
