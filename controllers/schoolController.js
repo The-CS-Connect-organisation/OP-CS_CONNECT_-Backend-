@@ -256,7 +256,16 @@ export const listAssignments = asyncHandler(async (req, res) => {
   assignments.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
 
   const total = assignments.length;
-  const items = assignments.slice(skip, skip + limit);
+  let items = assignments.slice(skip, skip + limit);
+
+  // Enrich with submission counts when teacherId is present
+  if (req.query.teacherId) {
+    const allSubmissions = await getRecords('submissions');
+    items = items.map(a => ({
+      ...a,
+      submission_count: allSubmissions.filter(s => s.assignment_id === a.id).length,
+    }));
+  }
 
   res.json({ success: true, ...buildPaginatedResponse({ items, total, page, limit }) });
 });
@@ -754,7 +763,7 @@ export const getExpandedStudentProfile = asyncHandler(async (req, res) => {
       nationality: profile?.nationality || '',
       
       // Academic Information
-      class: profile?.grade || profile?.class || '',
+      class: profile?.class || profile?.grade || '',
       classId: profile?.class_id || profile?.classId || '',
       section: profile?.section || '',
       

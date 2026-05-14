@@ -275,7 +275,10 @@ export const getStudentNotifications = asyncHandler(async (req, res) => {
   const studentId = req.user.id;
 
   let notifications = await queryRecords('notifications', n =>
-    n.target_users?.length === 0 || n.target_users?.includes(studentId)
+    n.target_users?.length === 0 ||
+    n.target_users?.includes(studentId) ||
+    n.userId === studentId ||
+    n.user_id === studentId
   );
 
   notifications.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));

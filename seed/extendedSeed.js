@@ -186,6 +186,7 @@ export const seedExtendedData = async () => {
       {
         id: 'notif-1',
         userId: 'student-1',
+        target_users: ['student-1'],
         message: 'Your Physics assignment "Motion and Velocity Lab Report" has been graded - 28/30',
         type: 'grade',
         read: false,
@@ -194,6 +195,7 @@ export const seedExtendedData = async () => {
       {
         id: 'notif-2',
         userId: 'student-1',
+        target_users: ['student-1'],
         message: 'New announcement: Annual Sports Day - Registrations Open',
         type: 'announcement',
         read: false,
@@ -202,6 +204,7 @@ export const seedExtendedData = async () => {
       {
         id: 'notif-3',
         userId: 'student-1',
+        target_users: ['student-1'],
         message: 'Reminder: Mathematics assignment due in 2 days',
         type: 'reminder',
         read: true,
@@ -210,6 +213,7 @@ export const seedExtendedData = async () => {
       {
         id: 'notif-4',
         userId: 'student-1',
+        target_users: ['student-1'],
         message: 'Congratulations! You earned the "Top Scorer" badge for scoring 95% in Physics',
         type: 'achievement',
         read: true,
@@ -218,6 +222,7 @@ export const seedExtendedData = async () => {
       {
         id: 'notif-5',
         userId: 'student-1',
+        target_users: ['student-1'],
         message: 'Your essay "Impact of Digital Technology" has been submitted successfully',
         type: 'submission',
         read: true,
