@@ -610,9 +610,35 @@ if (!classId) {
 
   if (!timetable) return res.json({ success: true, entries: [] });
 
-  const entries = typeof timetable.entries === 'string'
+  let entries = typeof timetable.entries === 'string'
     ? JSON.parse(timetable.entries)
     : timetable.entries;
+
+  // Handle extendedSeed date-keyed format: { "2026-05-11": { day: "Monday", periods: [...] } }
+  if (!Array.isArray(entries) || entries.length === 0) {
+    const dateEntries = Object.values(timetable).filter(v => v && typeof v === 'object' && v.day && Array.isArray(v.periods));
+    if (dateEntries.length > 0) {
+      const daysSeen = new Set();
+      entries = [];
+      for (const de of dateEntries) {
+        if (daysSeen.has(de.day)) continue;
+        daysSeen.add(de.day);
+        for (const p of de.periods) {
+          if (p.subject_name || p.subject_id) {
+            entries.push({
+              day: de.day,
+              period: String(p.period),
+              subject: p.subject_name || p.subject_id || '',
+              teacherId: p.teacher_id || '',
+              room: p.room || '',
+              startTime: p.start,
+              endTime: p.end,
+            });
+          }
+        }
+      }
+    }
+  }
 
   res.json({ success: true, classId, entries: entries || [] });
 });

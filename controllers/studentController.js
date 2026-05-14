@@ -329,10 +329,43 @@ export const getStudentTimetable = asyncHandler(async (req, res) => {
     }
   }
 
-  // If timetable.entries is an array (flat format), use it directly
-  const entries = Array.isArray(timetable?.entries)
-    ? timetable.entries
-    : Object.values(timetable || {}).filter(v => v && typeof v === 'object' && v.day);
+  // If timetable.entries is a JSON string, parse it; if an array, use directly
+  let rawEntries = timetable?.entries;
+  if (typeof rawEntries === 'string') {
+    try { rawEntries = JSON.parse(rawEntries); } catch { rawEntries = []; }
+  }
+
+  let entries;
+  if (Array.isArray(rawEntries) && rawEntries.length > 0) {
+    entries = rawEntries;
+  } else {
+    // extendedSeed format: date-keyed objects { "2026-05-11": { day: "Monday", periods: [...] } }
+    const dateEntries = Object.values(timetable || {}).filter(v => v && typeof v === 'object' && v.day && Array.isArray(v.periods));
+    if (dateEntries.length > 0) {
+      // Flatten date-keyed format into flat entries with day/period/subject
+      const daysSeen = new Set();
+      entries = [];
+      for (const de of dateEntries) {
+        if (daysSeen.has(de.day)) continue;
+        daysSeen.add(de.day);
+        for (const p of de.periods) {
+          if (p.subject_name || p.subject_id) {
+            entries.push({
+              day: de.day,
+              period: String(p.period),
+              subject: p.subject_name || p.subject_id || '',
+              teacherId: p.teacher_id || '',
+              room: p.room || '',
+              startTime: p.start,
+              endTime: p.end,
+            });
+          }
+        }
+      }
+    } else {
+      entries = Object.values(timetable || {}).filter(v => v && typeof v === 'object' && v.day && !v.periods);
+    }
+  }
 
   res.json({ success: true, timetable: timetable || {}, entries });
 });
