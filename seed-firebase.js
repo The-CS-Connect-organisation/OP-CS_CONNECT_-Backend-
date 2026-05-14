@@ -41,8 +41,8 @@ function schoolDays120() {
   return days;
 }
 
-const SEED_VERSION = 100;
-const SEED_FLAG_PATH = '_meta/seed_v100_done';
+const SEED_VERSION = 101;
+const SEED_FLAG_PATH = '_meta/seed_v101_done';
 
 const seedFirebaseData = async function() {
   // Check if already seeded
@@ -149,14 +149,23 @@ const seedFirebaseData = async function() {
 
   // ── USERS (batch) ─────────────────────────────────────────────────────────
   const avatarSeed = (name) => `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
+  // IDs reserved by bootstrapDefaults — do NOT overwrite these users
+  const BOOTSTRAP_IDS = new Set([
+    'student-1','student-2','student-3',
+    'teacher-1','teacher-2','teacher-3',
+    'admin-1','admin-2','admin-3',
+    'driver-1','driver-2','driver-3',
+    'parent-1','parent-2','parent-3',
+    'librarian-1','librarian-2','librarian-3',
+  ]);
   const userWrites = [];
-  for (const s of students) userWrites.push({ path: `users/${s.id}`, data: { id: s.id, name: s.name, email: s.email, role: 'student', is_active: true, password_hash: pwHash, avatar: avatarSeed(s.name), created_at: now(), updated_at: now() } });
-  for (const t of teachers) userWrites.push({ path: `users/${t.id}`, data: { id: t.id, name: t.name, email: t.email, role: 'teacher', is_active: true, password_hash: tHash, avatar: avatarSeed(t.name), created_at: now(), updated_at: now() } });
-  for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/admin-${i}`, data: { id: `admin-${i}`, name: `Admin ${i}`, email: `admin${i}@schoolsync.edu`, role: 'admin', is_active: true, password_hash: aHash, avatar: avatarSeed(`admin${i}`), created_at: now(), updated_at: now() } });
+  for (const s of students) { if (!BOOTSTRAP_IDS.has(s.id)) userWrites.push({ path: `users/${s.id}`, data: { id: s.id, name: s.name, email: s.email, role: 'student', is_active: true, password_hash: pwHash, avatar: avatarSeed(s.name), created_at: now(), updated_at: now() } }); }
+  for (const t of teachers) { if (!BOOTSTRAP_IDS.has(t.id)) userWrites.push({ path: `users/${t.id}`, data: { id: t.id, name: t.name, email: t.email, role: 'teacher', is_active: true, password_hash: tHash, avatar: avatarSeed(t.name), created_at: now(), updated_at: now() } }); }
+  for (let i = 1; i <= 3; i++) { if (!BOOTSTRAP_IDS.has(`admin-${i}`)) userWrites.push({ path: `users/admin-${i}`, data: { id: `admin-${i}`, name: `Admin ${i}`, email: `admin${i}@schoolsync.edu`, role: 'admin', is_active: true, password_hash: aHash, avatar: avatarSeed(`admin${i}`), created_at: now(), updated_at: now() } }); }
   userWrites.push({ path: 'users/manager-1', data: { id: 'manager-1', name: 'Sonia Verma', email: 'manager@schoolsync.edu', role: 'manager', is_active: true, password_hash: mHash, avatar: avatarSeed('Sonia Verma'), created_at: now(), updated_at: now() } });
-  for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/driver-${i}`, data: { id: `driver-${i}`, name: `Driver ${i}`, email: `driver${i}@schoolsync.edu`, role: 'driver', is_active: true, password_hash: dHash, avatar: avatarSeed(`driver${i}`), created_at: now(), updated_at: now() } });
-  for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/parent-${i}`, data: { id: `parent-${i}`, name: `Parent ${i}`, email: `parent${i}@schoolsync.edu`, role: 'parent', is_active: true, password_hash: pHash, avatar: avatarSeed(`parent${i}`), created_at: now(), updated_at: now() } });
-  for (let i = 1; i <= 3; i++) userWrites.push({ path: `users/librarian-${i}`, data: { id: `librarian-${i}`, name: `Librarian ${i}`, email: `librarian${i}@schoolsync.edu`, role: 'librarian', is_active: true, password_hash: lHash, avatar: avatarSeed(`librarian${i}`), created_at: now(), updated_at: now() } });
+  for (let i = 1; i <= 3; i++) { if (!BOOTSTRAP_IDS.has(`driver-${i}`)) userWrites.push({ path: `users/driver-${i}`, data: { id: `driver-${i}`, name: `Driver ${i}`, email: `driver${i}@schoolsync.edu`, role: 'driver', is_active: true, password_hash: dHash, avatar: avatarSeed(`driver${i}`), created_at: now(), updated_at: now() } }); }
+  for (let i = 1; i <= 3; i++) { if (!BOOTSTRAP_IDS.has(`parent-${i}`)) userWrites.push({ path: `users/parent-${i}`, data: { id: `parent-${i}`, name: `Parent ${i}`, email: `parent${i}@schoolsync.edu`, role: 'parent', is_active: true, password_hash: pHash, avatar: avatarSeed(`parent${i}`), created_at: now(), updated_at: now() } }); }
+  for (let i = 1; i <= 3; i++) { if (!BOOTSTRAP_IDS.has(`librarian-${i}`)) userWrites.push({ path: `users/librarian-${i}`, data: { id: `librarian-${i}`, name: `Librarian ${i}`, email: `librarian${i}@schoolsync.edu`, role: 'librarian', is_active: true, password_hash: lHash, avatar: avatarSeed(`librarian${i}`), created_at: now(), updated_at: now() } }); }
   await batchWrite(userWrites);
   console.log('✓ 19 users with avatars');
 
@@ -188,8 +197,14 @@ const seedFirebaseData = async function() {
   // ── STUDENT PROFILES + ENROLLMENTS ───────────────────────────────────────
   const profileWrites = [];
   for (const s of students) {
-    profileWrites.push({ path: `student_profiles/${s.id}`, data: { id: s.id, user_id: s.id, name: s.name, class: s.class, class_id: s.class_id, grade: s.class.split('-')[0], section: s.class.split('-')[1], roll_number: s.id.split('-')[1].padStart(2,'0'), subjects: ['Mathematics','English','Hindi','Science','Social Studies','Physics','Chemistry','Biology','Computer Science'], attendance_percent: 88, xp: 0, level: 1, badges: [], created_at: now(), updated_at: now() } });
-    profileWrites.push({ path: `classroom_students/${s.id}-${s.class_id}`, data: { id: `${s.id}-${s.class_id}`, classroom_id: s.class_id, student_id: s.id, enrolled_at: now() } });
+    // For bootstrapped demo students (student-1..3), keep their class-10-a assignment from extendedSeed
+    const isDemo = BOOTSTRAP_IDS.has(s.id) && s.id.startsWith('student-');
+    const profileClassId = isDemo ? 'class-10-a' : s.class_id;
+    const profileClass = isDemo ? '10-A' : s.class;
+    const profileGrade = isDemo ? '10' : s.class.split('-')[0];
+    const profileSection = isDemo ? 'A' : s.class.split('-')[1];
+    profileWrites.push({ path: `student_profiles/${s.id}`, data: { id: s.id, user_id: s.id, name: s.name, class: profileClass, class_id: profileClassId, grade: profileGrade, section: profileSection, roll_number: s.id.split('-')[1].padStart(2,'0'), subjects: ['Mathematics','English','Hindi','Science','Social Studies','Physics','Chemistry','Biology','Computer Science'], attendance_percent: 88, xp: 0, level: 1, badges: [], created_at: now(), updated_at: now() } });
+    profileWrites.push({ path: `classroom_students/${s.id}-${profileClassId}`, data: { id: `${s.id}-${profileClassId}`, classroom_id: profileClassId, student_id: s.id, enrolled_at: now() } });
   }
   await batchWrite(profileWrites);
   console.log('✓ Student profiles + enrollments');

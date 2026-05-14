@@ -1,8 +1,8 @@
 import { db } from '../config/firebase.js';
 import { logger } from '../utils/logger.js';
 
-const SEED_VERSION = 8;
-const SEED_FLAG_PATH = '_meta/seed_v8_done';
+const SEED_VERSION = 9;
+const SEED_FLAG_PATH = '_meta/seed_v9_done';
 
 /**
  * Extended seed data for SchoolSync

@@ -94,12 +94,17 @@ app.use((_req, _res, next) => {
 // Rate limiting
 app.use('/api', generalLimiter);
 app.use('/api/auth', authLimiter);
+app.use('/auth', authLimiter);
 
 app.get('/', (_req, res) => {
   res.json({ success: true, message: 'CS Connect API is running' });
 });
 
 app.get('/api/health', (_req, res) => {
+  res.json({ success: true, status: 'ok' });
+});
+
+app.get('/health', (_req, res) => {
   res.json({ success: true, status: 'ok' });
 });
 
@@ -119,6 +124,24 @@ app.use('/api/ai-analysis', aiAnalysisRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/user-prefs', userPrefsRoutes);
+
+// Mirror all routes without /api prefix so both /api/auth/login and /auth/login work
+app.use('/auth', authRoutes);
+app.use('/ai', aiRoutes);
+app.use('/school', schoolRoutes);
+app.use('/chat', chatRoutes);
+app.use('/gamification', gamificationRoutes);
+app.use('/fees', feesRoutes);
+app.use('/bus', busRoutes);
+app.use('/teacher', teacherRoutes);
+app.use('/student-assistant', studentAssistantRoutes);
+app.use('/student', studentRoutes);
+app.use('/report-cards', reportCardRoutes);
+app.use('/exams', examRoutes);
+app.use('/ai-analysis', aiAnalysisRoutes);
+app.use('/notifications', notificationsRoutes);
+app.use('/friends', friendRoutes);
+app.use('/user-prefs', userPrefsRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
