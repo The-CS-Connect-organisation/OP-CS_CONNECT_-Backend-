@@ -1,8 +1,8 @@
 import { db } from '../config/firebase.js';
 import { logger } from '../utils/logger.js';
 
-const SEED_VERSION = 9;
-const SEED_FLAG_PATH = '_meta/seed_v9_done';
+const SEED_VERSION = 11;
+const SEED_FLAG_PATH = '_meta/seed_v11_done';
 
 /**
  * Extended seed data for SchoolSync
@@ -295,11 +295,18 @@ export const seedExtendedData = async () => {
     }
     logger.info('User records updated with proper names');
 
-    // ── 8. Goals for student-1 ──
+    // ── 8. Goals for students ──
     const goals = [
       { id: 'goal-1', student_id: 'student-1', subject: 'Mathematics', target: 90, current: 85, progress: 94, created_at: new Date().toISOString() },
       { id: 'goal-2', student_id: 'student-1', subject: 'Physics', target: 85, current: 78, progress: 92, created_at: new Date().toISOString() },
       { id: 'goal-3', student_id: 'student-1', subject: 'English', target: 90, current: 88, progress: 98, created_at: new Date().toISOString() },
+
+      { id: 'goal-4', student_id: 'student-2', subject: 'Mathematics', target: 95, current: 90, progress: 95, created_at: new Date().toISOString() },
+      { id: 'goal-5', student_id: 'student-2', subject: 'Chemistry', target: 90, current: 85, progress: 94, created_at: new Date().toISOString() },
+      { id: 'goal-6', student_id: 'student-2', subject: 'Biology', target: 85, current: 80, progress: 94, created_at: new Date().toISOString() },
+
+      { id: 'goal-7', student_id: 'student-3', subject: 'English', target: 85, current: 75, progress: 88, created_at: new Date().toISOString() },
+      { id: 'goal-8', student_id: 'student-3', subject: 'History', target: 80, current: 72, progress: 90, created_at: new Date().toISOString() },
     ];
 
     for (const goal of goals) {
@@ -319,31 +326,42 @@ export const seedExtendedData = async () => {
     }
     logger.info('Classroom enrollments seeded');
 
-    // ── 10. Study activity for student-1 ──
-    const studyActivity = {
-      student_id: 'student-1',
-      total_hours: 45,
-      assignments_completed: 12,
-      tests_taken: 5,
-      streak_days: 7,
-      last_active: new Date().toISOString(),
-      subject_hours: {
-        Mathematics: 12,
-        Physics: 8,
-        Chemistry: 7,
-        English: 10,
-        Biology: 5,
-        History: 3,
+    // ── 10. Study activity for students ──
+    const studyActivities = [
+      {
+        student_id: 'student-1',
+        total_hours: 45,
+        assignments_completed: 12,
+        tests_taken: 5,
+        streak_days: 7,
+        last_active: new Date().toISOString(),
+        subject_hours: { Mathematics: 12, Physics: 8, Chemistry: 7, English: 10, Biology: 5, History: 3 },
+        weekly_progress: [ { week: 'W1', hours: 8 }, { week: 'W2', hours: 10 }, { week: 'W3', hours: 7 }, { week: 'W4', hours: 12 }, { week: 'W5', hours: 8 } ],
       },
-      weekly_progress: [
-        { week: 'W1', hours: 8 },
-        { week: 'W2', hours: 10 },
-        { week: 'W3', hours: 7 },
-        { week: 'W4', hours: 12 },
-        { week: 'W5', hours: 8 },
-      ],
-    };
-    await db.ref(`study_activity/student-1`).update(studyActivity);
+      {
+        student_id: 'student-2',
+        total_hours: 62,
+        assignments_completed: 15,
+        tests_taken: 6,
+        streak_days: 14,
+        last_active: new Date().toISOString(),
+        subject_hours: { Mathematics: 15, Physics: 12, Chemistry: 10, English: 8, Biology: 10, History: 7 },
+        weekly_progress: [ { week: 'W1', hours: 12 }, { week: 'W2', hours: 11 }, { week: 'W3', hours: 14 }, { week: 'W4', hours: 13 }, { week: 'W5', hours: 12 } ],
+      },
+      {
+        student_id: 'student-3',
+        total_hours: 28,
+        assignments_completed: 8,
+        tests_taken: 3,
+        streak_days: 2,
+        last_active: new Date().toISOString(),
+        subject_hours: { Mathematics: 5, Physics: 4, Chemistry: 3, English: 8, Biology: 4, History: 4 },
+        weekly_progress: [ { week: 'W1', hours: 4 }, { week: 'W2', hours: 5 }, { week: 'W3', hours: 6 }, { week: 'W4', hours: 8 }, { week: 'W5', hours: 5 } ],
+      }
+    ];
+    for (const activity of studyActivities) {
+      await db.ref(`study_activity/${activity.student_id}`).update(activity);
+    }
     logger.info('Study activity seeded');
 
     // ── 11. Subjects (K-12) ──
@@ -450,6 +468,90 @@ export const seedExtendedData = async () => {
     });
     await db.ref('timetables/class-10-a').update(class10aTimetable);
     logger.info(`Timetable seeded: 120 school days, 8 periods for class-10-a`);
+
+    // ── 16. Library Books ──
+    const libraryBooks = [
+      { id: 'book-1', title: 'Introduction to Algorithms', author: 'Thomas H. Cormen', isbn: '978-0262033848', publicationYear: 2009, category: 'Technology', description: 'A comprehensive textbook on algorithms covering sorting, searching, graph algorithms, and more.', status: 'available', createdAt: new Date().toISOString() },
+      { id: 'book-2', title: 'To Kill a Mockingbird', author: 'Harper Lee', isbn: '978-0061120084', publicationYear: 1960, category: 'Literature', description: 'A classic novel about racial injustice in the American South.', status: 'issued', borrower: { id: 'student-1', name: 'Priya Sharma', class: '10-A' }, issueDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), createdAt: new Date().toISOString() },
+      { id: 'book-3', title: 'A Brief History of Time', author: 'Stephen Hawking', isbn: '978-0553380163', publicationYear: 1998, category: 'Science', description: 'A landmark volume in science writing exploring the cosmos.', status: 'available', createdAt: new Date().toISOString() },
+      { id: 'book-4', title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', isbn: '978-0743273565', publicationYear: 1925, category: 'Literature', description: 'A story of the fabulously wealthy Jay Gatsby and his love for Daisy Buchanan.', status: 'issued', borrower: { id: 'student-2', name: 'Aarav Menon', class: '10-A' }, issueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), dueDate: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000).toISOString(), createdAt: new Date().toISOString() },
+      { id: 'book-5', title: 'NCERT Mathematics Class 10', author: 'NCERT', isbn: '978-8174506313', publicationYear: 2024, category: 'Mathematics', description: 'Official NCERT textbook for Class 10 Mathematics.', status: 'available', createdAt: new Date().toISOString() },
+      { id: 'book-6', title: 'Sapiens: A Brief History of Humankind', author: 'Yuval Noah Harari', isbn: '978-0062316097', publicationYear: 2015, category: 'History', description: 'A thought-provoking exploration of how Homo sapiens came to dominate the Earth.', status: 'available', createdAt: new Date().toISOString() },
+      { id: 'book-7', title: 'The Discovery of India', author: 'Jawaharlal Nehru', isbn: '978-0143031031', publicationYear: 1946, category: 'History', description: 'Nehru\'s classic work on Indian history and culture.', status: 'reserved', createdAt: new Date().toISOString() },
+      { id: 'book-8', title: 'Physics for Class 10', author: 'S.L. Arora', isbn: '978-9352830152', publicationYear: 2024, category: 'Science', description: 'Comprehensive physics reference for Class 10 students.', status: 'available', createdAt: new Date().toISOString() },
+      { id: 'book-9', title: 'Wings of Fire', author: 'A.P.J. Abdul Kalam', isbn: '978-8173711466', publicationYear: 1999, category: 'Non-Fiction', description: 'Autobiography of India\'s Missile Man and former President.', status: 'issued', borrower: { id: 'student-3', name: 'Ishita Kapoor', class: '10-A' }, issueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), dueDate: new Date(Date.now() + 11 * 24 * 60 * 60 * 1000).toISOString(), createdAt: new Date().toISOString() },
+      { id: 'book-10', title: 'The Alchemist', author: 'Paulo Coelho', isbn: '978-0062315007', publicationYear: 1988, category: 'Fiction', description: 'A mystical story about a shepherd boy who dreams of finding treasure.', status: 'available', createdAt: new Date().toISOString() },
+    ];
+    for (const book of libraryBooks) await db.ref(`library_books/${book.id}`).update(book);
+    logger.info('Library books seeded (10 books)');
+
+    // ── 17. Library Transactions ──
+    const libraryTransactions = [
+      { id: 'ltx-1', bookId: 'book-2', bookTitle: 'To Kill a Mockingbird', studentId: 'student-1', studentName: 'Priya Sharma', studentClass: '10-A', issueDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), status: 'issued' },
+      { id: 'ltx-2', bookId: 'book-4', bookTitle: 'The Great Gatsby', studentId: 'student-2', studentName: 'Aarav Menon', studentClass: '10-A', issueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), dueDate: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000).toISOString(), status: 'issued' },
+      { id: 'ltx-3', bookId: 'book-9', bookTitle: 'Wings of Fire', studentId: 'student-3', studentName: 'Ishita Kapoor', studentClass: '10-A', issueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), dueDate: new Date(Date.now() + 11 * 24 * 60 * 60 * 1000).toISOString(), status: 'issued' },
+      { id: 'ltx-4', bookId: 'book-5', bookTitle: 'NCERT Mathematics Class 10', studentId: 'student-1', studentName: 'Priya Sharma', studentClass: '10-A', issueDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(), dueDate: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), returnDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), fine: 0, status: 'returned' },
+      { id: 'ltx-5', bookId: 'book-3', bookTitle: 'A Brief History of Time', studentId: 'student-2', studentName: 'Aarav Menon', studentClass: '10-A', issueDate: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(), dueDate: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000).toISOString(), returnDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), fine: 0, status: 'returned' },
+    ];
+    for (const tx of libraryTransactions) await db.ref(`library_transactions/${tx.id}`).update(tx);
+    logger.info('Library transactions seeded');
+
+    // ── 18. Maintenance Tickets ──
+    const maintenanceTickets = [
+      { id: 'mt-1', title: 'Broken projector in Room 201', description: 'The projector screen is flickering and displays a blue tint. Needs immediate repair as exams are approaching.', location: 'Room 201, Main Building', category: 'IT', priority: 'high', status: 'in_progress', createdBy: 'teacher-1', assignedTo: 'admin-1', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() },
+      { id: 'mt-2', title: 'Water leakage in Boys\' Washroom', description: 'Continuous water leakage from the second tap in the boys washroom on the ground floor.', location: 'Ground Floor Washroom, Block A', category: 'Plumbing', priority: 'urgent', status: 'pending', createdBy: 'admin-2', assignedTo: null, createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() },
+      { id: 'mt-3', title: 'Broken chair in Library', description: 'One of the chairs in the reading area has a broken leg and is unsafe.', location: 'Library, First Floor', category: 'Furniture', priority: 'medium', status: 'completed', createdBy: 'librarian-1', assignedTo: 'admin-1', createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+      { id: 'mt-4', title: 'AC not working in Computer Lab', description: 'Air conditioning unit in the computer lab is making loud noise and not cooling properly.', location: 'Computer Lab, Second Floor', category: 'HVAC', priority: 'high', status: 'pending', createdBy: 'teacher-2', assignedTo: null, createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
+      { id: 'mt-5', title: 'Flickering lights in Corridor B', description: 'Multiple fluorescent lights are flickering in corridor B on the second floor, creating a safety hazard.', location: 'Corridor B, Second Floor', category: 'Electrical', priority: 'medium', status: 'in_progress', createdBy: 'admin-1', assignedTo: 'admin-2', createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
+      { id: 'mt-6', title: 'Whiteboard marker stains won\'t clean', description: 'The whiteboard in Room 305 has permanent marker stains that regular cleaning cannot remove.', location: 'Room 305, Science Block', category: 'Cleaning', priority: 'low', status: 'pending', createdBy: 'teacher-3', assignedTo: null, createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), updatedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString() },
+    ];
+    for (const mt of maintenanceTickets) await db.ref(`maintenance_tickets/${mt.id}`).update(mt);
+    logger.info('Maintenance tickets seeded (6 tickets)');
+
+    // ── 19. Social Posts ──
+    const socialPosts = [
+      { id: 'post-1', title: 'Science Exhibition Ideas Brainstorm', content: 'Hey everyone! Let\'s share ideas for the upcoming science exhibition. I\'m thinking of doing a project on renewable energy. What are you all planning?', authorId: 'student-1', authorName: 'Priya Sharma', createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), likes: ['student-2', 'student-3', 'teacher-1'], comments: [{ id: 'c1', content: 'I\'m doing a project on water purification using solar energy!', authorId: 'student-2', authorName: 'Aarav Menon', createdAt: new Date(Date.now() - 1.5 * 24 * 60 * 60 * 1000).toISOString() }, { id: 'c2', content: 'Great ideas! Remember to include a working model.', authorId: 'teacher-1', authorName: 'Rajesh Kumar', createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() }], views: 45, groupId: null },
+      { id: 'post-2', title: 'Math Study Group - Trigonometry', content: 'Anyone interested in forming a study group for trigonometry? The chapter test is coming up on May 20th. We can meet in the library after school.', authorId: 'student-2', authorName: 'Aarav Menon', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), likes: ['student-1', 'student-3'], comments: [{ id: 'c3', content: 'Count me in! I need help with inverse trig functions.', authorId: 'student-3', authorName: 'Ishita Kapoor', createdAt: new Date(Date.now() - 2.5 * 24 * 60 * 60 * 1000).toISOString() }], views: 32, groupId: 'group-1' },
+      { id: 'post-3', title: 'Sports Day Registrations Reminder', content: 'Last day to register for Annual Sports Day events is May 18th! Don\'t miss out on relay race, long jump, and shot put. Sign up at the PE department.', authorId: 'teacher-2', authorName: 'James Anderson', createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), likes: ['student-1', 'student-2', 'student-3', 'teacher-1', 'teacher-3'], comments: [], views: 78, groupId: null },
+      { id: 'post-4', title: 'Lost and Found: Blue Water Bottle', content: 'Found a blue Cello water bottle near the basketball court yesterday. If it\'s yours, please collect it from the school office.', authorId: 'student-3', authorName: 'Ishita Kapoor', createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), likes: [], comments: [], views: 15, groupId: null },
+      { id: 'post-5', title: 'Tips for Physics Practical Exam', content: 'Here are some tips for the upcoming physics practical:\n1. Practice all experiments at least twice\n2. Know the theory behind each experiment\n3. Label diagrams clearly\n4. Double-check calculations', authorId: 'teacher-2', authorName: 'James Anderson', createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), likes: ['student-1', 'student-2', 'student-3'], comments: [{ id: 'c4', content: 'Thank you sir! Very helpful.', authorId: 'student-1', authorName: 'Priya Sharma', createdAt: new Date(Date.now() - 4.5 * 24 * 60 * 60 * 1000).toISOString() }], views: 120, groupId: null },
+    ];
+    for (const post of socialPosts) await db.ref(`social_posts/${post.id}`).update(post);
+    logger.info('Social posts seeded (5 posts)');
+
+    // ── 20. Social Groups ──
+    const socialGroups = [
+      { id: 'group-1', name: 'Class 10-A Study Group', description: 'Official study group for Class 10-A students. Share notes, discuss doubts, and help each other prepare for exams.', visibility: 'public', createdBy: 'student-1', createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), members: ['student-1', 'student-2', 'student-3', 'teacher-1'] },
+      { id: 'group-2', name: 'Science Olympiad Prep', description: 'Preparation group for National Science Olympiad. Weekly problem-solving sessions and resource sharing.', visibility: 'public', createdBy: 'teacher-2', createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(), members: ['teacher-2', 'student-1', 'student-2'] },
+      { id: 'group-3', name: 'Sports Committee', description: 'Planning and coordination group for school sports events and annual sports day.', visibility: 'public', createdBy: 'teacher-2', createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), members: ['teacher-2', 'student-2', 'student-3', 'admin-1'] },
+      { id: 'group-4', name: 'Book Club', description: 'Monthly book reading and discussion club. We read one book per month and share our thoughts.', visibility: 'public', createdBy: 'librarian-1', createdAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(), members: ['librarian-1', 'student-1', 'student-3', 'teacher-3'] },
+    ];
+    for (const group of socialGroups) await db.ref(`social_groups/${group.id}`).update(group);
+    logger.info('Social groups seeded (4 groups)');
+
+    // ── 21. Exams seed data ──
+    const exams = [
+      { id: 'exam-1', name: 'Mid-Term Mathematics', subject: 'Mathematics', class: '10-A', date: '2026-05-20', maxMarks: 100, createdBy: 'teacher-1', createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() },
+      { id: 'exam-2', name: 'Physics Unit Test - Optics', subject: 'Physics', class: '10-A', date: '2026-05-22', maxMarks: 50, createdBy: 'teacher-2', createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+      { id: 'exam-3', name: 'Chemistry Practical', subject: 'Chemistry', class: '10-A', date: '2026-05-25', maxMarks: 30, createdBy: 'teacher-1', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
+      { id: 'exam-4', name: 'English Literature Essay', subject: 'English', class: '10-A', date: '2026-05-18', maxMarks: 50, createdBy: 'teacher-3', createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
+    ];
+    for (const exam of exams) await db.ref(`exams/${exam.id}`).update(exam);
+    logger.info('Exams seeded (4 exams)');
+
+    // ── 22. Question Bank for mock exams ──
+    const questionBank = [
+      { id: 'q-1', type: 'mcq', class: '10-A', subject: 'Mathematics', text: 'What is the value of sin(30°)?', marks: 1, options: ['0.5', '0.866', '1', '0'], correctIndex: 0, createdAt: new Date().toISOString(), createdBy: 'teacher-1' },
+      { id: 'q-2', type: 'mcq', class: '10-A', subject: 'Mathematics', text: 'The sum of angles in a triangle is:', marks: 1, options: ['90°', '180°', '270°', '360°'], correctIndex: 1, createdAt: new Date().toISOString(), createdBy: 'teacher-1' },
+      { id: 'q-3', type: 'mcq', class: '10-A', subject: 'Physics', text: 'SI unit of force is:', marks: 1, options: ['Joule', 'Newton', 'Watt', 'Pascal'], correctIndex: 1, createdAt: new Date().toISOString(), createdBy: 'teacher-2' },
+      { id: 'q-4', type: 'mcq', class: '10-A', subject: 'Physics', text: 'Speed of light in vacuum is approximately:', marks: 1, options: ['3×10⁶ m/s', '3×10⁸ m/s', '3×10¹⁰ m/s', '3×10⁴ m/s'], correctIndex: 1, createdAt: new Date().toISOString(), createdBy: 'teacher-2' },
+      { id: 'q-5', type: 'mcq', class: '10-A', subject: 'Chemistry', text: 'What is the chemical formula for water?', marks: 1, options: ['H₂O', 'CO₂', 'NaCl', 'O₂'], correctIndex: 0, createdAt: new Date().toISOString(), createdBy: 'teacher-1' },
+      { id: 'q-6', type: 'mcq', class: '10-A', subject: 'Chemistry', text: 'pH of pure water at 25°C is:', marks: 1, options: ['0', '7', '14', '1'], correctIndex: 1, createdAt: new Date().toISOString(), createdBy: 'teacher-1' },
+      { id: 'q-7', type: 'mcq', class: '10-A', subject: 'English', text: 'Which figure of speech is used in "The wind howled"?', marks: 1, options: ['Simile', 'Metaphor', 'Personification', 'Alliteration'], correctIndex: 2, createdAt: new Date().toISOString(), createdBy: 'teacher-3' },
+      { id: 'q-8', type: 'mcq', class: '10-A', subject: 'Mathematics', text: 'The derivative of x² is:', marks: 1, options: ['x', '2x', '2', 'x²'], correctIndex: 1, createdAt: new Date().toISOString(), createdBy: 'teacher-1' },
+    ];
+    for (const q of questionBank) await db.ref(`question_bank/${q.id}`).update(q);
+    logger.info('Question bank seeded (8 questions)');
 
     await db.ref(SEED_FLAG_PATH).set(SEED_VERSION);
     logger.info('Extended seed complete!');

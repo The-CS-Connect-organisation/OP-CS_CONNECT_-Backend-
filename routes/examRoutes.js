@@ -26,11 +26,11 @@ const upload = multer({ limits: { fileSize: 20 * 1024 * 1024 } });
 router.use(requireAuth);
 
 // Exams
-router.post('/exams', allowRoles('admin', 'teacher'), upload.single('paper'), validateRequest(createExamSchema), createExam);
-router.get('/exams', allowRoles('admin', 'teacher', 'student', 'parent'), listExams);
-router.get('/exams/:examId', allowRoles('admin', 'teacher', 'student', 'parent'), getExam);
-router.patch('/exams/:examId', allowRoles('admin', 'teacher'), updateExam);
-router.delete('/exams/:examId', allowRoles('admin'), deleteExam);
+router.post('/', allowRoles('admin', 'teacher'), upload.single('paper'), validateRequest(createExamSchema), createExam);
+router.get('/', allowRoles('admin', 'teacher', 'student', 'parent'), listExams);
+router.get('/:examId', allowRoles('admin', 'teacher', 'student', 'parent'), getExam);
+router.patch('/:examId', allowRoles('admin', 'teacher'), updateExam);
+router.delete('/:examId', allowRoles('admin'), deleteExam);
 
 // Question Bank
 router.post('/questions', allowRoles('admin', 'teacher'), validateRequest(createQuestionSchema), createQuestion);
@@ -39,7 +39,7 @@ router.delete('/questions/:questionId', allowRoles('admin', 'teacher'), deleteQu
 router.post('/questions/bulk', allowRoles('admin', 'teacher'), validateRequest(bulkQuestionsSchema), bulkCreateQuestions);
 
 // Exam Attempts
-router.post('/exams/:examId/attempts', allowRoles('student'), validateRequest(startAttemptSchema), startAttempt);
+router.post('/:examId/attempts', allowRoles('student'), validateRequest(startAttemptSchema), startAttempt);
 router.get('/attempts/:attemptId', allowRoles('student', 'teacher', 'admin'), getAttempt);
 router.patch('/attempts/:attemptId', allowRoles('student'), validateRequest(updateAttemptSchema), updateAttempt);
 router.get('/attempts', allowRoles('student', 'teacher', 'admin'), listAttempts);

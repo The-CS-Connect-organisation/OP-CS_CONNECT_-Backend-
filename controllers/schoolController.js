@@ -436,6 +436,19 @@ export const listAnnouncements = asyncHandler(async (req, res) => {
 
   let announcements = await getRecords('announcements');
 
+  // Filter based on role
+  if (req.user.role === 'student') {
+    const { getStudentProfileByUserId } = await import('../utils/firebaseDb.js');
+    const profile = await getStudentProfileByUserId(req.user.id);
+    const baseClassId = profile?.class_id || `class-${profile?.grade || '10'}-${(profile?.section || 'a').toLowerCase()}`;
+    const normalizedClassId = baseClassId.startsWith('class-') ? baseClassId : `class-${baseClassId.toLowerCase()}`;
+
+    announcements = announcements.filter(a =>
+      a.scope === 'all' ||
+      (a.scope === 'class' && (a.class_id === normalizedClassId || a.class_id === baseClassId))
+    );
+  }
+
   // Apply filters
   if (req.query.scope) {
     announcements = announcements.filter(a => a.scope === req.query.scope);

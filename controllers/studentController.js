@@ -243,10 +243,11 @@ export const getStudentAssignments = asyncHandler(async (req, res) => {
     const profiles = await queryRecords('student_profiles', (p) => p.user_id === studentId);
     profile = profiles[0] || null;
   }
-  const classId = profile?.class_id || `${profile?.grade || '10'}-${profile?.section || 'a'}`;
+  const baseClassId = profile?.class_id || `class-${profile?.grade || '10'}-${(profile?.section || 'a').toLowerCase()}`;
+  const normalizedClassId = baseClassId.startsWith('class-') ? baseClassId : `class-${baseClassId.toLowerCase()}`;
 
   const allAssignments = await getRecords('assignments');
-  const myAssignments = allAssignments.filter(a => a.class_id === classId || a.class === classId);
+  const myAssignments = allAssignments.filter(a => a.class_id === normalizedClassId || a.class === normalizedClassId || a.class_id === baseClassId || a.class === baseClassId);
 
   const mySubmissions = await queryRecords('submissions', s => s.student_id === studentId);
   const submissionMap = {};
