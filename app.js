@@ -18,6 +18,11 @@ import aiAnalysisRoutes from './routes/aiAnalysisRoutes.js';
 import notificationsRoutes from './routes/notificationsRoutes.js';
 import friendRoutes from './routes/friendRoutes.js';
 import userPrefsRoutes from './routes/userPrefsRoutes.js';
+import lostAndFoundRoutes from './routes/lostAndFoundRoutes.js';
+import reportRoutes from './routes/reportRoutes.js';
+import clinicRoutes from './routes/clinicRoutes.js';
+import portfolioRoutes from './routes/portfolioRoutes.js';
+import helpdeskRoutes from './routes/helpdeskRoutes.js';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { setIO, getIO } from './utils/socket.js';
@@ -124,6 +129,11 @@ app.use('/api/ai-analysis', aiAnalysisRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/user-prefs', userPrefsRoutes);
+app.use('/api/lost-and-found', lostAndFoundRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/clinic', clinicRoutes);
+app.use('/api/portfolios', portfolioRoutes);
+app.use('/api/helpdesk', helpdeskRoutes);
 
 // Mirror all routes without /api prefix so both /api/auth/login and /auth/login work
 app.use('/auth', authRoutes);
@@ -142,6 +152,11 @@ app.use('/ai-analysis', aiAnalysisRoutes);
 app.use('/notifications', notificationsRoutes);
 app.use('/friends', friendRoutes);
 app.use('/user-prefs', userPrefsRoutes);
+app.use('/lost-and-found', lostAndFoundRoutes);
+app.use('/reports', reportRoutes);
+app.use('/clinic', clinicRoutes);
+app.use('/portfolios', portfolioRoutes);
+app.use('/helpdesk', helpdeskRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
