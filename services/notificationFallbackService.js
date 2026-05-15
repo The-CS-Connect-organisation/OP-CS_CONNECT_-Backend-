@@ -6,15 +6,15 @@
 
 import { getRecords, queryRecords, updateRecord } from '../utils/firebaseDb.js';
 import { logger } from '../utils/logger.js';
-import { isUserOnline } from './socket.js';
+import { isUserOnline } from '../utils/socket.js';
 
 // FCM messaging instance (lazy initialization)
 let messagingInstance = null;
 
-const getMessaging = () => {
+const getMessaging = async () => {
   if (messagingInstance) return messagingInstance;
   try {
-    const admin = require('firebase-admin');
+    const admin = (await import('firebase-admin')).default;
     if (admin.apps.length === 0) {
       logger.warn('Firebase Admin not initialized, skipping FCM');
       return null;
@@ -32,7 +32,7 @@ const getMessaging = () => {
  */
 export const sendFCMPush = async (userId, title, body, data = {}) => {
   try {
-    const messaging = getMessaging();
+    const messaging = await getMessaging();
     if (!messaging) return { success: false, reason: 'fcm_unavailable' };
 
     // Look up the user's FCM token from their profile
@@ -99,7 +99,7 @@ export const sendFCMPush = async (userId, title, body, data = {}) => {
 export const sendEmailNotification = async (userId, toEmail, subject, body) => {
   try {
     // Check if nodemailer is configured
-    const nodemailer = require('nodemailer');
+    const nodemailer = (await import('nodemailer')).default;
     const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
     const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
     const SMTP_USER = process.env.SMTP_USER;
@@ -264,8 +264,8 @@ export const storeNotification = async ({ userId, message, type = 'info', meta =
     updated_at: new Date().toISOString(),
   };
 
-  const db = require('../utils/firebaseDb.js');
-  await db.updateRecord(`notifications/${notificationId}`, notification);
+  const { updateRecord: dbUpdate } = await import('../utils/firebaseDb.js');
+  await dbUpdate(`notifications/${notificationId}`, notification);
 
   return notificationId;
 };
@@ -278,7 +278,7 @@ export const sendFullNotification = async ({ userId, message, type = 'info', met
   const notificationId = await storeNotification({ userId, message, type, meta, senderId });
 
   // Try real-time via Socket.IO first
-  const { emitToUser } = await import('./socket.js');
+  const { emitToUser } = await import('../utils/socket.js');
   emitToUser(userId, 'notification:new', {
     id: notificationId,
     user_id: userId,
