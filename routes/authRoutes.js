@@ -10,8 +10,37 @@ const { hash } = pkg;
 
 const router = Router();
 
-router.get('/health', me);
+router.get('/health', (_req, res) => res.json({ success: true, status: 'ok', timestamp: new Date().toISOString() }));
 router.get('/me', requireAuth, (req, res) => res.json({ success: true, user: req.user }));
+
+// Update profile
+router.put('/profile', requireAuth, asyncHandler(async (req, res) => {
+  const { name, phone, avatar } = req.body;
+  const userId = req.user.id;
+
+  const updates = {
+    ...(name !== undefined && { name }),
+    updated_at: new Date().toISOString(),
+  };
+  await updateRecord(`users/${userId}`, updates);
+
+  // Update role-specific profile if phone provided
+  if (phone) {
+    const role = req.user.role;
+    if (role === 'student') {
+      const { getStudentProfileByUserId } = await import('../utils/firebaseDb.js');
+      const profile = await getStudentProfileByUserId(userId);
+      if (profile) await updateRecord(`student_profiles/${profile.id}`, { phone, updated_at: new Date().toISOString() });
+    } else if (role === 'teacher') {
+      const { getTeacherProfileByUserId } = await import('../utils/firebaseDb.js');
+      const profile = await getTeacherProfileByUserId(userId);
+      if (profile) await updateRecord(`teacher_profiles/${profile.id}`, { phone, updated_at: new Date().toISOString() });
+    }
+  }
+
+  const updatedUser = await getRecord(`users/${userId}`);
+  res.json({ success: true, user: { id: updatedUser.id, name: updatedUser.name, email: updatedUser.email, role: updatedUser.role, is_active: updatedUser.is_active } });
+}));
 router.post('/signup', validateRequest(signupSchema), signup);
 router.post('/login', validateRequest(loginSchema), login);
 

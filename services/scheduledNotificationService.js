@@ -6,6 +6,7 @@
 import { getRecords, queryRecords, updateRecord, getRecord } from '../utils/firebaseDb.js';
 import { emitToUser, emitToClass } from '../utils/socket.js';
 import { logger } from '../utils/logger.js';
+import { notifyWithFallback } from './notificationFallbackService.js';
 
 // Store for scheduled jobs
 const scheduledJobs = new Map();
@@ -40,7 +41,7 @@ export const scheduleNotification = async (notification, delayMs) => {
 };
 
 /**
- * Execute a scheduled notification
+ * Execute a scheduled notification with fallback delivery
  */
 export const executeScheduledNotification = async (notification) => {
   try {
@@ -48,22 +49,25 @@ export const executeScheduledNotification = async (notification) => {
     await updateRecord(`notifications/${notification.id}`, {
       sent_at: new Date().toISOString(),
     });
-    
+
     // Determine target users
     let targetUserIds = notification.target_users || [];
     if (targetUserIds.length === 0 && notification.class_id) {
       const enrollments = await queryRecords('classroom_students', (e) => e.classroom_id === notification.class_id);
       targetUserIds = enrollments.map(e => e.student_id);
     }
-    
-    // Emit to each target user
-    targetUserIds.forEach(userId => {
-      emitToUser(userId, 'notification:new', notification);
-    });
-    
-    logger.info(`Notification ${notification.id} executed and sent to ${targetUserIds.length} users`);
-    
-    return { success: true, sentTo: targetUserIds.length };
+
+    // Try WebSocket first, then fallback
+    const fallbackResults = await notifyWithFallback(
+      targetUserIds,
+      notification.title || 'Notification',
+      notification.message || '',
+      notification.metadata || {}
+    );
+
+    logger.info(`Notification ${notification.id}: ${fallbackResults.summary.websocket} ws, ${fallbackResults.summary.fcm} fcm, ${fallbackResults.summary.email} email, ${fallbackResults.summary.failed} failed`);
+
+    return { success: true, sentTo: targetUserIds.length, delivery: fallbackResults.summary };
   } catch (error) {
     logger.error('Error executing scheduled notification', { error: error.message });
     return { success: false, error: error.message };

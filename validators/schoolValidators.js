@@ -134,3 +134,63 @@ export const saveTimetableSchema = z.object({
       .min(1),
   }),
 });
+
+// ── Stationery / Supplies ──
+export const createAssignmentWithSuppliesSchema = z.object({
+  body: z.object({
+    title: z.string().trim().min(2).max(200),
+    description: z.string().trim().min(5).max(5000),
+    subject: z.string().trim().min(2).max(100),
+    classId: uuidField,
+    dueDate: z.string().datetime(),
+    maxMarks: z.number().int().min(1).max(1000),
+    suppliesNeeded: z.array(z.string().trim().min(1).max(100)).max(20).optional(),
+    notifyParents: z.boolean().optional().default(false),
+    notifyDaysBefore: z.number().int().min(1).max(14).optional().default(2),
+  }),
+});
+
+export const stationeryAlertSchema = z.object({
+  body: z.object({
+    title: z.string().trim().min(2).max(200),
+    message: z.string().trim().min(5).max(2000),
+    studentIds: z.array(uuidField).max(500),
+    supplies: z.array(z.string().trim().min(1).max(100)).max(20),
+    dueDate: z.string().datetime().optional(),
+    priority: z.enum(['info', 'warning', 'urgent']).optional().default('info'),
+  }),
+});
+
+// ── Book Heavy Day Alert ──
+export const bookHeavyDaySchema = z.object({
+  body: z.object({
+    classId: uuidField,
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    heavySubjectThreshold: z.number().int().min(1).max(10).optional().default(4),
+    bookWeights: z.record(z.string(), z.enum(['light', 'medium', 'heavy'])).optional(),
+  }),
+});
+
+// ── Digital Fridge (Shared Tasks) ──
+export const createFridgeItemSchema = z.object({
+  body: z.object({
+    title: z.string().trim().min(1).max(200),
+    description: z.string().trim().max(2000).optional(),
+    category: z.enum(['supplies', 'forms', 'permission', 'reminder', 'general']).optional(),
+    dueDate: z.string().datetime().optional(),
+    assignedTo: z.string().min(1).max(100).optional(),
+    priority: z.enum(['low', 'medium', 'high']).optional().default('medium'),
+    sharedWith: z.array(z.string()).max(50).optional(),
+  }),
+});
+
+// ── Uniform Schedule ──
+export const createUniformScheduleSchema = z.object({
+  body: z.object({
+    classId: uuidField,
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    uniformType: z.enum(['regular', 'sports', 'house_colors', 'formal', 'winter', 'summer', 'custom']),
+    customDescription: z.string().trim().max(500).optional(),
+    notes: z.string().trim().max(500).optional(),
+  }),
+});

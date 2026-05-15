@@ -1821,10 +1821,201 @@ export const generateFeedbackAI = asyncHandler(async (req, res) => {
   const { generateGradeFeedback } = await import('../services/aiService.js');
   
   const result = await generateGradeFeedback(submissionId, marks, maxMarks, rubric);
-  
-  if (!result.success) {
-    throw new ApiError(500, result.error);
-  }
-  
-  res.json({ success: true, ...result });
+
+   if (!result.success) {
+     throw new ApiError(500, result.error);
+   }
+
+   res.json({ success: true, ...result });
 });
+
+// ============================================================================
+// SUPPLY ANALYTICS (Stationery Budget Tracking)
+// ============================================================================
+
+export const getSupplyAnalytics = asyncHandler(async (req, res) => {
+  const teacherId = req.user.id;
+
+  const assignments = await queryRecords('assignments', (a) => a.teacher_id === teacherId);
+  const assignmentsWithSupplies = assignments.filter(a => a.supplies_needed && a.supplies_needed.length > 0);
+
+  const supplyCounts = {};
+  let totalBudgetEstimate = 0;
+
+  for (const assignment of assignmentsWithSupplies) {
+    const supplies = assignment.supplies_needed || [];
+    const enrollments = await queryRecords('classroom_students', (e) => e.classroom_id === assignment.class_id);
+    const studentCount = enrollments.length || 1;
+
+    for (const supply of supplies) {
+      const key = supply.toLowerCase().trim();
+      if (!supplyCounts[key]) {
+        supplyCounts[key] = { count: 0, students: new Set(), assignments: [] };
+      }
+      supplyCounts[key].count += studentCount;
+      supplyCounts[key].students.add(assignment.class_id);
+      supplyCounts[key].assignments.push({
+        id: assignment.id, title: assignment.title,
+        dueDate: assignment.due_date, classId: assignment.class_id, studentCount
+      });
+    }
+  }
+
+  const avgCosts = {
+    'notebook': 2.5, 'pen': 0.5, 'pencil': 0.3, 'eraser': 0.25,
+    'ruler': 1.0, 'calculator': 15.0, 'textbook': 25.0,
+    'folder': 3.0, 'highlighter': 1.5, 'markers': 4.0,
+    'glue': 2.0, 'scissors': 3.5, 'paper': 1.0, 'binder': 5.0
+  };
+
+  const supplySummary = Object.entries(supplyCounts).map(([item, data]) => {
+    const unitCost = avgCosts[item.toLowerCase()] || 2.0;
+    const estimatedCost = data.count * unitCost;
+    totalBudgetEstimate += estimatedCost;
+    return {
+      item, totalNeeded: data.count,
+      classesAffected: data.students.size,
+      assignments: data.assignments,
+      estimatedCost: Math.round(estimatedCost * 100) / 100
+    };
+  }).sort((a, b) => b.totalNeeded - a.totalNeeded);
+
+  const now = new Date();
+  const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const upcoming = assignmentsWithSupplies.filter(a => {
+    const due = new Date(a.due_date);
+    return due >= now && due <= sevenDaysLater && a.notify_parents;
+  });
+
+  res.json({
+    success: true,
+    analytics: {
+      totalAssignmentsWithSupplies: assignmentsWithSupplies.length,
+      uniqueSupplyItems: supplySummary.length,
+      totalBudgetEstimate: Math.round(totalBudgetEstimate * 100) / 100,
+      supplySummary,
+      upcomingAlerts: upcoming.map(a => ({
+        id: a.id, title: a.title, dueDate: a.due_date,
+        supplies: a.supplies_needed || [], classId: a.class_id
+      })),
+      costBreakdown: {
+        low: supplySummary.filter(s => s.estimatedCost < 10).length,
+        medium: supplySummary.filter(s => s.estimatedCost >= 10 && s.estimatedCost < 50).length,
+        high: supplySummary.filter(s => s.estimatedCost >= 50).length
+      }
+    }
+  });
+});
+
+// ============================================================================
+// STUDENT SUPPLY ALERTS (Students check their own)
+// ============================================================================
+
+export const getStudentSupplyAlerts = asyncHandler(async (req, res) => {
+  const studentId = req.user.id;
+
+  let profile = await getRecord(`student_profiles/${studentId}`);
+  if (!profile) {
+    const profiles = await queryRecords('student_profiles', (p) => p.user_id === studentId);
+    profile = profiles[0] || null;
+  }
+  if (!profile) throw new ApiError(404, 'Student profile not found');
+
+  const classId = profile.class_id || profile.class;
+  if (!classId) throw new ApiError(400, 'No class assigned to student');
+
+  const allAssignments = await getRecords('assignments');
+  const classAssignments = allAssignments.filter(a =>
+    (a.class_id === classId || a.class === classId) &&
+    a.supplies_needed && a.supplies_needed.length > 0
+  );
+
+  const submissions = await queryRecords('submissions', (s) => s.student_id === studentId);
+
+  const now = new Date();
+  const alerts = classAssignments
+    .filter(a => new Date(a.due_date) >= now)
+    .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+    .map(assignment => {
+      const submitted = submissions.find(s => s.assignment_id === assignment.id);
+      const isLate = new Date(assignment.due_date) < now && !submitted;
+      return {
+        id: assignment.id, title: assignment.title, subject: assignment.subject,
+        dueDate: assignment.due_date, suppliesNeeded: assignment.supplies_needed || [],
+        notifyParents: assignment.notify_parents || false,
+        isSubmitted: !!submitted, isLate, classId: assignment.class_id
+      };
+    });
+
+  res.json({
+    success: true, alerts,
+    summary: {
+      total: alerts.length,
+      submitted: alerts.filter(a => a.isSubmitted).length,
+      pending: alerts.filter(a => !a.isSubmitted && !a.isLate).length,
+      overdue: alerts.filter(a => a.isLate).length
+    }
+  });
+});
+
+// ============================================================================
+// BULK PARENT NOTIFICATION
+// ============================================================================
+
+export const sendBulkParentNotification = asyncHandler(async (req, res) => {
+  const { classId, subject, message, type } = req.body;
+
+  if (!classId || !message) {
+    throw new ApiError(400, 'classId and message are required');
+  }
+
+  const enrollments = await queryRecords('classroom_students', (e) => e.classroom_id === classId);
+  if (!enrollments.length) throw new ApiError(404, 'No students found in this class');
+
+  const students = await getRecords('student_profiles');
+  const parents = await getRecords('parents');
+
+  const studentIds = enrollments.map(e => e.student_id);
+  const notifyUserIds = [];
+
+  for (const sid of studentIds) {
+    const student = students.find(s => s.user_id === sid || s.id === sid);
+    if (student) {
+      if (student.mother_id) {
+        const parent = parents.find(p => p.id === student.mother_id || p.user_id === student.mother_id);
+        if (parent && parent.user_id) notifyUserIds.push(parent.user_id);
+      }
+      if (student.father_id) {
+        const parent = parents.find(p => p.id === student.father_id || p.user_id === student.father_id);
+        if (parent && parent.user_id) notifyUserIds.push(parent.user_id);
+      }
+    }
+  }
+
+  const uniqueParentIds = [...new Set(notifyUserIds)];
+  const io = req.io;
+
+  for (const parentUserId of uniqueParentIds) {
+    const notification = {
+      id: `bulk-${Date.now()}-${parentUserId}`,
+      user_id: parentUserId, message,
+      type: type || 'info',
+      meta: { classId, subject: subject || 'General', priority: 'normal', sentBy: req.user.name },
+      read: false, created_by: req.user.id, created_at: new Date().toISOString()
+    };
+    await createRecord('notifications', notification);
+    if (io) { io.to(`user:${parentUserId}`).emit('notification:new', notification); }
+  }
+
+  res.status(201).json({
+    success: true,
+    message: 'Notifications sent to ${uniqueParentIds.length} parents',
+    notifiedCount: uniqueParentIds.length
+  });
+});
+
+export default {
+  getSupplyAnalytics,
+  getStudentSupplyAlerts,
+  sendBulkParentNotification
+};

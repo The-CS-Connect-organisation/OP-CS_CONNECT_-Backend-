@@ -4,6 +4,8 @@ const multer = pkgMulter.default || pkgMulter;
 import {
   createAnnouncement,
   createAssignment,
+  createAssignmentWithSupplies,
+  updateAssignmentSupplies,
   createClassRoom,
   createMark,
   createStudentProfile,
@@ -27,6 +29,16 @@ import {
   getExpandedStudentProfile,
   getUser,
   listUsers,
+  // New feature controllers
+  analyzeBookLoad,
+  sendBookHeavyAlert,
+  createFridgeItem,
+  getFridgeItems,
+  updateFridgeItem,
+  deleteFridgeItem,
+  createUniformSchedule,
+  getUniformSchedule,
+  getTodaysUniform,
 } from '../controllers/schoolController.js';
 import { getAllClubs, createClub, joinClub, sendClubMessage, getClubMessages, uploadResearchPaper, getClubLeaderboard } from '../controllers/clubsController.js';
 import { saveStudyPlan, getMyStudyPlans } from '../controllers/studyPlannerController.js';
@@ -222,5 +234,24 @@ router.get('/notes', allowRoles('student', 'teacher', 'admin', 'parent'), asyncH
   notes.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   res.json({ success: true, notes: notes.slice(0, 100) });
 }));
- 
- export default router;
+
+// ── Assignments with Supplies Needed (Stationery Panic Alert) ──
+router.post('/assignments-with-supplies', allowRoles('teacher', 'admin'), validateRequest(createAssignmentWithSuppliesSchema), createAssignmentWithSupplies);
+router.patch('/assignments/:assignmentId/supplies', allowRoles('teacher', 'admin'), validateRequest(stationeryAlertSchema), updateAssignmentSupplies);
+
+// ── Book Heavy Day Alert ──
+router.get('/book-load/:classId/:date', allowRoles('teacher', 'admin', 'parent'), analyzeBookLoad);
+router.post('/book-load-alert', allowRoles('teacher', 'admin'), validateRequest(bookHeavyDaySchema), sendBookHeavyAlert);
+
+// ── Digital Fridge (Shared Tasks between Parents & Students) ──
+router.post('/fridge-items', allowRoles('student', 'parent', 'teacher', 'admin'), createFridgeItem);
+router.get('/fridge-items', allowRoles('student', 'parent', 'teacher', 'admin'), getFridgeItems);
+router.patch('/fridge-items/:itemId', allowRoles('student', 'parent', 'teacher', 'admin'), updateFridgeItem);
+router.delete('/fridge-items/:itemId', allowRoles('student', 'parent', 'teacher', 'admin'), deleteFridgeItem);
+
+// ── Uniform Schedule ──
+router.post('/uniform-schedules', allowRoles('teacher', 'admin'), validateRequest(createUniformScheduleSchema), createUniformSchedule);
+router.get('/uniform-schedules/:classId/:date', allowRoles('student', 'parent', 'teacher', 'admin'), getUniformSchedule);
+router.get('/uniform-today', allowRoles('student', 'parent', 'teacher', 'admin', 'librarian', 'driver'), getTodaysUniform);
+
+export default router;

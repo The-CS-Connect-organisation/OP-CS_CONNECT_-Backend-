@@ -8,6 +8,7 @@ import {
   getStudentAssignments,
   getStudentNotifications,
   getStudentTimetable,
+  getStudentAlerts,
 } from '../controllers/studentController.js';
 import { requireAuth, allowRoles } from '../middleware/auth.js';
 import { cacheMiddleware } from '../middleware/cache.js';
@@ -35,6 +36,9 @@ router.get('/assignments', cacheMiddleware(), getStudentAssignments);
 
 // Notifications
 router.get('/notifications', getStudentNotifications);
+
+// Supply Alerts
+router.get('/supply-alerts', getStudentAlerts);
 
 // Timetable
 router.get('/timetable', cacheMiddleware(), getStudentTimetable);

@@ -22,6 +22,7 @@ import lostAndFoundRoutes from './routes/lostAndFoundRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import clinicRoutes from './routes/clinicRoutes.js';
 import portfolioRoutes from './routes/portfolioRoutes.js';
+import parentRoutes from './routes/parentRoutes.js';
 import helpdeskRoutes from './routes/helpdeskRoutes.js';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
@@ -134,6 +135,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/clinic', clinicRoutes);
 app.use('/api/portfolios', portfolioRoutes);
 app.use('/api/helpdesk', helpdeskRoutes);
+app.use('/api/parent', parentRoutes);
 
 // Mirror all routes without /api prefix so both /api/auth/login and /auth/login work
 app.use('/auth', authRoutes);
@@ -157,6 +159,7 @@ app.use('/reports', reportRoutes);
 app.use('/clinic', clinicRoutes);
 app.use('/portfolios', portfolioRoutes);
 app.use('/helpdesk', helpdeskRoutes);
+app.use('/parent', parentRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

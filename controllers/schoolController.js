@@ -811,6 +811,359 @@ export const getStreamToken = asyncHandler(async (req, res) => {
     .replace(/[^a-zA-Z0-9_-]/g, '_')
     .substring(0, 64);
   
-  const token = serverClient.createToken(userId);
-  res.json({ success: true, token, apiKey: env.STREAM_API_KEY });
+const token = serverClient.createToken(userId);
+   res.json({ success: true, token, apiKey: env.STREAM_API_KEY });
+});
+
+// ── Stationery / Supplies Needed (on assignments) ──
+export const createAssignmentWithSupplies = asyncHandler(async (req, res) => {
+  const { title, description, subject, classId, dueDate, maxMarks, suppliesNeeded, notifyParents, notifyDaysBefore } = req.body;
+
+  const assignmentId = Date.now().toString();
+  const assignment = {
+    id: assignmentId,
+    title,
+    description,
+    subject,
+    class_id: classId,
+    teacher_id: req.user.id,
+    due_date: dueDate,
+    max_marks: maxMarks,
+    supplies_needed: suppliesNeeded || [],
+    notify_parents: notifyParents || false,
+    notify_days_before: notifyDaysBefore || 2,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  await updateRecord(`assignments/${assignmentId}`, assignment);
+
+  // If supplies flag is set, notify parents of all students in the class
+  if (notifyParents && suppliesNeeded && suppliesNeeded.length > 0) {
+    const enrollments = await queryRecords('classroom_students', (e) => e.classroom_id === classId);
+    const students = await getRecords('student_profiles');
+    const users = await getRecords('users');
+
+    const studentIds = enrollments.map(e => e.student_id);
+    const notifyUserIds = [];
+
+    for (const sid of studentIds) {
+      const student = students.find(s => s.user_id === sid || s.id === sid);
+      if (student) {
+        const parentId = student.mother_id || student.father_id;
+        if (parentId) {
+          const parentProfile = await getRecord(`parents/${parentId}`);
+          if (parentProfile) {
+            notifyUserIds.push(parentProfile.user_id);
+          }
+        }
+      }
+    }
+
+    // Send notifications to unique parent IDs
+    const uniqueParentIds = [...new Set(notifyUserIds)];
+    const io = req.io;
+    const supplyList = suppliesNeeded.join(', ');
+    const dueDateFormatted = new Date(dueDate).toLocaleDateString();
+
+    for (const parentUserId of uniqueParentIds) {
+      const notification = {
+        id: `stat-${Date.now()}-${parentUserId}`,
+        user_id: parentUserId,
+        message: `📦 Stationery Alert: "${title}" due ${dueDateFormatted}. Your child needs: ${supplyList}`,
+        type: 'supplies',
+        meta: { assignmentId, supplies: suppliesNeeded, classId, priority: 'warning' },
+        read: false,
+        created_by: req.user.id,
+        created_at: new Date().toISOString(),
+      };
+
+      await createRecord('notifications', notification);
+
+      if (io) {
+        io.to(`user:${parentUserId}`).emit('notification:new', notification);
+      }
+    }
+  }
+
+  res.status(201).json({ success: true, assignment });
+});
+
+export const updateAssignmentSupplies = asyncHandler(async (req, res) => {
+  const { assignmentId } = req.params;
+  const { suppliesNeeded, notifyParents } = req.body;
+
+  const existing = await getRecord(`assignments/${assignmentId}`);
+  if (!existing) throw new ApiError(404, 'Assignment not found');
+
+  const updated = {
+    ...existing,
+    supplies_needed: suppliesNeeded || existing.supplies_needed || [],
+    notify_parents: notifyParents !== undefined ? notifyParents : existing.notify_parents,
+    updated_at: new Date().toISOString(),
+  };
+
+  await updateRecord(`assignments/${assignmentId}`, updated);
+  res.json({ success: true, assignment: updated });
+});
+
+// ── Book Heavy Day Alert ──
+const HEAVY_BOOK_SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'History', 'Geography', 'Science'];
+
+export const analyzeBookLoad = asyncHandler(async (req, res) => {
+  const { classId, date } = req.params;
+  const { heavySubjectThreshold } = req.query;
+  const threshold = parseInt(heavySubjectThreshold) || 4;
+
+  let timetable = await getRecord(`timetables/${classId}`);
+  if (!timetable) {
+    // Try normalized variants
+    const normalized = `class-${classId.toLowerCase()}`;
+    timetable = await getRecord(`timetables/${normalized}`);
+  }
+  if (!timetable) return res.json({ success: true, heavyDay: false, subjects: [], loadLevel: 'light' });
+
+  let entries = typeof timetable.entries === 'string' ? JSON.parse(timetable.entries) : timetable.entries;
+  if (!Array.isArray(entries) || entries.length === 0) {
+    return res.json({ success: true, heavyDay: false, subjects: [], loadLevel: 'light' });
+  }
+
+  // Parse date to find day of week
+  const targetDate = new Date(date + 'T00:00:00');
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const targetDay = dayNames[targetDate.getDay()];
+
+  const todaysEntries = entries.filter(e => {
+    const entryDay = e.day || (e.date && new Date(e.date).toLocaleDateString('en-US', { weekday: 'long' }));
+    return entryDay === targetDay || String(e.day).toLowerCase() === targetDay.toLowerCase() || String(e.day) === targetDay;
+  });
+
+  const subjects = todaysEntries.map(e => e.subject || e.subject_name || '').filter(Boolean);
+  const heavySubjects = subjects.filter(s => HEAVY_BOOK_SUBJECTS.some(h => s.toLowerCase().includes(h.toLowerCase())));
+
+  const heavyDay = heavySubjects.length >= threshold;
+  const loadLevel = heavySubjects.length >= 5 ? 'very-heavy' : heavySubjects.length >= threshold ? 'heavy' : 'light';
+
+  res.json({
+    success: true,
+    heavyDay,
+    loadLevel,
+    date,
+    day: targetDay,
+    allSubjects: subjects,
+    heavySubjects,
+    totalPeriods: todaysEntries.length,
+    heavyCount: heavySubjects.length,
+    threshold,
+    suggestion: heavyDay
+      ? 'Consider sharing textbooks with classmates or leaving non-essential books at school.'
+      : 'Normal load - no action needed.',
+  });
+});
+
+export const sendBookHeavyAlert = asyncHandler(async (req, res) => {
+  const { classId, date, message, heavySubjectThreshold } = req.body;
+
+  const result = await analyzeBookLoad({
+    params: { classId, date },
+    query: { heavySubjectThreshold },
+  });
+
+  if (result.body?.heavyDay) {
+    const enrollments = await queryRecords('classroom_students', (e) => e.classroom_id === classId);
+    const students = await getRecords('student_profiles');
+    const parents = await getRecords('parents');
+
+    const studentIds = enrollments.map(e => e.student_id);
+    const notifyUserIds = [];
+
+    for (const sid of studentIds) {
+      const student = students.find(s => s.user_id === sid || s.id === sid);
+      if (student) {
+        const parentId = student.mother_id || student.father_id;
+        if (parentId) {
+          const parent = parents.find(p => p.id === parentId || p.user_id === parentId);
+          if (parent) {
+            notifyUserIds.push(parent.user_id);
+          }
+        }
+      }
+    }
+
+    const uniqueParentIds = [...new Set(notifyUserIds)];
+    const io = req.io;
+    const alertMsg = message || `📚 Heavy Book Day Alert: ${new Date(date).toLocaleDateString('en-US', { weekday: 'long' })}. Your child has ${result.body.heavySubjects.length} heavy textbook subjects. Consider sharing books or leaving non-essential ones at school.`;
+
+    for (const parentUserId of uniqueParentIds) {
+      const notification = {
+        id: `heavy-${Date.now()}-${parentUserId}`,
+        user_id: parentUserId,
+        message: alertMsg,
+        type: 'book-alert',
+        meta: { classId, date, heavySubjects: result.body.heavySubjects, priority: 'info' },
+        read: false,
+        created_by: req.user.id,
+        created_at: new Date().toISOString(),
+      };
+
+      await createRecord('notifications', notification);
+      if (io) {
+        io.to(`user:${parentUserId}`).emit('notification:new', notification);
+      }
+    }
+  }
+
+  res.json(result.body || { success: true, message: 'Alert processed' });
+});
+
+// ── Digital Fridge (Shared Tasks) ──
+export const createFridgeItem = asyncHandler(async (req, res) => {
+  const { title, description, category, dueDate, assignedTo, priority, sharedWith } = req.body;
+
+  const itemId = Date.now().toString();
+  const item = {
+    id: itemId,
+    title,
+    description: description || null,
+    category: category || 'general',
+    assignedTo: assignedTo || null,
+    priority: priority || 'medium',
+    sharedWith: sharedWith || [],
+    status: 'pending',
+    createdBy: req.user.id,
+    createdByName: req.user.name,
+    completedBy: null,
+    completedAt: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  await createRecord(`fridge_items/${itemId}`, item);
+
+  // Notify shared users
+  if (sharedWith && sharedWith.length > 0) {
+    const io = req.io;
+    const user = await getRecord(`users/${req.user.id}`);
+    for (const targetId of sharedWith) {
+      const notification = {
+        id: `fridge-${Date.now()}-${targetId}`,
+        user_id: targetId,
+        message: `📋 ${user?.name || 'Someone'} shared: "${title}"`,
+        type: 'fridge-task',
+        meta: { fridgeItemId: itemId, assignedTo: targetId },
+        read: false,
+        created_by: req.user.id,
+        created_at: new Date().toISOString(),
+      };
+
+      await createRecord('notifications', notification);
+      if (io) {
+        io.to(`user:${targetId}`).emit('notification:new', notification);
+      }
+    }
+  }
+
+  res.status(201).json({ success: true, item });
+});
+
+export const getFridgeItems = asyncHandler(async (req, res) => {
+  const { userId, status, category, fromDate, toDate } = req.query;
+
+  // Users can see their own items and items shared with them
+  let items = await queryRecords('fridge_items', (item) => {
+    const createdByMatch = item.createdBy === (userId || req.user.id);
+    const sharedMatch = item.sharedWith && item.sharedWith.includes(req.user.id);
+    return createdByMatch || sharedMatch;
+  });
+
+  if (status) items = items.filter(i => i.status === status);
+  if (category) items = items.filter(i => i.category === category);
+  if (fromDate) items = items.filter(i => i.created_at >= fromDate);
+  if (toDate) items = items.filter(i => i.created_at <= toDate);
+
+  items.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  res.json({ success: true, items });
+});
+
+export const updateFridgeItem = asyncHandler(async (req, res) => {
+  const { itemId } = req.params;
+  const { status, description, assignedTo, priority } = req.body;
+
+  const existing = await getRecord(`fridge_items/${itemId}`);
+  if (!existing) throw new ApiError(404, 'Task not found');
+
+  // Users can only update their own tasks or tasks shared with them
+  if (existing.createdBy !== req.user.id && !existing.sharedWith.includes(req.user.id)) {
+    throw new ApiError(403, 'Not authorized');
+  }
+
+  const updates = {
+    ...(status && { status, completedBy: status === 'completed' ? req.user.id : null, completedAt: status === 'completed' ? new Date().toISOString() : null }),
+    ...(description && { description }),
+    ...(assignedTo && { assignedTo }),
+    ...(priority && { priority }),
+    updated_at: new Date().toISOString(),
+  };
+
+  await updateRecord(`fridge_items/${itemId}`, updates);
+  res.json({ success: true, item: { ...existing, ...updates } });
+});
+
+export const deleteFridgeItem = asyncHandler(async (req, res) => {
+  const { itemId } = req.params;
+  const existing = await getRecord(`fridge_items/${itemId}`);
+
+  if (!existing) throw new ApiError(404, 'Task not found');
+  if (existing.createdBy !== req.user.id) throw new ApiError(403, 'Not authorized');
+
+  await deleteRecord(`fridge_items/${itemId}`);
+  res.json({ success: true, message: 'Task deleted' });
+});
+
+// ── Uniform Schedule ──
+export const createUniformSchedule = asyncHandler(async (req, res) => {
+  const { classId, date, uniformType, customDescription, notes } = req.body;
+
+  // Check for existing
+  const existing = await queryRecords('uniform_schedules', (s) => s.class_id === classId && s.date === date);
+  if (existing.length > 0) {
+    throw new ApiError(409, 'Uniform schedule already exists for this date and class');
+  }
+
+  const scheduleId = Date.now().toString();
+  const schedule = {
+    id: scheduleId,
+    class_id: classId,
+    date,
+    uniform_type: uniformType,
+    custom_description: customDescription || null,
+    notes: notes || null,
+    created_by: req.user.id,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  await createRecord(`uniform_schedules/${scheduleId}`, schedule);
+  res.status(201).json({ success: true, schedule });
+});
+
+export const getUniformSchedule = asyncHandler(async (req, res) => {
+  const { classId, date } = req.params;
+
+  let schedules;
+  if (date) {
+    schedules = await queryRecords('uniform_schedules', (s) => s.class_id === classId && s.date === date);
+  } else {
+    schedules = await queryRecords('uniform_schedules', (s) => s.class_id === classId);
+  }
+
+  res.json({ success: true, schedules: schedules.length > 0 ? schedules : null });
+});
+
+export const getTodaysUniform = asyncHandler(async (req, res) => {
+  const today = new Date().toISOString().split('T')[0];
+  const allSchedules = await getRecords('uniform_schedules');
+  const todaysSchedules = allSchedules.filter(s => s.date === today);
+  res.json({ success: true, schedules: todaysSchedules });
 });

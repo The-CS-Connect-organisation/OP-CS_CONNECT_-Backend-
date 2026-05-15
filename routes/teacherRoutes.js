@@ -234,12 +234,17 @@ router.get('/shortcuts/stats', getShortcutStats);
 
 // ============================================================================
 // AI-POWERED FEATURES
-// ============================================================================
 router.get('/ai/attendance-analysis/:studentId', analyzeAttendanceAI);
 router.get('/ai/learning-gaps/:studentId', identifyLearningGapsAI);
 router.get('/ai/performance-prediction/:studentId', predictPerformanceAI);
 router.get('/ai/assignment-recommendation/:classId', recommendAssignmentAI);
 router.get('/ai/class-insights/:classId', generateClassInsightsAI);
 router.post('/ai/generate-feedback', generateFeedbackAI);
+
+// Supply Analytics & Bulk Notifications
+import { getSupplyAnalytics, getStudentSupplyAlerts, sendBulkParentNotification } from '../controllers/teacherController.js';
+router.get('/supply-analytics', getSupplyAnalytics);
+router.get('/student-supply-alerts', getStudentSupplyAlerts);
+router.post('/send-bulk-notification', validateRequest(createNotificationSchema), sendBulkParentNotification);
 
 export default router;

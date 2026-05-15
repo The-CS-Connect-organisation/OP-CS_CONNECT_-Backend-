@@ -82,8 +82,14 @@ export const getStudentDashboard = asyncHandler(async (req, res) => {
 
   // Assignments
   const allAssignments = await getRecords('assignments');
-  const classId = profile?.class_id || `class-${profile?.grade || '10'}-${(profile?.section || 'a').toLowerCase()}`;
-  const myAssignments = allAssignments.filter(a => a.class_id === classId || a.class === classId);
+  const classId = profile?.class_id
+    || (profile?.grade && profile?.section ? `class-${profile.grade}-${profile.section.toLowerCase()}` : null)
+    || `class-10-a`;
+  const myAssignments = allAssignments.filter(a => {
+    const aClassId = a.class_id || '';
+    const aClass = a.class || a.class_name || '';
+    return aClassId === classId || aClass === classId || aClass === profile?.class;
+  });
 
   // Submissions
   const mySubmissions = await queryRecords('submissions', s => s.student_id === studentId);
@@ -243,11 +249,21 @@ export const getStudentAssignments = asyncHandler(async (req, res) => {
     const profiles = await queryRecords('student_profiles', (p) => p.user_id === studentId);
     profile = profiles[0] || null;
   }
-  const baseClassId = profile?.class_id || `class-${profile?.grade || '10'}-${(profile?.section || 'a').toLowerCase()}`;
+  // Resolve classId consistently: prefer profile.class_id, then compute from grade+section
+  const baseClassId = profile?.class_id
+    || (profile?.grade && profile?.section ? `class-${profile.grade}-${profile.section.toLowerCase()}` : null)
+    || `class-10-a`; // Safe default
   const normalizedClassId = baseClassId.startsWith('class-') ? baseClassId : `class-${baseClassId.toLowerCase()}`;
 
   const allAssignments = await getRecords('assignments');
-  const myAssignments = allAssignments.filter(a => a.class_id === normalizedClassId || a.class === normalizedClassId || a.class_id === baseClassId || a.class === baseClassId);
+  // Match by class_id OR class_name (e.g., '10-A') OR class field
+  const myAssignments = allAssignments.filter(a => {
+    const aClassId = a.class_id || '';
+    const aClass = a.class || a.class_name || '';
+    return aClassId === normalizedClassId || aClassId === baseClassId
+      || aClass === normalizedClassId || aClass === baseClassId
+      || aClass === profile?.class; // e.g. '10-A'
+  });
 
   const mySubmissions = await queryRecords('submissions', s => s.student_id === studentId);
   const submissionMap = {};
@@ -374,6 +390,57 @@ export const getStudentTimetable = asyncHandler(async (req, res) => {
   res.json({ success: true, timetable: timetable || {}, entries });
 });
 
+// ============================================================================
+// STUDENT SUPPLY ALERTS
+// ============================================================================
+
+export const getStudentAlerts = asyncHandler(async (req, res) => {
+  const studentId = req.user.id;
+
+  let profile = await getRecord(`student_profiles/${studentId}`);
+  if (!profile) {
+    const profiles = await queryRecords('student_profiles', (p) => p.user_id === studentId);
+    profile = profiles[0] || null;
+  }
+  if (!profile) throw new ApiError(404, 'Student profile not found');
+
+  const classId = profile.class_id || profile.class;
+  if (!classId) throw new ApiError(400, 'No class assigned to student');
+
+  const allAssignments = await getRecords('assignments');
+  const classAssignments = allAssignments.filter(a =>
+    (a.class_id === classId || a.class === classId) &&
+    a.supplies_needed && a.supplies_needed.length > 0
+  );
+
+  const submissions = await queryRecords('submissions', (s) => s.student_id === studentId);
+
+  const now = new Date();
+  const alerts = classAssignments
+    .filter(a => new Date(a.due_date) >= now)
+    .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+    .map(assignment => {
+      const submitted = submissions.find(s => s.assignment_id === assignment.id);
+      const isLate = new Date(assignment.due_date) < now && !submitted;
+      return {
+        id: assignment.id, title: assignment.title, subject: assignment.subject,
+        dueDate: assignment.due_date, suppliesNeeded: assignment.supplies_needed || [],
+        notifyParents: assignment.notify_parents || false,
+        isSubmitted: !!submitted, isLate, classId: assignment.class_id
+      };
+    });
+
+  res.json({
+    success: true, alerts,
+    summary: {
+      total: alerts.length,
+      submitted: alerts.filter(a => a.isSubmitted).length,
+      pending: alerts.filter(a => !a.isSubmitted && !a.isLate).length,
+      overdue: alerts.filter(a => a.isLate).length
+    }
+  });
+});
+
 export default {
   getStudentProfile,
   updateStudentProfile,
@@ -383,4 +450,5 @@ export default {
   getStudentAssignments,
   getStudentNotifications,
   getStudentTimetable,
+  getStudentAlerts,
 };
