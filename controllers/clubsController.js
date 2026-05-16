@@ -117,7 +117,9 @@ export const uploadResearchPaper = asyncHandler(async (req, res) => {
     club_id: clubId,
     title: title || 'Untitled Research',
     author: author || req.user.name,
-    file_url: req.files[0].path || '', // In a real app, this would be a cloud URL
+    file_url: req.files[0].path || `/uploads/${req.files[0].filename || req.files[0].originalname}`,
+    file_name: req.files[0].originalname,
+    mime_type: req.files[0].mimetype,
     size: `${(req.files[0].size / 1024 / 1024).toFixed(1)} MB`,
     created_at: new Date().toISOString()
   };
