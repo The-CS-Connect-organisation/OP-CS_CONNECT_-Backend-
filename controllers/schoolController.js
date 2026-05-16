@@ -910,25 +910,22 @@ export const updateAssignmentSupplies = asyncHandler(async (req, res) => {
 // ── Book Heavy Day Alert ──
 const HEAVY_BOOK_SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'History', 'Geography', 'Science'];
 
-export const analyzeBookLoad = asyncHandler(async (req, res) => {
-  const { classId, date } = req.params;
-  const { heavySubjectThreshold } = req.query;
+// Internal helper to compute book load without sending a response
+const _computeBookLoad = async (classId, date, heavySubjectThreshold) => {
   const threshold = parseInt(heavySubjectThreshold) || 4;
 
   let timetable = await getRecord(`timetables/${classId}`);
   if (!timetable) {
-    // Try normalized variants
     const normalized = `class-${classId.toLowerCase()}`;
     timetable = await getRecord(`timetables/${normalized}`);
   }
-  if (!timetable) return res.json({ success: true, heavyDay: false, subjects: [], loadLevel: 'light' });
+  if (!timetable) return { heavyDay: false, subjects: [], loadLevel: 'light' };
 
   let entries = typeof timetable.entries === 'string' ? JSON.parse(timetable.entries) : timetable.entries;
   if (!Array.isArray(entries) || entries.length === 0) {
-    return res.json({ success: true, heavyDay: false, subjects: [], loadLevel: 'light' });
+    return { heavyDay: false, subjects: [], loadLevel: 'light' };
   }
 
-  // Parse date to find day of week
   const targetDate = new Date(date + 'T00:00:00');
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const targetDay = dayNames[targetDate.getDay()];
@@ -944,18 +941,18 @@ export const analyzeBookLoad = asyncHandler(async (req, res) => {
   const heavyDay = heavySubjects.length >= threshold;
   const loadLevel = heavySubjects.length >= 5 ? 'very-heavy' : heavySubjects.length >= threshold ? 'heavy' : 'light';
 
+  return { heavyDay, loadLevel, date, day: targetDay, allSubjects: subjects, heavySubjects, totalPeriods: todaysEntries.length, heavyCount: heavySubjects.length, threshold };
+};
+
+export const analyzeBookLoad = asyncHandler(async (req, res) => {
+  const { classId, date } = req.params;
+  const { heavySubjectThreshold } = req.query;
+  const result = await _computeBookLoad(classId, date, heavySubjectThreshold);
+
   res.json({
     success: true,
-    heavyDay,
-    loadLevel,
-    date,
-    day: targetDay,
-    allSubjects: subjects,
-    heavySubjects,
-    totalPeriods: todaysEntries.length,
-    heavyCount: heavySubjects.length,
-    threshold,
-    suggestion: heavyDay
+    ...result,
+    suggestion: result.heavyDay
       ? 'Consider sharing textbooks with classmates or leaving non-essential books at school.'
       : 'Normal load - no action needed.',
   });
@@ -964,12 +961,9 @@ export const analyzeBookLoad = asyncHandler(async (req, res) => {
 export const sendBookHeavyAlert = asyncHandler(async (req, res) => {
   const { classId, date, message, heavySubjectThreshold } = req.body;
 
-  const result = await analyzeBookLoad({
-    params: { classId, date },
-    query: { heavySubjectThreshold },
-  });
+  const loadResult = await _computeBookLoad(classId, date, heavySubjectThreshold);
 
-  if (result.body?.heavyDay) {
+  if (loadResult.heavyDay) {
     const enrollments = await queryRecords('classroom_students', (e) => e.classroom_id === classId);
     const students = await getRecords('student_profiles');
     const parents = await getRecords('parents');
@@ -992,7 +986,7 @@ export const sendBookHeavyAlert = asyncHandler(async (req, res) => {
 
     const uniqueParentIds = [...new Set(notifyUserIds)];
     const io = req.io;
-    const alertMsg = message || `📚 Heavy Book Day Alert: ${new Date(date).toLocaleDateString('en-US', { weekday: 'long' })}. Your child has ${result.body.heavySubjects.length} heavy textbook subjects. Consider sharing books or leaving non-essential ones at school.`;
+    const alertMsg = message || `📚 Heavy Book Day Alert: ${new Date(date).toLocaleDateString('en-US', { weekday: 'long' })}. Your child has ${loadResult.heavySubjects.length} heavy textbook subjects. Consider sharing books or leaving non-essential ones at school.`;
 
     for (const parentUserId of uniqueParentIds) {
       const notification = {
@@ -1000,7 +994,7 @@ export const sendBookHeavyAlert = asyncHandler(async (req, res) => {
         user_id: parentUserId,
         message: alertMsg,
         type: 'book-alert',
-        meta: { classId, date, heavySubjects: result.body.heavySubjects, priority: 'info' },
+        meta: { classId, date, heavySubjects: loadResult.heavySubjects, priority: 'info' },
         read: false,
         created_by: req.user.id,
         created_at: new Date().toISOString(),
@@ -1013,7 +1007,7 @@ export const sendBookHeavyAlert = asyncHandler(async (req, res) => {
     }
   }
 
-  res.json(result.body || { success: true, message: 'Alert processed' });
+  res.json({ success: true, ...loadResult, message: 'Alert processed' });
 });
 
 // ── Digital Fridge (Shared Tasks) ──

@@ -184,6 +184,14 @@ export const createFridgeItemSchema = z.object({
   }),
 });
 
+// ── Update Assignment Supplies ──
+export const updateAssignmentSuppliesSchema = z.object({
+  body: z.object({
+    suppliesNeeded: z.array(z.string().trim().min(1).max(100)).max(20).optional(),
+    notifyParents: z.boolean().optional(),
+  }),
+});
+
 // ── Uniform Schedule ──
 export const createUniformScheduleSchema = z.object({
   body: z.object({

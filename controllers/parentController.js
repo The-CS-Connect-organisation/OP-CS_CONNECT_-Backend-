@@ -8,7 +8,7 @@ export const getSupplyAnalytics = asyncHandler(async (req, res) => {
 
   // Get all assignments by this teacher that have supplies
   const assignments = await queryRecords('assignments', (a) => a.teacher_id === teacherId);
-  const assignmentsWithSupplies = assignments.filter(a => a.supplies_needed && a.supply_needed.length > 0);
+  const assignmentsWithSupplies = assignments.filter(a => (a.supplies_needed && a.supplies_needed.length > 0) || (a.supply_needed && a.supply_needed.length > 0));
 
   // Aggregate supply items
   const supplyCounts = {};

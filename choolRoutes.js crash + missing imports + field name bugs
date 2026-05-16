@@ -1,0 +1,191 @@
+[1mdiff --git a/routes/schoolRoutes.js b/routes/schoolRoutes.js[m
+[1mindex 53ebd0f..f073111 100644[m
+[1m--- a/routes/schoolRoutes.js[m
+[1m+++ b/routes/schoolRoutes.js[m
+[36m@@ -74,4 +74,184 @@[m [mrouter.post('/messages', sendMessage);[m
+ router.patch('/messages/:messageId/read', markMessageRead);[m
+ [m
+ router.get('/classes', allowRoles('admin', 'teacher', 'student', 'parent'), asyncHandler(async (req, res) => {[m
+[31m-  con[m
+\ No newline at end of file[m
+[32m+[m[32m  const { getRecords } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const classes = await getRecords('class_rooms');[m
+[32m+[m[32m  res.json({ success: true, classes, classRooms: classes, items: classes });[m
+[32m+[m[32m}));[m
+[32m+[m
+[32m+[m[32mrouter.post('/classes', allowRoles('admin'), validateRequest(createClassSchema), createClassRoom);[m
+[32m+[m[32mrouter.post('/students/profiles', allowRoles('admin'), validateRequest(createStudentProfileSchema), createStudentProfile);[m
+[32m+[m[32mrouter.post('/teachers/profiles', allowRoles('admin'), validateRequest(createTeacherProfileSchema), createTeacherProfile);[m
+[32m+[m[32mrouter.get('/students', allowRoles('admin', 'teacher', 'student', 'parent'), listStudents);[m
+[32m+[m[32mrouter.get('/students/:studentId/profile', allowRoles('admin', 'teacher', 'student', 'parent'), getExpandedStudentProfile);[m
+[32m+[m[32mrouter.get('/teachers', allowRoles('admin', 'teacher', 'student', 'parent'), listTeachers);[m
+[32m+[m[32mrouter.get('/users', allowRoles('admin', 'teacher', 'student', 'parent', 'driver'), listUsers);[m
+[32m+[m[32mrouter.get('/users/:userId', allowRoles('admin', 'teacher', 'student', 'parent', 'driver'), getUser);[m
+[32m+[m
+[32m+[m[32mrouter.post('/assignments', allowRoles('teacher', 'admin'), upload.array('files', 5), validateRequest(createAssignmentSchema), createAssignment);[m
+[32m+[m[32mrouter.get('/assignments', allowRoles('student', 'teacher', 'admin', 'parent'), listAssignments);[m
+[32m+[m[32mrouter.post('/assignments/:assignmentId/submissions', allowRoles('student'), upload.array('files', 3), validateRequest(submitAssignmentSchema), submitAssignment);[m
+[32m+[m[32mrouter.patch('/submissions/:submissionId/grade', allowRoles('teacher', 'admin'), validateRequest(gradeSubmissionSchema), gradeSubmission);[m
+[32m+[m
+[32m+[m[32mrouter.post('/attendance', allowRoles('teacher', 'admin'), validateRequest(markAttendanceSchema), markAttendance);[m
+[32m+[m[32mrouter.get('/attendance/:studentId/report', allowRoles('student', 'teacher', 'admin', 'parent'), getAttendanceReport);[m
+[32m+[m
+[32m+[m[32mrouter.post('/announcements', allowRoles('teacher', 'admin'), validateRequest(createAnnouncementSchema), createAnnouncement);[m
+[32m+[m[32mrouter.get('/announcements', allowRoles('student', 'teacher', 'admin', 'parent'), listAnnouncements);[m
+[32m+[m
+[32m+[m[32mrouter.post('/marks', allowRoles('teacher', 'admin'), validateRequest(createMarkSchema), createMark);[m
+[32m+[m[32mrouter.get('/report-cards/:studentId', allowRoles('student', 'teacher', 'admin', 'parent'), getReportCard);[m
+[32m+[m[32mrouter.get('/leaderboard/:classId', allowRoles('student', 'teacher', 'admin'), getLeaderboard);[m
+[32m+[m
+[32m+[m[32mrouter.put('/timetables', allowRoles('admin', 'teacher'), validateRequest(saveTimetableSchema), saveTimetable);[m
+[32m+[m[32mrouter.get('/timetables', allowRoles('student', 'teacher', 'admin', 'parent'), getTimetable);[m
+[32m+[m[32m// ── Communities & Clubs ──[m
+[32m+[m[32mrouter.post('/clubs', allowRoles('student', 'teacher', 'admin'), createClub);[m
+[32m+[m[32mrouter.post('/clubs/:clubId/join', allowRoles('student', 'teacher', 'admin'), joinClub);[m
+[32m+[m[32mrouter.get('/clubs/:clubId/messages', allowRoles('student', 'teacher', 'admin'), getClubMessages);[m
+[32m+[m[32mrouter.post('/clubs/:clubId/messages', allowRoles('student', 'teacher', 'admin'), sendClubMessage);[m
+[32m+[m[32mrouter.post('/clubs/:clubId/research', allowRoles('student', 'teacher', 'admin'), upload.array('files', 1), uploadResearchPaper);[m
+[32m+[m[32mrouter.get('/clubs/leaderboard', allowRoles('student', 'teacher', 'admin'), getClubLeaderboard);[m
+[32m+[m
+[32m+[m[32m// ── Study Planner ──[m
+[32m+[m[32mrouter.post('/study-plans', allowRoles('student'), saveStudyPlan);[m
+[32m+[m[32mrouter.get('/study-plans', allowRoles('student'), getMyStudyPlans);[m
+[32m+[m
+[32m+[m[32m// ── Library ──[m
+[32m+[m[32mrouter.get('/library/books', allowRoles('admin', 'teacher', 'student', 'librarian', 'parent'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { getRecords } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const books = await getRecords('library_books');[m
+[32m+[m[32m  res.json({ success: true, books });[m
+[32m+[m[32m}));[m
+[32m+[m[32mrouter.post('/library/books', allowRoles('admin', 'librarian'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { updateRecord } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const id = `book-${Date.now()}`;[m
+[32m+[m[32m  const book = { id, ...req.body, createdAt: new Date().toISOString() };[m
+[32m+[m[32m  await updateRecord(`library_books/${id}`, book);[m
+[32m+[m[32m  res.status(201).json({ success: true, book });[m
+[32m+[m[32m}));[m
+[32m+[m[32mrouter.patch('/library/books/:bookId', allowRoles('admin', 'librarian'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { getRecord, updateRecord } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const existing = await getRecord(`library_books/${req.params.bookId}`);[m
+[32m+[m[32m  if (!existing) return res.status(404).json({ success: false, message: 'Book not found' });[m
+[32m+[m[32m  const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() };[m
+[32m+[m[32m  await updateRecord(`library_books/${req.params.bookId}`, updated);[m
+[32m+[m[32m  res.json({ success: true, book: updated });[m
+[32m+[m[32m}));[m
+[32m+[m[32mrouter.delete('/library/books/:bookId', allowRoles('admin', 'librarian'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { deleteRecord } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  await deleteRecord(`library_books/${req.params.bookId}`);[m
+[32m+[m[32m  res.json({ success: true });[m
+[32m+[m[32m}));[m
+[32m+[m[32mrouter.get('/library/transactions', allowRoles('admin', 'librarian', 'teacher', 'student', 'parent'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { getRecords } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const transactions = await getRecords('library_transactions');[m
+[32m+[m[32m  res.json({ success: true, transactions });[m
+[32m+[m[32m}));[m
+[32m+[m[32mrouter.post('/library/transactions', allowRoles('admin', 'librarian'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { updateRecord } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const id = `ltx-${Date.now()}`;[m
+[32m+[m[32m  const tx = { id, ...req.body, createdAt: new Date().toISOString() };[m
+[32m+[m[32m  await updateRecord(`library_transactions/${id}`, tx);[m
+[32m+[m[32m  res.status(201).json({ success: true, transaction: tx });[m
+[32m+[m[32m}));[m
+[32m+[m
+[32m+[m[32m// ── Maintenance Tickets ──[m
+[32m+[m[32mrouter.get('/maintenance', allowRoles('admin', 'teacher', 'student', 'librarian', 'driver', 'parent'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { getRecords } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const tickets = await getRecords('maintenance_tickets');[m
+[32m+[m[32m  res.json({ success: true, tickets });[m
+[32m+[m[32m}));[m
+[32m+[m[32mrouter.post('/maintenance', allowRoles('admin', 'teacher', 'student', 'librarian'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { updateRecord } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const id = `mt-${Date.now()}`;[m
+[32m+[m[32m  const ticket = { id, ...req.body, createdBy: req.user.id, status: 'pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };[m
+[32m+[m[32m  await updateRecord(`maintenance_tickets/${id}`, ticket);[m
+[32m+[m[32m  res.status(201).json({ success: true, ticket });[m
+[32m+[m[32m}));[m
+[32m+[m[32mrouter.patch('/maintenance/:ticketId', allowRoles('admin'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { getRecord, updateRecord } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const existing = await getRecord(`maintenance_tickets/${req.params.ticketId}`);[m
+[32m+[m[32m  if (!existing) return res.status(404).json({ success: false, message: 'Ticket not found' });[m
+[32m+[m[32m  const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() };[m
+[32m+[m[32m  await updateRecord(`maintenance_tickets/${req.params.ticketId}`, updated);[m
+[32m+[m[32m  res.json({ success: true, ticket: updated });[m
+[32m+[m[32m}));[m
+[32m+[m
+[32m+[m[32m// ── Social Posts ──[m
+[32m+[m[32mrouter.get('/social/posts', allowRoles('admin', 'teacher', 'student', 'librarian', 'parent'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { getRecords } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const posts = await getRecords('social_posts');[m
+[32m+[m[32m  res.json({ success: true, posts });[m
+[32m+[m[32m}));[m
+[32m+[m[32mrouter.post('/social/posts', allowRoles('admin', 'teacher', 'student', 'librarian'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { updateRecord } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const id = `post-${Date.now()}`;[m
+[32m+[m[32m  const post = { id, ...req.body, authorId: req.user.id, createdAt: new Date().toISOString(), likes: [], comments: [], views: 0 };[m
+[32m+[m[32m  await updateRecord(`social_posts/${id}`, post);[m
+[32m+[m[32m  res.status(201).json({ success: true, post });[m
+[32m+[m[32m}));[m
+[32m+[m[32mrouter.patch('/social/posts/:postId', allowRoles('admin', 'teacher', 'student', 'librarian'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { getRecord, updateRecord } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const existing = await getRecord(`social_posts/${req.params.postId}`);[m
+[32m+[m[32m  if (!existing) return res.status(404).json({ success: false, message: 'Post not found' });[m
+[32m+[m[32m  const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() };[m
+[32m+[m[32m  await updateRecord(`social_posts/${req.params.postId}`, updated);[m
+[32m+[m[32m  res.json({ success: true, post: updated });[m
+[32m+[m[32m}));[m
+[32m+[m[32mrouter.delete('/social/posts/:postId', allowRoles('admin', 'teacher', 'student', 'librarian'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { deleteRecord } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  await deleteRecord(`social_posts/${req.params.postId}`);[m
+[32m+[m[32m  res.json({ success: true });[m
+[32m+[m[32m}));[m
+[32m+[m
+[32m+[m[32m// ── Social Groups ──[m
+[32m+[m[32mrouter.get('/social/groups', allowRoles('admin', 'teacher', 'student', 'librarian', 'parent'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { getRecords } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const groups = await getRecords('social_groups');[m
+[32m+[m[32m  res.json({ success: true, groups });[m
+[32m+[m[32m}));[m
+[32m+[m[32mrouter.post('/social/groups', allowRoles('admin', 'teacher', 'student', 'librarian'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { updateRecord } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const id = `group-${Date.now()}`;[m
+[32m+[m[32m  const group = { id, ...req.body, createdBy: req.user.id, createdAt: new Date().toISOString(), members: [req.user.id] };[m
+[32m+[m[32m  await updateRecord(`social_groups/${id}`, group);[m
+[32m+[m[32m  res.status(201).json({ success: true, group });[m
+[32m+[m[32m}));[m
+[32m+[m[32mrouter.patch('/social/groups/:groupId', allowRoles('admin', 'teacher', 'student', 'librarian'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { getRecord, updateRecord } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const existing = await getRecord(`social_groups/${req.params.groupId}`);[m
+[32m+[m[32m  if (!existing) return res.status(404).json({ success: false, message: 'Group not found' });[m
+[32m+[m[32m  const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() };[m
+[32m+[m[32m  await updateRecord(`social_groups/${req.params.groupId}`, updated);[m
+[32m+[m[32m  res.json({ success: true, group: updated });[m
+[32m+[m[32m}))[m
+[32m+[m
+[32m+[m[32m// ── Notes (student-accessible teacher notes) ──[m
+[32m+[m[32mrouter.get('/notes', allowRoles('student', 'teacher', 'admin', 'parent'), asyncHandler(async (req, res) => {[m
+[32m+[m[32m  const { getRecords } = await import('../utils/firebaseDb.js');[m
+[32m+[m[32m  const notes = await getRecords('class_notes');[m
+[32m+[m[32m  notes.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));[m
+[32m+[m[32m  res.json({ success: true, notes: notes.slice(0, 100) });[m
+[32m+[m[32m}));[m
+[32m+[m
+[32m+[m[32m// ── Assignments with Supplies Needed (Stationery Panic Alert) ──[m
+[32m+[m[32mrouter.post('/assignments-with-supplies', allowRoles('teacher', 'admin'), validateRequest(createAssignmentWithSuppliesSchema), createAssignmentWithSupplies);[m
+[32m+[m[32mrouter.patch('/assignments/:assignmentId/supplies', allowRoles('teacher', 'admin'), validateRequest(stationeryAlertSchema), updateAssignmentSupplies);[m
+[32m+[m
+[32m+[m[32m// ── Book Heavy Day Alert ──[m
+[32m+[m[32mrouter.get('/book-load/:classId/:date', allowRoles('teacher', 'admin', 'parent'), analyzeBookLoad);[m
+[32m+[m[32mrouter.post('/book-load-alert', allowRoles('teacher', 'admin'), validateRequest(bookHeavyDaySchema), sendBookHeavyAlert);[m
+[32m+[m
+[32m+[m[32m// ── Digital Fridge (Shared Tasks between Parents & Students) ──[m
+[32m+[m[32mrouter.post('/fridge-items', allowRoles('student', 'parent', 'teacher', 'admin'), createFridgeItem);[m
+[32m+[m[32mrouter.get('/fridge-items', allowRoles('student', 'parent', 'teacher', 'admin'), getFridgeItems);[m
+[32m+[m[32mrouter.patch('/fridge-items/:itemId', allowRoles('student', 'parent', 'teacher', 'admin'), updateFridgeItem);[m
+[32m+[m[32mrouter.delete('/fridge-items/:itemId', allowRoles('student', 'parent', 'teacher', 'admin'), deleteFridgeItem);[m
+[32m+[m
+[32m+[m[32m// ── Uniform Schedule ──[m
+[32m+[m[32mrouter.post('/uniform-schedules', allowRoles('teacher', 'admin'), validateRequest(createUniformScheduleSchema), createUniformSchedule);[m
+[32m+[m[32mrouter.get('/uniform-schedules/:classId/:date', allowRoles('student', 'parent', 'teacher', 'admin'), getUniformSchedule);[m
+[32m+[m[32mrouter.get('/uniform-today', allowRoles('student', 'parent', 'teacher', 'admin', 'librarian', 'driver'), getTodaysUniform);[m
+[32m+[m
+[32m+[m[32mexport default router;[m

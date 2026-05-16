@@ -3,7 +3,7 @@ import { logger } from '../utils/logger.js';
 import pkg from 'bcryptjs';
 const { hash } = pkg;
 
-const SEED_VERSION = 2026;
+const SEED_VERSION = 2027;
 const SEED_FLAG_PATH = '_meta/seed_mass_done';
 
 /**
@@ -49,6 +49,13 @@ export const seedMassData = async () => {
       { id: 'student-2', name: 'Aarav Menon', email: 'student2@schoolsync.edu', role: 'student', password_hash: pwHash, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=aarav', created_at: now(), updated_at: now() },
       { id: 'student-3', name: 'Ishita Kapoor', email: 'student3@schoolsync.edu', role: 'student', password_hash: pwHash, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ishita', created_at: now(), updated_at: now() },
       { id: 'student-4', name: 'Kabir Verma', email: 'student4@schoolsync.edu', role: 'student', password_hash: pwHash, avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kabir', created_at: now(), updated_at: now() },
+      // Parents
+      { id: 'parent-1', name: 'Vikram Singh', email: 'parent@schoolsync.edu', role: 'parent', password_hash: await hash('parent123', 12), avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=vikram', created_at: now(), updated_at: now() },
+      { id: 'parent-2', name: 'Priya Menon', email: 'parent2@schoolsync.edu', role: 'parent', password_hash: await hash('parent123', 12), avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=priyamenon', created_at: now(), updated_at: now() },
+      { id: 'parent-3', name: 'Deepak Verma', email: 'parent3@schoolsync.edu', role: 'parent', password_hash: await hash('parent123', 12), avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=deepak', created_at: now(), updated_at: now() },
+      { id: 'parent-4', name: 'Sunita Verma', email: 'parent4@schoolsync.edu', role: 'parent', password_hash: await hash('parent123', 12), avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sunita', created_at: now(), updated_at: now() },
+      // Drivers
+      { id: 'driver-1', name: 'Amit Patel', email: 'driver@schoolsync.edu', role: 'driver', password_hash: await hash('driver123', 12), avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=amit', created_at: now(), updated_at: now() },
     ];
 
     for (const user of users) await db.ref(`users/${user.id}`).set(user);
@@ -212,15 +219,15 @@ export const seedMassData = async () => {
     // ── SUBMISSIONS ───────────────────────────────────────────────────────────
     const submissions = [
       // 10-A: student-1 submitted first 3, student-2 submitted first 2
-      { id: 'sub-s1-a0', assignment_id: 'asgn-class-10-a-0', student_id: 'student-1', content: 'Completed worksheet', submitted_at: new Date(Date.now() - 2 * 24*60*60*1000).toISOString(), status: 'graded', marks: 28, created_at: now(), updated_at: now() },
-      { id: 'sub-s1-a1', assignment_id: 'asgn-class-10-a-1', student_id: 'student-1', content: 'Lab report submitted', submitted_at: new Date(Date.now() - 1 * 24*60*60*1000).toISOString(), status: 'graded', marks: 25, created_at: now(), updated_at: now() },
-      { id: 'sub-s1-a2', assignment_id: 'asgn-class-10-a-2', student_id: 'student-1', content: 'Essay on digital technology', submitted_at: new Date(Date.now() - 3 * 24*60*60*1000).toISOString(), status: 'submitted', created_at: now(), updated_at: now() },
-      { id: 'sub-s2-a0', assignment_id: 'asgn-class-10-a-0', student_id: 'student-2', content: 'Worksheet done', submitted_at: new Date(Date.now() - 1 * 24*60*60*1000).toISOString(), status: 'graded', marks: 27, created_at: now(), updated_at: now() },
-      { id: 'sub-s2-a1', assignment_id: 'asgn-class-10-a-1', student_id: 'student-2', content: 'Lab report complete', submitted_at: new Date().toISOString(), status: 'submitted', created_at: now(), updated_at: now() },
+      { id: 'sub-s1-a0', assignment_id: 'asgn-class-10-a-0', student_id: 'student-1', content: 'Completed worksheet', submitted_at: new Date(Date.now() - 2 * 24*60*60*1000).toISOString(), is_late: false, status: 'graded', marks: 28, created_at: now(), updated_at: now() },
+      { id: 'sub-s1-a1', assignment_id: 'asgn-class-10-a-1', student_id: 'student-1', content: 'Lab report submitted', submitted_at: new Date(Date.now() - 1 * 24*60*60*1000).toISOString(), is_late: false, status: 'graded', marks: 25, created_at: now(), updated_at: now() },
+      { id: 'sub-s1-a2', assignment_id: 'asgn-class-10-a-2', student_id: 'student-1', content: 'Essay on digital technology', submitted_at: new Date(Date.now() - 3 * 24*60*60*1000).toISOString(), is_late: false, status: 'submitted', created_at: now(), updated_at: now() },
+      { id: 'sub-s2-a0', assignment_id: 'asgn-class-10-a-0', student_id: 'student-2', content: 'Worksheet done', submitted_at: new Date(Date.now() - 1 * 24*60*60*1000).toISOString(), is_late: false, status: 'graded', marks: 27, created_at: now(), updated_at: now() },
+      { id: 'sub-s2-a1', assignment_id: 'asgn-class-10-a-1', student_id: 'student-2', content: 'Lab report complete', submitted_at: new Date().toISOString(), is_late: false, status: 'submitted', created_at: now(), updated_at: now() },
       // 10-B: student-3 submitted first 2, student-4 submitted first 1
-      { id: 'sub-s3-b0', assignment_id: 'asgn-class-10-b-0', student_id: 'student-3', content: 'Algebra homework', submitted_at: new Date(Date.now() - 2 * 24*60*60*1000).toISOString(), status: 'graded', marks: 24, created_at: now(), updated_at: now() },
-      { id: 'sub-s3-b1', assignment_id: 'asgn-class-10-b-1', student_id: 'student-3', content: 'Forces assignment', submitted_at: new Date(Date.now() - 1 * 24*60*60*1000).toISOString(), status: 'submitted', created_at: now(), updated_at: now() },
-      { id: 'sub-s4-b0', assignment_id: 'asgn-class-10-b-0', student_id: 'student-4', content: 'Algebra done', submitted_at: new Date(Date.now() - 1 * 24*60*60*1000).toISOString(), status: 'graded', marks: 26, created_at: now(), updated_at: now() },
+      { id: 'sub-s3-b0', assignment_id: 'asgn-class-10-b-0', student_id: 'student-3', content: 'Algebra homework', submitted_at: new Date(Date.now() - 2 * 24*60*60*1000).toISOString(), is_late: false, status: 'graded', marks: 24, created_at: now(), updated_at: now() },
+      { id: 'sub-s3-b1', assignment_id: 'asgn-class-10-b-1', student_id: 'student-3', content: 'Forces assignment', submitted_at: new Date(Date.now() - 1 * 24*60*60*1000).toISOString(), is_late: false, status: 'submitted', created_at: now(), updated_at: now() },
+      { id: 'sub-s4-b0', assignment_id: 'asgn-class-10-b-0', student_id: 'student-4', content: 'Algebra done', submitted_at: new Date(Date.now() - 1 * 24*60*60*1000).toISOString(), is_late: false, status: 'graded', marks: 26, created_at: now(), updated_at: now() },
     ];
     for (const s of submissions) await db.ref(`submissions/${s.id}`).set(s);
     logger.info(`Submissions seeded (${submissions.length} total)`);
@@ -228,25 +235,25 @@ export const seedMassData = async () => {
     // ── MARKS (every student x every subject = 16 records) ────────────────────
     const marks = [
       // student-1 (10-A) — strong student
-      { id: 'mark-s1-math', student_id: 'student-1', class_id: 'class-10-a', subject: 'Mathematics', score: 85, max_marks: 100, term: '1', created_at: now() },
-      { id: 'mark-s1-phy',  student_id: 'student-1', class_id: 'class-10-a', subject: 'Physics', score: 78, max_marks: 100, term: '1', created_at: now() },
-      { id: 'mark-s1-eng',  student_id: 'student-1', class_id: 'class-10-a', subject: 'English', score: 88, max_marks: 100, term: '1', created_at: now() },
-      { id: 'mark-s1-chem', student_id: 'student-1', class_id: 'class-10-a', subject: 'Chemistry', score: 72, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s1-math', student_id: 'student-1', class_id: 'class-10-a', subject: 'Mathematics', exam_type: 'mid_term', score: 85, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s1-phy',  student_id: 'student-1', class_id: 'class-10-a', subject: 'Physics', exam_type: 'mid_term', score: 78, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s1-eng',  student_id: 'student-1', class_id: 'class-10-a', subject: 'English', exam_type: 'mid_term', score: 88, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s1-chem', student_id: 'student-1', class_id: 'class-10-a', subject: 'Chemistry', exam_type: 'mid_term', score: 72, max_marks: 100, term: '1', created_at: now() },
       // student-2 (10-A) — top student
-      { id: 'mark-s2-math', student_id: 'student-2', class_id: 'class-10-a', subject: 'Mathematics', score: 92, max_marks: 100, term: '1', created_at: now() },
-      { id: 'mark-s2-phy',  student_id: 'student-2', class_id: 'class-10-a', subject: 'Physics', score: 88, max_marks: 100, term: '1', created_at: now() },
-      { id: 'mark-s2-eng',  student_id: 'student-2', class_id: 'class-10-a', subject: 'English', score: 95, max_marks: 100, term: '1', created_at: now() },
-      { id: 'mark-s2-chem', student_id: 'student-2', class_id: 'class-10-a', subject: 'Chemistry', score: 85, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s2-math', student_id: 'student-2', class_id: 'class-10-a', subject: 'Mathematics', exam_type: 'mid_term', score: 92, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s2-phy',  student_id: 'student-2', class_id: 'class-10-a', subject: 'Physics', exam_type: 'mid_term', score: 88, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s2-eng',  student_id: 'student-2', class_id: 'class-10-a', subject: 'English', exam_type: 'mid_term', score: 95, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s2-chem', student_id: 'student-2', class_id: 'class-10-a', subject: 'Chemistry', exam_type: 'mid_term', score: 85, max_marks: 100, term: '1', created_at: now() },
       // student-3 (10-B) — average student
-      { id: 'mark-s3-math', student_id: 'student-3', class_id: 'class-10-b', subject: 'Mathematics', score: 65, max_marks: 100, term: '1', created_at: now() },
-      { id: 'mark-s3-phy',  student_id: 'student-3', class_id: 'class-10-b', subject: 'Physics', score: 60, max_marks: 100, term: '1', created_at: now() },
-      { id: 'mark-s3-eng',  student_id: 'student-3', class_id: 'class-10-b', subject: 'English', score: 72, max_marks: 100, term: '1', created_at: now() },
-      { id: 'mark-s3-chem', student_id: 'student-3', class_id: 'class-10-b', subject: 'Chemistry', score: 68, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s3-math', student_id: 'student-3', class_id: 'class-10-b', subject: 'Mathematics', exam_type: 'mid_term', score: 65, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s3-phy',  student_id: 'student-3', class_id: 'class-10-b', subject: 'Physics', exam_type: 'mid_term', score: 60, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s3-eng',  student_id: 'student-3', class_id: 'class-10-b', subject: 'English', exam_type: 'mid_term', score: 72, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s3-chem', student_id: 'student-3', class_id: 'class-10-b', subject: 'Chemistry', exam_type: 'mid_term', score: 68, max_marks: 100, term: '1', created_at: now() },
       // student-4 (10-B) — good student
-      { id: 'mark-s4-math', student_id: 'student-4', class_id: 'class-10-b', subject: 'Mathematics', score: 78, max_marks: 100, term: '1', created_at: now() },
-      { id: 'mark-s4-phy',  student_id: 'student-4', class_id: 'class-10-b', subject: 'Physics', score: 82, max_marks: 100, term: '1', created_at: now() },
-      { id: 'mark-s4-eng',  student_id: 'student-4', class_id: 'class-10-b', subject: 'English', score: 70, max_marks: 100, term: '1', created_at: now() },
-      { id: 'mark-s4-chem', student_id: 'student-4', class_id: 'class-10-b', subject: 'Chemistry', score: 75, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s4-math', student_id: 'student-4', class_id: 'class-10-b', subject: 'Mathematics', exam_type: 'mid_term', score: 78, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s4-phy',  student_id: 'student-4', class_id: 'class-10-b', subject: 'Physics', exam_type: 'mid_term', score: 82, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s4-eng',  student_id: 'student-4', class_id: 'class-10-b', subject: 'English', exam_type: 'mid_term', score: 70, max_marks: 100, term: '1', created_at: now() },
+      { id: 'mark-s4-chem', student_id: 'student-4', class_id: 'class-10-b', subject: 'Chemistry', exam_type: 'mid_term', score: 75, max_marks: 100, term: '1', created_at: now() },
     ];
     for (const m of marks) await db.ref(`marks/${m.id}`).set(m);
     logger.info(`Marks seeded (${marks.length} total)`);
@@ -301,8 +308,8 @@ export const seedMassData = async () => {
 
     // ── ANNOUNCEMENTS ───────────────────────────────────────────────────────────
     const announcements = [
-      { id: 'ann-1', title: 'Exam Schedule Released', body: 'Mid-term exams begin June 1st', category: 'exam', scope: 'all', created_by: 'admin-1', pinned: true, priority: 'high', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), updated_at: now() },
-      { id: 'ann-2', title: 'Library Books Due', body: 'Please return borrowed books by due date', category: 'reminder', scope: 'all', created_by: 'librarian-1', pinned: false, priority: 'medium', created_at: now(), updated_at: now() },
+      { id: 'ann-1', title: 'Exam Schedule Released', body: 'Mid-term exams begin June 1st', category: 'exam', scope: 'school', created_by: 'admin-1', pinned: true, priority: 'high', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), updated_at: now() },
+      { id: 'ann-2', title: 'Library Books Due', body: 'Please return borrowed books by due date', category: 'reminder', scope: 'school', created_by: 'librarian-1', pinned: false, priority: 'medium', created_at: now(), updated_at: now() },
     ];
     for (const ann of announcements) await db.ref(`announcements/${ann.id}`).set(ann);
     logger.info('Announcements seeded (2 total)');

@@ -4,7 +4,7 @@ import { validateRequest } from '../middleware/validateRequest.js';
 import { loginSchema, signupSchema } from '../validators/authValidators.js';
 import { requireAuth, allowRoles } from '../middleware/auth.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { queryRecords, updateRecord } from '../utils/firebaseDb.js';
+import { getRecord, queryRecords, updateRecord } from '../utils/firebaseDb.js';
 import pkg from 'bcryptjs';
 const { hash } = pkg;
 

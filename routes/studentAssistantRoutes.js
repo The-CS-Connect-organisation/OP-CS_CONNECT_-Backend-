@@ -21,7 +21,7 @@ import {
   scoreAnswer,
   getAnswerAnalysisHistory,
 } from '../controllers/studentAssistantController.js';
-import { allowRoles } from '../middleware/auth.js';
+import { requireAuth, allowRoles } from '../middleware/auth.js';
 import { validateRequest } from '../middleware/validateRequest.js';
 import {
   resolveDoubtSchema,
@@ -37,6 +37,7 @@ import {
 const router = Router();
 
 // Apply authentication to all student assistant routes
+router.use(requireAuth);
 router.use(allowRoles('student', 'teacher', 'admin', 'parent'));
 
 // ============================================================================
