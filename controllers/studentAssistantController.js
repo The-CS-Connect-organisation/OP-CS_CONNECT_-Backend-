@@ -7,6 +7,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { getRecord, getRecords, queryRecords, createRecord, updateRecord, deleteRecord, getStudentProfileByUserId } from '../utils/firebaseDb.js';
 import { emitToUser } from '../utils/socket.js';
+import { generateId } from '../utils/generateId.js';
 
 // ============================================================================
 // AI DOUBT RESOLUTION
@@ -21,7 +22,7 @@ export const resolveDoubt = asyncHandler(async (req, res) => {
   }
   
   // Save doubt to history
-  const doubtId = Date.now().toString();
+  const doubtId = generateId();
   const doubtRecord = {
     id: doubtId,
     student_id: studentId,
@@ -128,7 +129,7 @@ export const generateStudyPlan = asyncHandler(async (req, res) => {
   });
   
   // Save study plan
-  const planId = Date.now().toString();
+  const planId = generateId();
   const planRecord = {
     id: planId,
     student_id: studentId,
@@ -220,7 +221,7 @@ export const generateFlashcards = asyncHandler(async (req, res) => {
   const flashcards = await createFlashcardsFromText(text, subject, topic);
   
   // Save flashcards
-  const flashcardSetId = Date.now().toString();
+  const flashcardSetId = generateId();
   const flashcardSet = {
     id: flashcardSetId,
     student_id: studentId,
@@ -328,7 +329,7 @@ export const generatePracticeTest = asyncHandler(async (req, res) => {
   });
   
   // Create test
-  const testId = Date.now().toString();
+  const testId = generateId();
   const test = {
     id: testId,
     student_id: studentId,
@@ -780,7 +781,7 @@ export const scoreAnswer = asyncHandler(async (req, res) => {
   const analysis = await analyzeWrittenAnswer(extractedText, subject, questionPrompt, maxScore);
   
   // Save analysis to history
-  const analysisId = Date.now().toString();
+  const analysisId = generateId();
   const analysisRecord = {
     id: analysisId,
     student_id: studentId,

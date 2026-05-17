@@ -2,11 +2,12 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { getRecord, getRecords, queryRecords, createRecord, updateRecord } from '../utils/firebaseDb.js';
 import { getIO } from '../utils/socket.js';
+import { generateId } from '../utils/generateId.js';
 
 export const createReport = asyncHandler(async (req, res) => {
   const { type, severity, title, description, location, dateOfIncident, isAnonymous, evidenceUrls } = req.body;
 
-  const reportId = Date.now().toString();
+  const reportId = generateId();
   const report = {
     id: reportId,
     type: type || 'other',

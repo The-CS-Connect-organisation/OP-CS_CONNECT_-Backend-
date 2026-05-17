@@ -2,10 +2,11 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { buildPaginatedResponse, parsePagination } from '../utils/pagination.js';
 import { getRecord, getRecords, queryRecords, updateRecord, createRecord, deleteRecord, batchWrite } from '../utils/firebaseDb.js';
+import { generateId } from '../utils/generateId.js';
 
 // ── Exams ──
 export const createExam = asyncHandler(async (req, res) => {
-  const examId = Date.now().toString();
+  const examId = generateId();
   const exam = {
     id: examId,
     name: req.body.name,
@@ -78,7 +79,7 @@ export const deleteExam = asyncHandler(async (req, res) => {
 
 // ── Questions ──
 export const createQuestion = asyncHandler(async (req, res) => {
-  const questionId = Date.now().toString();
+  const questionId = generateId();
   const question = {
     id: questionId,
     type: req.body.type || 'mcq',

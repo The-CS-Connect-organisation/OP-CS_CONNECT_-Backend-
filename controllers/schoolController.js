@@ -4,6 +4,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { buildPaginatedResponse, parsePagination } from '../utils/pagination.js';
 import { getRecord, getRecords, queryRecords, createRecord, updateRecord, deleteRecord, batchWrite, getStudentProfileByUserId, getTeacherProfileByUserId } from '../utils/firebaseDb.js';
+import { generateId } from '../utils/generateId.js';
 
 const gradeFromPercentage = (percentage) => {
   if (percentage >= 90) return 'A';
@@ -15,7 +16,7 @@ const gradeFromPercentage = (percentage) => {
 
 // ── ClassRoom ──
 export const createClassRoom = asyncHandler(async (req, res) => {
-  const classroomId = Date.now().toString();
+  const classroomId = generateId();
   const classroom = {
     id: classroomId,
     ...req.body,
@@ -32,7 +33,7 @@ export const createStudentProfile = asyncHandler(async (req, res) => {
   const user = await getRecord(`users/${userId}`);
   if (!user || user.role !== 'student') throw new ApiError(400, 'userId must belong to a student');
 
-  const profileId = Date.now().toString();
+  const profileId = generateId();
   const profile = {
     id: profileId,
     user_id: user.id,
@@ -58,7 +59,7 @@ export const createTeacherProfile = asyncHandler(async (req, res) => {
   const user = await getRecord(`users/${userId}`);
   if (!user || user.role !== 'teacher') throw new ApiError(400, 'userId must belong to a teacher');
 
-  const profileId = Date.now().toString();
+  const profileId = generateId();
   const profile = {
     id: profileId,
     user_id: user.id,
@@ -213,7 +214,7 @@ export const listMessages = asyncHandler(async (req, res) => {
 
 // ── Assignments ──
 export const createAssignment = asyncHandler(async (req, res) => {
-  const assignmentId = Date.now().toString();
+  const assignmentId = generateId();
   const assignment = {
     id: assignmentId,
     title: req.body.title,
@@ -278,7 +279,7 @@ export const submitAssignment = asyncHandler(async (req, res) => {
   const submittedAt = new Date().toISOString();
   const isLate = new Date(submittedAt) > new Date(assignment.due_date);
 
-  const submissionId = Date.now().toString();
+  const submissionId = generateId();
   const submission = {
     id: submissionId,
     assignment_id: assignment.id,
@@ -420,7 +421,7 @@ export const getAttendanceReport = asyncHandler(async (req, res) => {
 
 // ── Announcements ──
 export const createAnnouncement = asyncHandler(async (req, res) => {
-  const announcementId = Date.now().toString();
+  const announcementId = generateId();
   const announcement = {
     id: announcementId,
     title: req.body.title,
@@ -488,7 +489,7 @@ export const sendMessage = asyncHandler(async (req, res) => {
   }
 
   const userId = req.user.id;
-  const messageId = Date.now().toString();
+  const messageId = generateId();
   const message = {
     id: messageId,
     sender_id: userId,
@@ -537,7 +538,7 @@ export const markMessageRead = asyncHandler(async (req, res) => {
 
 // ── Marks ──
 export const createMark = asyncHandler(async (req, res) => {
-  const markId = Date.now().toString();
+  const markId = generateId();
   const mark = {
     id: markId,
     student_id: req.body.studentId || req.body.student_id,
@@ -819,7 +820,7 @@ const token = serverClient.createToken(userId);
 export const createAssignmentWithSupplies = asyncHandler(async (req, res) => {
   const { title, description, subject, classId, dueDate, maxMarks, suppliesNeeded, notifyParents, notifyDaysBefore } = req.body;
 
-  const assignmentId = Date.now().toString();
+  const assignmentId = generateId();
   const assignment = {
     id: assignmentId,
     title,
@@ -1014,7 +1015,7 @@ export const sendBookHeavyAlert = asyncHandler(async (req, res) => {
 export const createFridgeItem = asyncHandler(async (req, res) => {
   const { title, description, category, dueDate, assignedTo, priority, sharedWith } = req.body;
 
-  const itemId = Date.now().toString();
+  const itemId = generateId();
   const item = {
     id: itemId,
     title,
@@ -1125,7 +1126,7 @@ export const createUniformSchedule = asyncHandler(async (req, res) => {
     throw new ApiError(409, 'Uniform schedule already exists for this date and class');
   }
 
-  const scheduleId = Date.now().toString();
+  const scheduleId = generateId();
   const schedule = {
     id: scheduleId,
     class_id: classId,

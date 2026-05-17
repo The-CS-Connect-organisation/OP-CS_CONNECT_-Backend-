@@ -2,6 +2,20 @@ import admin from 'firebase-admin';
 import { env } from './env.js';
 import { logger } from '../utils/logger.js';
 
+// Validate required env vars before initializing
+const requiredEnvVars = [
+  'FIREBASE_PROJECT_ID',
+  'FIREBASE_PRIVATE_KEY',
+  'FIREBASE_CLIENT_EMAIL',
+  'FIREBASE_DATABASE_URL',
+];
+
+const missingVars = requiredEnvVars.filter(v => !env[v]);
+if (missingVars.length > 0) {
+  logger.error('Missing required Firebase env vars:', { missing: missingVars });
+  throw new Error(`Missing required Firebase config: ${missingVars.join(', ')}`);
+}
+
 // Initialize Firebase Admin SDK
 // Handle private key: if it has literal \n strings, convert them to actual newlines
 let privateKey = env.FIREBASE_PRIVATE_KEY.trim();

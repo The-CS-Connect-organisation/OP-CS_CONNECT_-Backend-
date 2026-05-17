@@ -2,11 +2,12 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { getRecord, getRecords, queryRecords, createRecord, updateRecord } from '../utils/firebaseDb.js';
 import { getIO } from '../utils/socket.js';
+import { generateId } from '../utils/generateId.js';
 
 export const createTicket = asyncHandler(async (req, res) => {
   const { subject, description, category, priority, deviceId, screenshots } = req.body;
 
-  const ticketId = Date.now().toString();
+  const ticketId = generateId();
   const ticket = {
     id: ticketId,
     subject,
@@ -185,7 +186,7 @@ export const getDeviceInventory = asyncHandler(async (req, res) => {
 export const requestDevice = asyncHandler(async (req, res) => {
   const { deviceType, quantity, reason, requestedDate, classId } = req.body;
 
-  const requestId = Date.now().toString();
+  const requestId = generateId();
   const request = {
     id: requestId,
     deviceType: deviceType || 'laptop',

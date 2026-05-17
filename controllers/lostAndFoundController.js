@@ -2,11 +2,12 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { getRecord, getRecords, queryRecords, createRecord, updateRecord, deleteRecord } from '../utils/firebaseDb.js';
 import { getIO } from '../utils/socket.js';
+import { generateId } from '../utils/generateId.js';
 
 export const createLostItem = asyncHandler(async (req, res) => {
   const { type, title, description, category, location, date, imageUrl, contactInfo, isAnonymous } = req.body;
 
-  const itemId = Date.now().toString();
+  const itemId = generateId();
   const item = {
     id: itemId,
     type,

@@ -2,11 +2,12 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { getRecord, getRecords, queryRecords, createRecord, updateRecord } from '../utils/firebaseDb.js';
 import { getIO } from '../utils/socket.js';
+import { generateId } from '../utils/generateId.js';
 
 export const submitHealthRecord = asyncHandler(async (req, res) => {
   const { studentId, recordType, date, symptoms, diagnosis, treatment, medication, doctor, followUpDate, isEmergency, notes } = req.body;
 
-  const recordId = Date.now().toString();
+  const recordId = generateId();
   const record = {
     id: recordId,
     studentId,
@@ -79,7 +80,7 @@ export const getHealthRecords = asyncHandler(async (req, res) => {
 export const sendClinicAlert = asyncHandler(async (req, res) => {
   const { title, message, severity, targetGroups, classId, requiresAction, actionDescription } = req.body;
 
-  const alertId = Date.now().toString();
+  const alertId = generateId();
   const alert = {
     id: alertId,
     title,

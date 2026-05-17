@@ -3,6 +3,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { buildPaginatedResponse, parsePagination } from '../utils/pagination.js';
 import { getRecord, getRecords, queryRecords, createRecord, updateRecord, deleteRecord, batchWrite, getStudentProfileByUserId } from '../utils/firebaseDb.js';
 import { getIO } from '../utils/socket.js';
+import { generateId } from '../utils/generateId.js';
 
 // ============================================================================
 // QUICK ATTENDANCE MARKING - Mark attendance for entire class in one view
@@ -149,7 +150,7 @@ export const createGradingTemplate = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Template name and criteria are required');
   }
   
-  const templateId = Date.now().toString();
+  const templateId = generateId();
   const template = {
     id: templateId,
     name,
@@ -564,7 +565,7 @@ export const getStudentProgressTimeline = asyncHandler(async (req, res) => {
 export const createNotification = asyncHandler(async (req, res) => {
   const { type, title, message, targetUsers, classId, scheduledAt } = req.body;
   
-  const notificationId = Date.now().toString();
+  const notificationId = generateId();
   const notification = {
     id: notificationId,
     type, // 'assignment_due', 'low_attendance', 'poor_performance', 'announcement', 'custom'
@@ -678,7 +679,7 @@ export const createClassNote = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'classId and title are required');
   }
   
-  const noteId = Date.now().toString();
+  const noteId = generateId();
   const note = {
     id: noteId,
     class_id: classId,
@@ -821,7 +822,7 @@ export const createMessageTemplate = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Template name and body are required');
   }
   
-  const templateId = Date.now().toString();
+  const templateId = generateId();
   const template = {
     id: templateId,
     name,
@@ -871,7 +872,7 @@ export const sendQuickMessage = asyncHandler(async (req, res) => {
     });
   }
   
-  const messageId = Date.now().toString();
+  const messageId = generateId();
   const message = {
     id: messageId,
     sender_id: req.user.id,

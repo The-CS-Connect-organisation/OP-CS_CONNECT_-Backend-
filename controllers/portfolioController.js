@@ -1,6 +1,7 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { getRecord, getRecords, queryRecords, createRecord, updateRecord, deleteRecord, batchWrite } from '../utils/firebaseDb.js';
+import { generateId } from '../utils/generateId.js';
 
 export const createPortfolio = asyncHandler(async (req, res) => {
   const { studentId, academicYear, grade, section } = req.body;
@@ -11,7 +12,7 @@ export const createPortfolio = asyncHandler(async (req, res) => {
     throw new ApiError(409, 'Portfolio already exists for this student and academic year');
   }
 
-  const portfolioId = Date.now().toString();
+  const portfolioId = generateId();
   const portfolio = {
     id: portfolioId,
     studentId,
@@ -84,7 +85,7 @@ export const addPortfolioItem = asyncHandler(async (req, res) => {
   const portfolio = await getRecord(`portfolios/${portfolioId}`);
   if (!portfolio) throw new ApiError(404, 'Portfolio not found');
 
-  const itemId = Date.now().toString();
+  const itemId = generateId();
   const item = {
     id: itemId,
     portfolioId,

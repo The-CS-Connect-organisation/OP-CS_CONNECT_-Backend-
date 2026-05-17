@@ -7,6 +7,7 @@
 import { getRecords, queryRecords, updateRecord } from '../utils/firebaseDb.js';
 import { logger } from '../utils/logger.js';
 import { isUserOnline } from '../utils/socket.js';
+import { generateId } from '../utils/generateId.js';
 
 // FCM messaging instance (lazy initialization)
 let messagingInstance = null;
@@ -52,7 +53,7 @@ export const sendFCMPush = async (userId, title, body, data = {}) => {
       data: {
         ...data,
         userId,
-        timestamp: Date.now().toString(),
+        timestamp: generateId(),
       },
       android: {
         priority: 'high',

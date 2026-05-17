@@ -8,6 +8,7 @@ import { createRecord } from '../utils/firebaseDb.js';
 import { StreamChat } from 'stream-chat';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+import { generateId } from '../utils/generateId.js';
 
 // Provision user in GetStream so they can connect to chat
 const provisionStreamUser = async (userId, name, role) => {
@@ -113,7 +114,7 @@ export const signup = asyncHandler(async (req, res) => {
   }
 
   const passwordHash = await hash(password, 12);
-  const userId = Date.now().toString();
+  const userId = generateId();
   
   const user = {
     id: userId,

@@ -6,6 +6,7 @@ import { getRecord, getRecords, queryRecords, createRecord, updateRecord, delete
 import { buildPaginatedResponse, parsePagination } from '../utils/pagination.js';
 import { z } from 'zod';
 import { validateRequest } from '../middleware/validateRequest.js';
+import { generateId } from '../utils/generateId.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -69,7 +70,7 @@ router.get('/', allowRoles('admin', 'teacher', 'student', 'parent'), asyncHandle
 router.post('/', allowRoles('admin'), validateRequest(createFeeSchema), asyncHandler(async (req, res) => {
   const { studentId, term, amount, dueDate, description } = req.body;
 
-  const feeId = Date.now().toString();
+  const feeId = generateId();
   const fee = {
     id: feeId,
     student_id: studentId,

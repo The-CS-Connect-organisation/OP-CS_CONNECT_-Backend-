@@ -6,6 +6,7 @@
 import { getRecords, queryRecords, updateRecord } from '../utils/firebaseDb.js';
 import { emitToUser } from '../utils/socket.js';
 import { logger } from '../utils/logger.js';
+import { generateId } from '../utils/generateId.js';
 
 /**
  * Check for upcoming assignment deadlines
@@ -50,7 +51,7 @@ export const checkUpcomingDeadlines = async (hoursBefore = 24) => {
       });
       
       if (!alreadyNotified && studentIds.length > 0) {
-        const notificationId = Date.now().toString() + Math.random().toString(36).slice(2, 11);
+        const notificationId = generateId();
         const notification = {
           id: notificationId,
           type: 'assignment_due',
@@ -121,7 +122,7 @@ export const checkLowAttendance = async (threshold = 75) => {
       );
       
       if (!Array.isArray(existingNotifications) || existingNotifications.length === 0) {
-        const notificationId = Date.now().toString() + Math.random().toString(36).slice(2, 11);
+        const notificationId = generateId();
         const notification = {
           id: notificationId,
           type: 'low_attendance',
@@ -198,7 +199,7 @@ export const checkPoorPerformance = async (failingScore = 45) => {
       if (!Array.isArray(existingNotifications) || existingNotifications.length === 0) {
         const subjects = [...new Set(marks.map(m => m.subject))];
         
-        const notificationId = Date.now().toString() + Math.random().toString(36).slice(2, 11);
+        const notificationId = generateId();
         const notification = {
           id: notificationId,
           type: 'poor_performance',
@@ -258,7 +259,7 @@ export const runAutomatedNotificationChecks = async () => {
  */
 export const sendCustomNotification = async (data) => {
   try {
-    const notificationId = Date.now().toString() + Math.random().toString(36).slice(2, 11);
+    const notificationId = generateId();
     const notification = {
       id: notificationId,
       type: data.type || 'custom',

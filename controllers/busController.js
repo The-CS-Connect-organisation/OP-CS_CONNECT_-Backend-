@@ -2,10 +2,11 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { buildPaginatedResponse, parsePagination } from '../utils/pagination.js';
 import { getRecord, getRecords, queryRecords, updateRecord, deleteRecord } from '../utils/firebaseDb.js';
+import { generateId } from '../utils/generateId.js';
 
 // ── Create Bus ──
 export const createBus = asyncHandler(async (req, res) => {
-  const busId = Date.now().toString();
+  const busId = generateId();
   const bus = {
     id: busId,
     bus_number: req.body.busNumber || req.body.bus_number,
@@ -89,7 +90,7 @@ export const deleteBus = asyncHandler(async (req, res) => {
 
 // ── Create Route ──
 export const createRoute = asyncHandler(async (req, res) => {
-  const routeId = Date.now().toString();
+  const routeId = generateId();
   const route = {
     id: routeId,
     name: req.body.name,

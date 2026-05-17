@@ -6,6 +6,7 @@
 
 import { getRecords, queryRecords, getRecord, updateRecord, createRecord, deleteRecord, batchWrite } from '../utils/firebaseDb.js';
 import { logger } from '../utils/logger.js';
+import { generateId } from '../utils/generateId.js';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const cache = new Map();
@@ -210,7 +211,7 @@ export const teacherDataLayer = {
     try {
       clearCache(`templates:${teacherId}`);
 
-      const templateId = Date.now().toString();
+      const templateId = generateId();
       const newTemplate = {
         id: templateId,
         ...template,
@@ -501,7 +502,7 @@ export const teacherDataLayer = {
     try {
       clearCache('notifications');
 
-      const notificationId = Date.now().toString();
+      const notificationId = generateId();
       const newNotification = {
         id: notificationId,
         ...notification,
