@@ -1,0 +1,93 @@
+{
+  "users": [
+    { "id": "u1", "name": "Aarav Sharma", "email": "aarav@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-A", "subjects": ["Math", "Physics", "Chemistry", "English", "CS"], "gpa": 3.8, "attendance": 92, "feesPaid": true, "routeId": "r1", "avatar": "AS" },
+    { "id": "u2", "name": "Priya Patel", "email": "priya@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-A", "subjects": ["Math", "Physics", "Chemistry", "English", "Biology"], "gpa": 3.9, "attendance": 96, "feesPaid": true, "routeId": "r1", "avatar": "PP" },
+    { "id": "u3", "name": "Rohan Kumar", "email": "rohan@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-B", "subjects": ["Math", "Physics", "Chemistry", "English", "CS"], "gpa": 3.5, "attendance": 85, "feesPaid": false, "routeId": "r2", "avatar": "RK" },
+    { "id": "u4", "name": "Ananya Singh", "email": "ananya@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-B", "subjects": ["Math", "Physics", "Chemistry", "English", "Biology"], "gpa": 3.7, "attendance": 89, "feesPaid": true, "routeId": "r2", "avatar": "AS" },
+    { "id": "u5", "name": "Dr. Rajesh Gupta", "email": "rajesh@eduvault.ai", "password": "demo1234", "role": "teacher", "subjects": ["Math", "Physics", "CS"], "classes": ["10-A", "10-B"], "avatar": "RG" },
+    { "id": "u6", "name": "Prof. Sunita Verma", "email": "sunita@eduvault.ai", "password": "demo1234", "role": "teacher", "subjects": ["Chemistry", "Biology", "English"], "classes": ["10-A", "10-B"], "avatar": "SV" },
+    { "id": "u7", "name": "Principal Meera", "email": "meera@eduvault.ai", "password": "demo1234", "role": "admin", "schoolId": "sch1", "avatar": "PM" },
+    { "id": "u8", "name": "Mr. Vikram", "email": "vikram@eduvault.ai", "password": "demo1234", "role": "coordinator", "schoolId": "sch1", "avatar": "MV" },
+    { "id": "u9", "name": "Raju Kumar", "email": "raju@eduvault.ai", "password": "demo1234", "role": "driver", "routeId": "r1", "avatar": "RK" }
+  ],
+  "schools": [
+    { "id": "sch1", "name": "Cornerstone International School", "address": "123 Education Lane, New Delhi", "phone": "+91-11-23456789", "email": "info@cornerstone.edu", "principal": "Principal Meera", "established": 2005, "affiliation": "CBSE", "grades": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"] }
+  ],
+  "subjects": [
+    { "id": "sub1", "name": "Mathematics", "code": "MATH101", "teacher": "Dr. Rajesh Gupta", "classes": ["10-A", "10-B"] },
+    { "id": "sub2", "name": "Physics", "code": "PHY101", "teacher": "Dr. Rajesh Gupta", "classes": ["10-A", "10-B"] },
+    { "id": "sub3", "name": "Chemistry", "code": "CHEM101", "teacher": "Prof. Sunita Verma", "classes": ["10-A", "10-B"] },
+    { "id": "sub4", "name": "English", "code": "ENG101", "teacher": "Prof. Sunita Verma", "classes": ["10-A", "10-B"] },
+    { "id": "sub5", "name": "Computer Science", "code": "CS101", "teacher": "Dr. Rajesh Gupta", "classes": ["10-A"] },
+    { "id": "sub6", "name": "Biology", "code": "BIO101", "teacher": "Prof. Sunita Verma", "classes": ["10-B"] }
+  ],
+  "assignments": [
+    { "id": "a1", "title": "Quadratic Equations Worksheet", "subjectId": "sub1", "class": "10-A", "dueDate": "2026-05-25", "status": "active", "submissions": [{ "studentId": "u1", "content": "Completed all problems", "scoredMarks": 45, "feedback": "Excellent work!" }] },
+    { "id": "a2", "title": "Newton's Laws Lab Report", "subjectId": "sub2", "class": "10-A", "dueDate": "2026-05-28", "status": "active", "submissions": [] },
+    { "id": "a3", "title": "Organic Chemistry Notes", "subjectId": "sub3", "class": "10-B", "dueDate": "2026-05-22", "status": "active", "submissions": [{ "studentId": "u3", "content": "Submitted notes", "scoredMarks": 38, "feedback": "Good effort" }] },
+    { "id": "a4", "title": "Essay: Climate Change", "subjectId": "sub4", "class": "10-A", "dueDate": "2026-06-01", "status": "active", "submissions": [] }
+  ],
+  "grades": {
+    "u1": [{ "subject": "Math", "grade": "A", "marks": 92 }, { "subject": "Physics", "grade": "A-", "marks": 88 }, { "subject": "Chemistry", "grade": "B+", "marks": 82 }, { "subject": "English", "grade": "A", "marks": 90 }, { "subject": "CS", "grade": "A+", "marks": 96 }],
+    "u2": [{ "subject": "Math", "grade": "A+", "marks": 95 }, { "subject": "Physics", "grade": "A", "marks": 91 }, { "subject": "Chemistry", "grade": "A", "marks": 89 }, { "subject": "English", "grade": "A+", "marks": 94 }, { "subject": "Biology", "grade": "A", "marks": 90 }],
+    "u3": [{ "subject": "Math", "grade": "B+", "marks": 78 }, { "subject": "Physics", "grade": "B", "marks": 72 }, { "subject": "Chemistry", "grade": "A-", "marks": 85 }, { "subject": "English", "grade": "B+", "marks": 79 }, { "subject": "CS", "grade": "A-", "marks": 86 }],
+    "u4": [{ "subject": "Math", "grade": "A-", "marks": 87 }, { "subject": "Physics", "grade": "B+", "marks": 80 }, { "subject": "Chemistry", "grade": "A", "marks": 88 }, { "subject": "English", "grade": "A", "marks": 91 }, { "subject": "Biology", "grade": "A+", "marks": 93 }]
+  },
+  "attendance": {
+    "u1": [{ "date": "2026-05-01", "status": "present" }, { "date": "2026-05-02", "status": "present" }, { "date": "2026-05-03", "status": "absent" }, { "date": "2026-05-04", "status": "present" }, { "date": "2026-05-05", "status": "present" }],
+    "u2": [{ "date": "2026-05-01", "status": "present" }, { "date": "2026-05-02", "status": "present" }, { "date": "2026-05-03", "status": "present" }, { "date": "2026-05-04", "status": "present" }, { "date": "2026-05-05", "status": "present" }],
+    "u3": [{ "date": "2026-05-01", "status": "present" }, { "date": "2026-05-02", "status": "absent" }, { "date": "2026-05-03", "status": "absent" }, { "date": "2026-05-04", "status": "present" }, { "date": "2026-05-05", "status": "late" }],
+    "u4": [{ "date": "2026-05-01", "status": "present" }, { "date": "2026-05-02", "status": "present" }, { "date": "2026-05-03", "status": "late" }, { "date": "2026-05-04", "status": "present" }, { "date": "2026-05-05", "status": "present" }]
+  },
+  "fees": {
+    "u1": [{ "term": "Term 1", "amount": 25000, "paid": 25000, "date": "2026-01-15", "status": "paid" }, { "term": "Term 2", "amount": 25000, "paid": 25000, "date": "2026-04-10", "status": "paid" }],
+    "u2": [{ "term": "Term 1", "amount": 25000, "paid": 25000, "date": "2026-01-20", "status": "paid" }, { "term": "Term 2", "amount": 25000, "paid": 25000, "date": "2026-04-12", "status": "paid" }],
+    "u3": [{ "term": "Term 1", "amount": 25000, "paid": 25000, "date": "2026-01-18", "status": "paid" }, { "term": "Term 2", "amount": 25000, "paid": 15000, "date": "2026-04-15", "status": "partial" }],
+    "u4": [{ "term": "Term 1", "amount": 25000, "paid": 25000, "date": "2026-01-22", "status": "paid" }, { "term": "Term 2", "amount": 25000, "paid": 25000, "date": "2026-04-08", "status": "paid" }]
+  },
+  "timetable": {
+    "10-A": [
+      { "day": "Monday", "periods": [{ "time": "8:00-8:45", "subject": "Math" }, { "time": "8:45-9:30", "subject": "Physics" }, { "time": "9:45-10:30", "subject": "Chemistry" }, { "time": "10:30-11:15", "subject": "English" }, { "time": "11:30-12:15", "subject": "CS" }] },
+      { "day": "Tuesday", "periods": [{ "time": "8:00-8:45", "subject": "English" }, { "time": "8:45-9:30", "subject": "Math" }, { "time": "9:45-10:30", "subject": "Physics" }, { "time": "10:30-11:15", "subject": "Chemistry" }, { "time": "11:30-12:15", "subject": "CS" }] },
+      { "day": "Wednesday", "periods": [{ "time": "8:00-8:45", "subject": "Chemistry" }, { "time": "8:45-9:30", "subject": "English" }, { "time": "9:45-10:30", "subject": "Math" }, { "time": "10:30-11:15", "subject": "CS" }, { "time": "11:30-12:15", "subject": "Physics" }] },
+      { "day": "Thursday", "periods": [{ "time": "8:00-8:45", "subject": "Physics" }, { "time": "8:45-9:30", "subject": "CS" }, { "time": "9:45-10:30", "subject": "English" }, { "time": "10:30-11:15", "subject": "Math" }, { "time": "11:30-12:15", "subject": "Chemistry" }] },
+      { "day": "Friday", "periods": [{ "time": "8:00-8:45", "subject": "CS" }, { "time": "8:45-9:30", "subject": "Chemistry" }, { "time": "9:45-10:30", "subject": "Math" }, { "time": "10:30-11:15", "subject": "Physics" }, { "time": "11:30-12:15", "subject": "English" }] }
+    ],
+    "10-B": [
+      { "day": "Monday", "periods": [{ "time": "8:00-8:45", "subject": "Math" }, { "time": "8:45-9:30", "subject": "Chemistry" }, { "time": "9:45-10:30", "subject": "English" }, { "time": "10:30-11:15", "subject": "Physics" }, { "time": "11:30-12:15", "subject": "Biology" }] },
+      { "day": "Tuesday", "periods": [{ "time": "8:00-8:45", "subject": "Biology" }, { "time": "8:45-9:30", "subject": "Math" }, { "time": "9:45-10:30", "subject": "Chemistry" }, { "time": "10:30-11:15", "subject": "English" }, { "time": "11:30-12:15", "subject": "Physics" }] },
+      { "day": "Wednesday", "periods": [{ "time": "8:00-8:45", "subject": "English" }, { "time": "8:45-9:30", "subject": "Physics" }, { "time": "9:45-10:30", "subject": "Biology" }, { "time": "10:30-11:15", "subject": "Math" }, { "time": "11:30-12:15", "subject": "Chemistry" }] },
+      { "day": "Thursday", "periods": [{ "time": "8:00-8:45", "subject": "Chemistry" }, { "time": "8:45-9:30", "subject": "Biology" }, { "time": "9:45-10:30", "subject": "Math" }, { "time": "10:30-11:15", "subject": "English" }, { "time": "11:30-12:15", "subject": "Physics" }] },
+      { "day": "Friday", "periods": [{ "time": "8:00-8:45", "subject": "Physics" }, { "time": "8:45-9:30", "subject": "English" }, { "time": "9:45-10:30", "subject": "Chemistry" }, { "time": "10:30-11:15", "subject": "Biology" }, { "time": "11:30-12:15", "subject": "Math" }] }
+    ]
+  },
+  "routes": [
+    { "id": "r1", "name": "Route A - North Campus", "driver": "Raju Kumar", "driverId": "u9", "bus": "KA-01-1234", "stops": ["Main Gate", "North Block", "Library", "Sports Complex"], "students": ["u1", "u2"] },
+    { "id": "r2", "name": "Route B - South Campus", "driver": "Raju Kumar", "driverId": "u9", "bus": "KA-01-5678", "stops": ["South Gate", "Auditorium", "Lab Block", "Cafeteria"], "students": ["u3", "u4"] }
+  ],
+  "events": [
+    { "id": "e1", "title": "Annual Sports Day", "date": "2026-06-15", "type": "sports", "description": "Inter-house athletics competition" },
+    { "id": "e2", "title": "Science Fair", "date": "2026-06-22", "type": "academic", "description": "Student science project exhibition" },
+    { "id": "e3", "title": "Parent-Teacher Meeting", "date": "2026-05-30", "type": "meeting", "description": "Quarterly PTM for all classes" },
+    { "id": "e4", "title": "Farewell Ceremony", "date": "2026-05-20", "type": "ceremony", "description": "Farewell for graduating batch" }
+  ],
+  "clubs": [
+    { "id": "c1", "name": "Coding Club", "members": ["u1", "u3"], "lead": "u1" },
+    { "id": "c2", "name": "Science Society", "members": ["u2", "u4"], "lead": "u2" },
+    { "id": "c3", "name": "Drama Club", "members": ["u1", "u2", "u4"], "lead": "u4" }
+  ],
+  "messages": {
+    "u1": [{ "id": "msg1", "from": "u5", "to": "u1", "content": "Great work on the math assignment!", "timestamp": "2026-05-18T10:00:00Z", "read": true }],
+    "u5": [{ "id": "msg1", "from": "u5", "to": "u1", "content": "Great work on the math assignment!", "timestamp": "2026-05-18T10:00:00Z", "read": true }]
+  },
+  "notifications": {
+    "u1": [{ "id": "n1", "title": "Assignment Due", "message": "Quadratic Equations Worksheet due on May 25", "type": "assignment", "timestamp": "2026-05-18T08:00:00Z", "read": false }],
+    "u5": [{ "id": "n2", "title": "New Submission", "message": "Aarav Sharma submitted Quadratic Equations Worksheet", "type": "submission", "timestamp": "2026-05-17T14:00:00Z", "read": true }]
+  },
+  "questionBank": [
+    { "id": "q1", "subjectId": "sub1", "type": "mcq", "difficulty": "easy", "question": "What is the value of x in 2x + 4 = 10?", "options": ["2", "3", "4", "5"], "answer": "3" },
+    { "id": "q2", "subjectId": "sub1", "type": "mcq", "difficulty": "medium", "question": "Solve: x^2 - 5x + 6 = 0", "options": ["2, 3", "1, 6", "-2, -3", "-1, -6"], "answer": "2, 3" },
+    { "id": "q3", "subjectId": "sub2", "type": "short", "difficulty": "easy", "question": "State Newton's First Law of Motion.", "answer": "An object at rest stays at rest and an object in motion stays in motion unless acted upon by an external force." },
+    { "id": "q4", "subjectId": "sub3", "type": "mcq", "difficulty": "hard", "question": "Which is an aromatic compound?", "options": ["Ethanol", "Benzene", "Methane", "Acetic Acid"], "answer": "Benzene" }
+  ]
+}

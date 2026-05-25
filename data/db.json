@@ -1,0 +1,202 @@
+
+{
+  "users": [
+    { "id": "s1", "name": "Aarav Sharma", "email": "aarav@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-A", "rollNo": "001", "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face", "gpa": 3.8, "attendance": 94, "feesPaid": true },
+    { "id": "s2", "name": "Priya Patel", "email": "priya@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-A", "rollNo": "002", "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face", "gpa": 3.9, "attendance": 97, "feesPaid": true },
+    { "id": "s3", "name": "Rohan Kumar", "email": "rohan@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-B", "rollNo": "003", "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face", "gpa": 3.2, "attendance": 85, "feesPaid": false },
+    { "id": "s4", "name": "Ananya Singh", "email": "ananya@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-B", "rollNo": "004", "avatar": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face", "gpa": 3.6, "attendance": 91, "feesPaid": true },
+    { "id": "t1", "name": "Dr. Rajesh Gupta", "email": "rajesh@eduvault.ai", "password": "demo1234", "role": "teacher", "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face", "subjects": ["Mathematics", "Physics", "Computer Science"], "classes": ["10-A", "10-B"], "rating": 4.8 },
+    { "id": "t2", "name": "Prof. Sunita Verma", "email": "sunita@eduvault.ai", "password": "demo1234", "role": "teacher", "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face", "subjects": ["Chemistry", "Biology", "English"], "classes": ["10-A", "10-B"], "rating": 4.6 },
+    { "id": "a1", "name": "Principal Meera", "email": "meera@eduvault.ai", "password": "demo1234", "role": "admin", "avatar": "https://images.unsplash.com/photo-1580894732444-8ecded7900cd?w=150&h=150&fit=crop&crop=face" },
+    { "id": "c1", "name": "Mr. Vikram", "email": "vikram@eduvault.ai", "password": "demo1234", "role": "coordinator", "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face" },
+    { "id": "d1", "name": "Raju Kumar", "email": "raju@eduvault.ai", "password": "demo1234", "role": "driver", "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face", "routeId": "r1" }
+  ],
+  "subjects": [
+    { "id": "sub1", "name": "Mathematics", "code": "MATH101", "teacherId": "t1", "classes": ["10-A", "10-B"], "color": "#f97316", "icon": "📐" },
+    { "id": "sub2", "name": "Physics", "code": "PHY101", "teacherId": "t1", "classes": ["10-A", "10-B"], "color": "#3b82f6", "icon": "⚡" },
+    { "id": "sub3", "name": "Computer Science", "code": "CS101", "teacherId": "t1", "classes": ["10-A", "10-B"], "color": "#6366f1", "icon": "💻" },
+    { "id": "sub4", "name": "Chemistry", "code": "CHEM101", "teacherId": "t2", "classes": ["10-A", "10-B"], "color": "#10b981", "icon": "🧪" },
+    { "id": "sub5", "name": "Biology", "code": "BIO101", "teacherId": "t2", "classes": ["10-A", "10-B"], "color": "#ec4899", "icon": "🧬" },
+    { "id": "sub6", "name": "English", "code": "ENG101", "teacherId": "t2", "classes": ["10-A", "10-B"], "color": "#f59e0b", "icon": "📚" }
+  ],
+  "assignments": [
+    { "id": "a1", "title": "Quadratic Equations Worksheet", "subjectId": "sub1", "class": "10-A", "dueDate": "2025-01-20", "status": "pending", "maxMarks": 50, "description": "Solve all problems from Chapter 5", "submissions": [] },
+    { "id": "a2", "title": "Physics Lab Report", "subjectId": "sub2", "class": "10-A", "dueDate": "2025-01-18", "status": "submitted", "maxMarks": 30, "description": "Write lab report for Ohms Law experiment", "submissions": [{ "studentId": "s1", "scoredMarks": 27, "feedback": "Good work on the analysis" }, { "studentId": "s2", "scoredMarks": 28 }] },
+    { "id": "a3", "title": "Organic Chemistry Notes", "subjectId": "sub4", "class": "10-A", "dueDate": "2025-01-22", "status": "pending", "maxMarks": 20, "description": "Prepare comprehensive notes on alkanes", "submissions": [] },
+    { "id": "a4", "title": "Essay: Modern Poetry", "subjectId": "sub6", "class": "10-A", "dueDate": "2025-01-15", "status": "graded", "maxMarks": 40, "description": "Write a 1000-word essay on modern Indian poetry", "submissions": [{ "studentId": "s1", "scoredMarks": 36 }, { "studentId": "s2", "scoredMarks": 38 }] },
+    { "id": "a5", "title": "Data Structures Assignment", "subjectId": "sub3", "class": "10-B", "dueDate": "2025-01-25", "status": "pending", "maxMarks": 60, "description": "Implement linked list and binary tree", "submissions": [] },
+    { "id": "a6", "title": "Cell Biology Diagram", "subjectId": "sub5", "class": "10-B", "dueDate": "2025-01-17", "status": "late", "maxMarks": 25, "description": "Draw and label cell organelles", "submissions": [{ "studentId": "s3", "scoredMarks": 18 }] },
+    { "id": "a7", "title": "Trigonometry Problems", "subjectId": "sub1", "class": "10-B", "dueDate": "2025-01-23", "status": "pending", "maxMarks": 40, "description": "Solve trigonometric identities", "submissions": [] },
+    { "id": "a8", "title": "English Comprehension", "subjectId": "sub6", "class": "10-B", "dueDate": "2025-01-19", "status": "graded", "maxMarks": 30, "description": "Read and answer questions on Chapter 8", "submissions": [{ "studentId": "s3", "scoredMarks": 25 }, { "studentId": "s4", "scoredMarks": 27 }] }
+  ],
+  "grades": {
+    "s1": [
+      { "subjectId": "sub1", "subject": "Mathematics", "midTerm": 85, "final": 92, "assignments": 88, "overall": 89, "grade": "A", "trend": "up" },
+      { "subjectId": "sub2", "subject": "Physics", "midTerm": 78, "final": 82, "assignments": 90, "overall": 83, "grade": "B+", "trend": "up" },
+      { "subjectId": "sub4", "subject": "Chemistry", "midTerm": 90, "final": 88, "assignments": 85, "overall": 88, "grade": "A", "trend": "stable" },
+      { "subjectId": "sub6", "subject": "English", "midTerm": 92, "final": 95, "assignments": 90, "overall": 93, "grade": "A+", "trend": "up" },
+      { "subjectId": "sub5", "subject": "Biology", "midTerm": 75, "final": 80, "assignments": 78, "overall": 78, "grade": "B+", "trend": "down" },
+      { "subjectId": "sub3", "subject": "Computer Science", "midTerm": 95, "final": 98, "assignments": 96, "overall": 97, "grade": "A+", "trend": "up" }
+    ],
+    "s2": [
+      { "subjectId": "sub1", "subject": "Mathematics", "midTerm": 92, "final": 95, "assignments": 90, "overall": 93, "grade": "A+", "trend": "up" },
+      { "subjectId": "sub2", "subject": "Physics", "midTerm": 88, "final": 91, "assignments": 87, "overall": 89, "grade": "A", "trend": "up" },
+      { "subjectId": "sub4", "subject": "Chemistry", "midTerm": 85, "final": 90, "assignments": 88, "overall": 88, "grade": "A", "trend": "up" },
+      { "subjectId": "sub6", "subject": "English", "midTerm": 96, "final": 98, "assignments": 95, "overall": 97, "grade": "A+", "trend": "up" },
+      { "subjectId": "sub5", "subject": "Biology", "midTerm": 82, "final": 85, "assignments": 80, "overall": 83, "grade": "B+", "trend": "up" },
+      { "subjectId": "sub3", "subject": "Computer Science", "midTerm": 90, "final": 93, "assignments": 92, "overall": 92, "grade": "A", "trend": "up" }
+    ],
+    "s3": [
+      { "subjectId": "sub1", "subject": "Mathematics", "midTerm": 65, "final": 72, "assignments": 70, "overall": 69, "grade": "C+", "trend": "up" },
+      { "subjectId": "sub2", "subject": "Physics", "midTerm": 70, "final": 68, "assignments": 75, "overall": 71, "grade": "B-", "trend": "down" },
+      { "subjectId": "sub4", "subject": "Chemistry", "midTerm": 78, "final": 75, "assignments": 72, "overall": 75, "grade": "B", "trend": "down" },
+      { "subjectId": "sub6", "subject": "English", "midTerm": 80, "final": 82, "assignments": 78, "overall": 80, "grade": "B+", "trend": "up" },
+      { "subjectId": "sub5", "subject": "Biology", "midTerm": 72, "final": 70, "assignments": 68, "overall": 70, "grade": "B-", "trend": "down" },
+      { "subjectId": "sub3", "subject": "Computer Science", "midTerm": 85, "final": 88, "assignments": 82, "overall": 85, "grade": "A-", "trend": "up" }
+    ],
+    "s4": [
+      { "subjectId": "sub1", "subject": "Mathematics", "midTerm": 80, "final": 85, "assignments": 82, "overall": 82, "grade": "B+", "trend": "up" },
+      { "subjectId": "sub2", "subject": "Physics", "midTerm": 75, "final": 78, "assignments": 80, "overall": 78, "grade": "B+", "trend": "up" },
+      { "subjectId": "sub4", "subject": "Chemistry", "midTerm": 88, "final": 85, "assignments": 90, "overall": 88, "grade": "A", "trend": "stable" },
+      { "subjectId": "sub6", "subject": "English", "midTerm": 90, "final": 88, "assignments": 92, "overall": 90, "grade": "A", "trend": "stable" },
+      { "subjectId": "sub5", "subject": "Biology", "midTerm": 82, "final": 86, "assignments": 84, "overall": 84, "grade": "A-", "trend": "up" },
+      { "subjectId": "sub3", "subject": "Computer Science", "midTerm": 78, "final": 82, "assignments": 80, "overall": 80, "grade": "B+", "trend": "up" }
+    ]
+  },
+  "attendance": {
+    "s1": [
+      { "month": "Aug", "present": 22, "absent": 2, "late": 1, "percentage": 88 },
+      { "month": "Sep", "present": 20, "absent": 3, "late": 2, "percentage": 80 },
+      { "month": "Oct", "present": 23, "absent": 1, "late": 0, "percentage": 96 },
+      { "month": "Nov", "present": 21, "absent": 2, "late": 1, "percentage": 88 },
+      { "month": "Dec", "present": 19, "absent": 4, "late": 2, "percentage": 76 },
+      { "month": "Jan", "present": 15, "absent": 1, "late": 0, "percentage": 94 }
+    ],
+    "s2": [
+      { "month": "Aug", "present": 24, "absent": 0, "late": 1, "percentage": 96 },
+      { "month": "Sep", "present": 22, "absent": 1, "late": 2, "percentage": 88 },
+      { "month": "Oct", "present": 24, "absent": 0, "late": 0, "percentage": 100 },
+      { "month": "Nov", "present": 23, "absent": 0, "late": 1, "percentage": 96 },
+      { "month": "Dec", "present": 22, "absent": 1, "late": 2, "percentage": 88 },
+      { "month": "Jan", "present": 16, "absent": 0, "late": 0, "percentage": 100 }
+    ],
+    "s3": [
+      { "month": "Aug", "present": 18, "absent": 6, "late": 1, "percentage": 72 },
+      { "month": "Sep", "present": 17, "absent": 6, "late": 2, "percentage": 68 },
+      { "month": "Oct", "present": 20, "absent": 4, "late": 0, "percentage": 83 },
+      { "month": "Nov", "present": 18, "absent": 5, "late": 1, "percentage": 75 },
+      { "month": "Dec", "present": 15, "absent": 8, "late": 2, "percentage": 60 },
+      { "month": "Jan", "present": 13, "absent": 3, "late": 0, "percentage": 81 }
+    ],
+    "s4": [
+      { "month": "Aug", "present": 21, "absent": 3, "late": 1, "percentage": 84 },
+      { "month": "Sep", "present": 20, "absent": 3, "late": 2, "percentage": 80 },
+      { "month": "Oct", "present": 22, "absent": 2, "late": 0, "percentage": 92 },
+      { "month": "Nov", "present": 20, "absent": 3, "late": 1, "percentage": 83 },
+      { "month": "Dec", "present": 18, "absent": 5, "late": 2, "percentage": 72 },
+      { "month": "Jan", "present": 14, "absent": 2, "late": 0, "percentage": 88 }
+    ]
+  },
+  "timetable": {
+    "10-A": [
+      { "time": "08:00 - 08:45", "slots": { "monday": { "subjectId": "sub1", "room": "101" }, "tuesday": { "subjectId": "sub2", "room": "Lab 1" }, "wednesday": { "subjectId": "sub6", "room": "201" }, "thursday": { "subjectId": "sub4", "room": "Lab 2" }, "friday": { "subjectId": "sub5", "room": "Lab 3" } } },
+      { "time": "08:50 - 09:35", "slots": { "monday": { "subjectId": "sub2", "room": "Lab 1" }, "tuesday": { "subjectId": "sub1", "room": "101" }, "wednesday": { "subjectId": "sub4", "room": "Lab 2" }, "thursday": { "subjectId": "sub6", "room": "201" }, "friday": { "subjectId": "sub3", "room": "IT Lab" } } },
+      { "time": "09:40 - 10:25", "slots": { "monday": { "subjectId": "sub6", "room": "201" }, "tuesday": { "subjectId": "sub5", "room": "Lab 3" }, "wednesday": { "subjectId": "sub1", "room": "101" }, "thursday": { "subjectId": "sub3", "room": "IT Lab" }, "friday": { "subjectId": "sub2", "room": "Lab 1" } } },
+      { "time": "10:25 - 10:45", "slots": { "monday": { "subjectId": "break" }, "tuesday": { "subjectId": "break" }, "wednesday": { "subjectId": "break" }, "thursday": { "subjectId": "break" }, "friday": { "subjectId": "break" } } },
+      { "time": "10:45 - 11:30", "slots": { "monday": { "subjectId": "sub4", "room": "Lab 2" }, "tuesday": { "subjectId": "sub3", "room": "IT Lab" }, "wednesday": { "subjectId": "sub2", "room": "Lab 1" }, "thursday": { "subjectId": "sub5", "room": "Lab 3" }, "friday": { "subjectId": "sub1", "room": "101" } } },
+      { "time": "11:35 - 12:20", "slots": { "monday": { "subjectId": "sub5", "room": "Lab 3" }, "tuesday": { "subjectId": "sub4", "room": "Lab 2" }, "wednesday": { "subjectId": "sub3", "room": "IT Lab" }, "thursday": { "subjectId": "sub1", "room": "101" }, "friday": { "subjectId": "sub6", "room": "201" } } },
+      { "time": "12:20 - 13:00", "slots": { "monday": { "subjectId": "lunch" }, "tuesday": { "subjectId": "lunch" }, "wednesday": { "subjectId": "lunch" }, "thursday": { "subjectId": "lunch" }, "friday": { "subjectId": "lunch" } } },
+      { "time": "13:00 - 13:45", "slots": { "monday": { "subjectId": "sub3", "room": "IT Lab" }, "tuesday": { "subjectId": "sub6", "room": "201" }, "wednesday": { "subjectId": "sub5", "room": "Lab 3" }, "thursday": { "subjectId": "sub2", "room": "Lab 1" }, "friday": { "subjectId": "sub4", "room": "Lab 2" } } }
+    ],
+    "10-B": [
+      { "time": "08:00 - 08:45", "slots": { "monday": { "subjectId": "sub3", "room": "IT Lab" }, "tuesday": { "subjectId": "sub4", "room": "Lab 2" }, "wednesday": { "subjectId": "sub1", "room": "102" }, "thursday": { "subjectId": "sub5", "room": "Lab 3" }, "friday": { "subjectId": "sub2", "room": "Lab 1" } } },
+      { "time": "08:50 - 09:35", "slots": { "monday": { "subjectId": "sub1", "room": "102" }, "tuesday": { "subjectId": "sub5", "room": "Lab 3" }, "wednesday": { "subjectId": "sub4", "room": "Lab 2" }, "thursday": { "subjectId": "sub3", "room": "IT Lab" }, "friday": { "subjectId": "sub6", "room": "202" } } },
+      { "time": "09:40 - 10:25", "slots": { "monday": { "subjectId": "sub4", "room": "Lab 2" }, "tuesday": { "subjectId": "sub1", "room": "102" }, "wednesday": { "subjectId": "sub6", "room": "202" }, "thursday": { "subjectId": "sub2", "room": "Lab 1" }, "friday": { "subjectId": "sub3", "room": "IT Lab" } } },
+      { "time": "10:25 - 10:45", "slots": { "monday": { "subjectId": "break" }, "tuesday": { "subjectId": "break" }, "wednesday": { "subjectId": "break" }, "thursday": { "subjectId": "break" }, "friday": { "subjectId": "break" } } },
+      { "time": "10:45 - 11:30", "slots": { "monday": { "subjectId": "sub2", "room": "Lab 1" }, "tuesday": { "subjectId": "sub6", "room": "202" }, "wednesday": { "subjectId": "sub5", "room": "Lab 3" }, "thursday": { "subjectId": "sub1", "room": "102" }, "friday": { "subjectId": "sub4", "room": "Lab 2" } } },
+      { "time": "11:35 - 12:20", "slots": { "monday": { "subjectId": "sub6", "room": "202" }, "tuesday": { "subjectId": "sub3", "room": "IT Lab" }, "wednesday": { "subjectId": "sub2", "room": "Lab 1" }, "thursday": { "subjectId": "sub4", "room": "Lab 2" }, "friday": { "subjectId": "sub1", "room": "102" } } },
+      { "time": "12:20 - 13:00", "slots": { "monday": { "subjectId": "lunch" }, "tuesday": { "subjectId": "lunch" }, "wednesday": { "subjectId": "lunch" }, "thursday": { "subjectId": "lunch" }, "friday": { "subjectId": "lunch" } } },
+      { "time": "13:00 - 13:45", "slots": { "monday": { "subjectId": "sub5", "room": "Lab 3" }, "tuesday": { "subjectId": "sub2", "room": "Lab 1" }, "wednesday": { "subjectId": "sub3", "room": "IT Lab" }, "thursday": { "subjectId": "sub6", "room": "202" }, "friday": { "subjectId": "sub5", "room": "Lab 3" } } }
+    ]
+  },
+  "fees": {
+    "s1": [{ "term": "Term 1", "amount": 25000, "paid": 25000, "due": 0, "status": "paid", "date": "2024-06-15" }, { "term": "Term 2", "amount": 25000, "paid": 15000, "due": 10000, "status": "partial", "date": "2024-10-01" }, { "term": "Term 3", "amount": 25000, "paid": 0, "due": 25000, "status": "unpaid", "date": "2025-02-01" }],
+    "s2": [{ "term": "Term 1", "amount": 25000, "paid": 25000, "due": 0, "status": "paid", "date": "2024-06-15" }, { "term": "Term 2", "amount": 25000, "paid": 25000, "due": 0, "status": "paid", "date": "2024-10-01" }, { "term": "Term 3", "amount": 25000, "paid": 25000, "due": 0, "status": "paid", "date": "2025-02-01" }],
+    "s3": [{ "term": "Term 1", "amount": 25000, "paid": 25000, "due": 0, "status": "paid", "date": "2024-06-15" }, { "term": "Term 2", "amount": 25000, "paid": 10000, "due": 15000, "status": "partial", "date": "2024-10-01" }, { "term": "Term 3", "amount": 25000, "paid": 0, "due": 25000, "status": "unpaid", "date": "2025-02-01" }],
+    "s4": [{ "term": "Term 1", "amount": 25000, "paid": 25000, "due": 0, "status": "paid", "date": "2024-06-15" }, { "term": "Term 2", "amount": 25000, "paid": 25000, "due": 0, "status": "paid", "date": "2024-10-01" }, { "term": "Term 3", "amount": 25000, "paid": 5000, "due": 20000, "status": "partial", "date": "2025-02-01" }]
+  },
+  "messages": [
+    { "id": "m1", "from": "t1", "to": "s1", "subject": "Math Test Prep", "body": "Hi Aarav, please review chapters 3-5 for the upcoming test.", "timestamp": "2025-01-15T10:30:00Z", "read": true },
+    { "id": "m2", "from": "t2", "to": "s1", "subject": "Lab Report Feedback", "body": "Great work on the Ohms Law experiment! A few improvements needed in the conclusion.", "timestamp": "2025-01-14T14:20:00Z", "read": false },
+    { "id": "m3", "from": "t1", "to": "s2", "subject": "Outstanding Performance", "body": "Priya, your math scores have been exceptional! Keep it up.", "timestamp": "2025-01-16T09:00:00Z", "read": false },
+    { "id": "m4", "from": "t2", "to": "s3", "subject": "Attendance Concern", "body": "Rohan, your attendance has been dropping. Please ensure regular attendance.", "timestamp": "2025-01-13T11:15:00Z", "read": true },
+    { "id": "m5", "from": "t2", "to": "s4", "subject": "Chemistry Project", "body": "Ananya, your chemistry project on organic compounds was excellent!", "timestamp": "2025-01-12T16:45:00Z", "read": true }
+  ],
+  "routes": [
+    { "id": "r1", "name": "Route Alpha - North Zone", "stops": [{ "id": 1, "name": "School Main Gate", "time": "07:30 AM", "students": 0, "status": "start" }, { "id": 2, "name": "Sector 5 Chowk", "time": "07:40 AM", "students": 5, "status": "pickup" }, { "id": 3, "name": "Rajouri Garden", "time": "07:50 AM", "students": 4, "status": "pickup" }, { "id": 4, "name": "Tagore Garden", "time": "08:00 AM", "students": 3, "status": "pickup" }, { "id": 5, "name": "School Main Gate", "time": "08:15 AM", "students": 0, "status": "end" }], "students": ["s1", "s3"], "distance": "12.5 km", "duration": "45 min", "status": "active" },
+    { "id": "r2", "name": "Route Beta - South Zone", "stops": [{ "id": 1, "name": "School Main Gate", "time": "07:25 AM", "students": 0, "status": "start" }, { "id": 2, "name": "Green Park", "time": "07:35 AM", "students": 6, "status": "pickup" }, { "id": 3, "name": "Hauz Khas", "time": "07:45 AM", "students": 4, "status": "pickup" }, { "id": 4, "name": "School Main Gate", "time": "08:10 AM", "students": 0, "status": "end" }], "students": ["s2", "s4"], "distance": "9.8 km", "duration": "35 min", "status": "active" }
+  ],
+  "events": [
+    { "id": "e1", "title": "Annual Sports Day", "date": "2025-02-15", "type": "event", "description": "Inter-house athletic competition" },
+    { "id": "e2", "title": "Science Exhibition", "date": "2025-01-28", "type": "academic", "description": "Student science projects showcase" },
+    { "id": "e3", "title": "Parent-Teacher Meeting", "date": "2025-02-05", "type": "meeting", "description": "Mid-term PTM for all classes" },
+    { "id": "e4", "title": "Republic Day Celebration", "date": "2025-01-26", "type": "holiday", "description": "School holiday - Republic Day" }
+  ],
+  "clubs": [
+    { "id": "c1", "name": "Coding Club", "members": ["s1", "s3", "s4"], "icon": "💻", "color": "#6366f1" },
+    { "id": "c2", "name": "Debate Society", "members": ["s2", "s4"], "icon": "🎤", "color": "#8b5cf6" },
+    { "id": "c3", "name": "Science Olympiad", "members": ["s1", "s2"], "icon": "🔬", "color": "#10b981" },
+    { "id": "c4", "name": "Art Circle", "members": ["s2", "s3"], "icon": "🎨", "color": "#f59e0b" }
+  ],
+  "notifications": [
+    { "id": "n1", "userId": "s1", "title": "AI Study Plan Generated", "message": "Your personalized study plan for Mathematics is ready!", "type": "success", "timestamp": "2025-01-17T10:00:00Z", "read": false },
+    { "id": "n2", "userId": "s1", "title": "Assignment Due Tomorrow", "message": "Physics Lab Report submission deadline is approaching", "type": "warning", "timestamp": "2025-01-17T08:00:00Z", "read": false },
+    { "id": "n3", "userId": "s2", "title": "Outstanding Performance", "message": "You scored highest in English this term!", "type": "success", "timestamp": "2025-01-16T12:00:00Z", "read": true },
+    { "id": "n4", "userId": "s3", "title": "Attendance Alert", "message": "Your attendance has dropped below 85%", "type": "warning", "timestamp": "2025-01-15T09:00:00Z", "read": false },
+    { "id": "n5", "userId": "t1", "title": "New Submissions", "message": "5 students submitted the Quadratic Equations Worksheet", "type": "info", "timestamp": "2025-01-17T07:30:00Z", "read": false },
+    { "id": "n6", "userId": "t2", "title": "AI Grading Complete", "message": "Chemistry assignments for 10-A have been AI-graded", "type": "success", "timestamp": "2025-01-17T06:00:00Z", "read": true }
+  ],
+  "schools": [
+    { "id": "sch1", "name": "EduVault Academy - North", "students": 450, "teachers": 35, "attendance": 92, "feeCollection": 85, "performance": 88, "location": "North Delhi" },
+    { "id": "sch2", "name": "EduVault Academy - South", "students": 380, "teachers": 30, "attendance": 89, "feeCollection": 91, "performance": 85, "location": "South Delhi" }
+  ],
+  "routes": [
+    { "id": "r1", "name": "Route Alpha - North Zone", "stops": 8, "students": ["s1", "s2"], "distance": "12.5 km", "duration": "45 min", "status": "active" },
+    { "id": "r2", "name": "Route Beta - South Zone", "stops": 6, "students": ["s3", "s4"], "distance": "9.8 km", "duration": "35 min", "status": "active" }
+  ],
+  "timetable": {
+    "10-A": [
+      { "time": "08:00 - 08:45", "monday": { "subject": "Mathematics", "room": "101", "color": "#f97316" }, "tuesday": { "subject": "Physics", "room": "Lab 1", "color": "#3b82f6" }, "wednesday": { "subject": "English", "room": "201", "color": "#f59e0b" }, "thursday": { "subject": "Chemistry", "room": "Lab 2", "color": "#10b981" }, "friday": { "subject": "Biology", "room": "Lab 3", "color": "#ec4899" } },
+      { "time": "08:50 - 09:35", "monday": { "subject": "Physics", "room": "Lab 1", "color": "#3b82f6" }, "tuesday": { "subject": "Mathematics", "room": "101", "color": "#f97316" }, "wednesday": { "subject": "Chemistry", "room": "Lab 2", "color": "#10b981" }, "thursday": { "subject": "English", "room": "201", "color": "#f59e0b" }, "friday": { "subject": "Computer Science", "room": "IT Lab", "color": "#6366f1" } },
+      { "time": "09:40 - 10:25", "monday": { "subject": "English", "room": "201", "color": "#f59e0b" }, "tuesday": { "subject": "Biology", "room": "Lab 3", "color": "#ec4899" }, "wednesday": { "subject": "Mathematics", "room": "101", "color": "#f97316" }, "thursday": { "subject": "Computer Science", "room": "IT Lab", "color": "#6366f1" }, "friday": { "subject": "Physics", "room": "Lab 1", "color": "#3b82f6" } },
+      { "time": "10:25 - 10:45", "monday": { "subject": "Break", "room": "", "color": "#64748b" }, "tuesday": { "subject": "Break", "room": "", "color": "#64748b" }, "wednesday": { "subject": "Break", "room": "", "color": "#64748b" }, "thursday": { "subject": "Break", "room": "", "color": "#64748b" }, "friday": { "subject": "Break", "room": "", "color": "#64748b" } },
+      { "time": "10:45 - 11:30", "monday": { "subject": "Chemistry", "room": "Lab 2", "color": "#10b981" }, "tuesday": { "subject": "Computer Science", "room": "IT Lab", "color": "#6366f1" }, "wednesday": { "subject": "Physics", "room": "Lab 1", "color": "#3b82f6" }, "thursday": { "subject": "Biology", "room": "Lab 3", "color": "#ec4899" }, "friday": { "subject": "Mathematics", "room": "101", "color": "#f97316" } },
+      { "time": "11:35 - 12:20", "monday": { "subject": "Biology", "room": "Lab 3", "color": "#ec4899" }, "tuesday": { "subject": "Chemistry", "room": "Lab 2", "color": "#10b981" }, "wednesday": { "subject": "Computer Science", "room": "IT Lab", "color": "#6366f1" }, "thursday": { "subject": "Mathematics", "room": "101", "color": "#f97316" }, "friday": { "subject": "English", "room": "201", "color": "#f59e0b" } },
+      { "time": "12:20 - 13:00", "monday": { "subject": "Lunch", "room": "", "color": "#64748b" }, "tuesday": { "subject": "Lunch", "room": "", "color": "#64748b" }, "wednesday": { "subject": "Lunch", "room": "", "color": "#64748b" }, "thursday": { "subject": "Lunch", "room": "", "color": "#64748b" }, "friday": { "subject": "Lunch", "room": "", "color": "#64748b" } },
+      { "time": "13:00 - 13:45", "monday": { "subject": "Computer Science", "room": "IT Lab", "color": "#6366f1" }, "tuesday": { "subject": "English", "room": "201", "color": "#f59e0b" }, "wednesday": { "subject": "Biology", "room": "Lab 3", "color": "#ec4899" }, "thursday": { "subject": "Physics", "room": "Lab 1", "color": "#3b82f6" }, "friday": { "subject": "Chemistry", "room": "Lab 2", "color": "#10b981" } }
+    ],
+    "10-B": [
+      { "time": "08:00 - 08:45", "monday": { "subject": "Physics", "room": "Lab 1", "color": "#3b82f6" }, "tuesday": { "subject": "Mathematics", "room": "101", "color": "#f97316" }, "wednesday": { "subject": "Chemistry", "room": "Lab 2", "color": "#10b981" }, "thursday": { "subject": "English", "room": "201", "color": "#f59e0b" }, "friday": { "subject": "Computer Science", "room": "IT Lab", "color": "#6366f1" } },
+      { "time": "08:50 - 09:35", "monday": { "subject": "Mathematics", "room": "101", "color": "#f97316" }, "tuesday": { "subject": "Biology", "room": "Lab 3", "color": "#ec4899" }, "wednesday": { "subject": "English", "room": "201", "color": "#f59e0b" }, "thursday": { "subject": "Physics", "room": "Lab 1", "color": "#3b82f6" }, "friday": { "subject": "Chemistry", "room": "Lab 2", "color": "#10b981" } },
+      { "time": "09:40 - 10:25", "monday": { "subject": "Chemistry", "room": "Lab 2", "color": "#10b981" }, "tuesday": { "subject": "Computer Science", "room": "IT Lab", "color": "#6366f1" }, "wednesday": { "subject": "Physics", "room": "Lab 1", "color": "#3b82f6" }, "thursday": { "subject": "Biology", "room": "Lab 3", "color": "#ec4899" }, "friday": { "subject": "Mathematics", "room": "101", "color": "#f97316" } },
+      { "time": "10:25 - 10:45", "monday": { "subject": "Break", "room": "", "color": "#64748b" }, "tuesday": { "subject": "Break", "room": "", "color": "#64748b" }, "wednesday": { "subject": "Break", "room": "", "color": "#64748b" }, "thursday": { "subject": "Break", "room": "", "color": "#64748b" }, "friday": { "subject": "Break", "room": "", "color": "#64748b" } },
+      { "time": "10:45 - 11:30", "monday": { "subject": "English", "room": "201", "color": "#f59e0b" }, "tuesday": { "subject": "Physics", "room": "Lab 1", "color": "#3b82f6" }, "wednesday": { "subject": "Mathematics", "room": "101", "color": "#f97316" }, "thursday": { "subject": "Computer Science", "room": "IT Lab", "color": "#6366f1" }, "friday": { "subject": "Biology", "room": "Lab 3", "color": "#ec4899" } },
+      { "time": "11:35 - 12:20", "monday": { "subject": "Computer Science", "room": "IT Lab", "color": "#6366f1" }, "tuesday": { "subject": "English", "room": "201", "color": "#f59e0b" }, "wednesday": { "subject": "Biology", "room": "Lab 3", "color": "#ec4899" }, "thursday": { "subject": "Mathematics", "room": "101", "color": "#f97316" }, "friday": { "subject": "Physics", "room": "Lab 1", "color": "#3b82f6" } },
+      { "time": "12:20 - 13:00", "monday": { "subject": "Lunch", "room": "", "color": "#64748b" }, "tuesday": { "subject": "Lunch", "room": "", "color": "#64748b" }, "wednesday": { "subject": "Lunch", "room": "", "color": "#64748b" }, "thursday": { "subject": "Lunch", "room": "", "color": "#64748b" }, "friday": { "subject": "Lunch", "room": "", "color": "#64748b" } },
+      { "time": "13:00 - 13:45", "monday": { "subject": "Biology", "room": "Lab 3", "color": "#ec4899" }, "tuesday": { "subject": "Chemistry", "room": "Lab 2", "color": "#10b981" }, "wednesday": { "subject": "Computer Science", "room": "IT Lab", "color": "#6366f1" }, "thursday": { "subject": "English", "room": "201", "color": "#f59e0b" }, "friday": { "subject": "Mathematics", "room": "101", "color": "#f97316" } }
+    ]
+  },
+  "questionBank": [
+    { "id": "q1", "subjectId": "sub1", "subject": "Mathematics", "question": "Solve the quadratic equation: x² + 5x + 6 = 0", "type": "subjective", "difficulty": "Easy", "marks": 5 },
+    { "id": "q2", "subjectId": "sub2", "subject": "Physics", "question": "State Ohms Law and derive its mathematical expression.", "type": "subjective", "difficulty": "Medium", "marks": 10 },
+    { "id": "q3", "subjectId": "sub4", "subject": "Chemistry", "question": "What is the molecular formula of Glucose?", "type": "mcq", "difficulty": "Easy", "marks": 2, "options": ["C6H12O6", "C12H22O11", "C6H10O5", "C2H5OH"] },
+    { "id": "q4", "subjectId": "sub6", "subject": "English", "question": "Who wrote The Waste Land?", "type": "mcq", "difficulty": "Medium", "marks": 2, "options": ["T.S. Eliot", "W.B. Yeats", "Robert Frost", "Emily Dickinson"] },
+    { "id": "q5", "subjectId": "sub1", "subject": "Mathematics", "question": "Find the derivative of f(x) = x³ + 2x² - 5x + 3", "type": "subjective", "difficulty": "Hard", "marks": 8 }
+  ],
+  "messages": {
+    "s1": [{ "id": "msg1", "from": "s1", "to": "t1", "content": "Sir, I have a doubt in the quadratic equation problem", "timestamp": "2025-01-17T09:00:00Z", "read": true }, { "id": "msg2", "from": "t1", "to": "s1", "content": "Sure Aarav, which step are you stuck on?", "timestamp": "2025-01-17T09:05:00Z", "read": true }],
+    "s2": [{ "id": "msg3", "from": "s2", "to": "t2", "content": "Maam, when is the Chemistry lab report due?", "timestamp": "2025-01-16T14:00:00Z", "read": true }],
+    "t1": [{ "id": "msg1", "from": "s1", "to": "t1", "content": "Sir, I have a doubt in the quadratic equation problem", "timestamp": "2025-01-17T09:00:00Z", "read": true }, { "id": "msg2", "from": "t1", "to": "s1", "content": "Sure Aarav, which step are you stuck on?", "timestamp": "2025-01-17T09:05:00Z", "read": true }],
+    "t2": [{ "id": "msg3", "from": "s2", "to": "t2", "content": "Maam, when is the Chemistry lab report due?", "timestamp": "2025-01-16T14:00:00Z", "read": true }]
+  }
+}
