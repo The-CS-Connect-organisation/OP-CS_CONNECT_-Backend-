@@ -25,6 +25,8 @@ import foodServiceRoutes from './routes/food-service';
 import athleticsRoutes from './routes/athletics';
 import alumniRoutes from './routes/alumni';
 import platformRoutes from './routes/platform';
+import circularRoutes from './routes/circulars';
+import announcementRoutes from './routes/announcements';
 
 dotenv.config();
 
@@ -99,6 +101,8 @@ app.use('/api/food-service', foodServiceRoutes);
 app.use('/api/athletics', athleticsRoutes);
 app.use('/api/alumni', alumniRoutes);
 app.use('/api/platform', platformRoutes);
+app.use('/api/circulars', circularRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 // Helper: safe user (remove password)
 function safeUser(u: any) {
