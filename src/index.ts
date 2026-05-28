@@ -1574,6 +1574,9 @@ const GROQ_MODELS: Record<string, string> = {
 
 app.post('/api/ai/chat', async (req, res) => {
   try {
+    // #region agent log
+    fetch('http://127.0.0.1:7648/ingest/9083a094-cb0a-4860-b6f2-236bb876b0d0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6a311b'},body:JSON.stringify({sessionId:'6a311b',runId:'pre-fix',hypothesisId:'H5',location:'index.ts:ai-chat-entry',message:'index ai chat handler entered',data:{model:req.body?.model || 'none',messagesCount:Array.isArray(req.body?.messages) ? req.body.messages.length : -1},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     const { messages, model = 'gemini', systemPrompt } = req.body;
     const allMessages = [...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []), ...messages];
 
