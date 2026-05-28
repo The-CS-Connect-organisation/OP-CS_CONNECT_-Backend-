@@ -11,6 +11,20 @@ import hrRoutes from './routes/hr';
 import libraryRoutes from './routes/library';
 import commsRoutes from './routes/comms';
 import erpRoutes from './routes/erp';
+// Phase 3 Route Modules
+import counsellingRoutes from './routes/counselling';
+import healthRoutes from './routes/health';
+import disciplineRoutes from './routes/discipline';
+import activitiesRoutes from './routes/activities';
+import portfolioRoutes from './routes/portfolio';
+import enrolmentRoutes from './routes/enrolment';
+// Phase 4 Route Modules
+import facilitiesRoutes from './routes/facilities';
+import transportRoutes from './routes/transport';
+import foodServiceRoutes from './routes/food-service';
+import athleticsRoutes from './routes/athletics';
+import alumniRoutes from './routes/alumni';
+import platformRoutes from './routes/platform';
 
 dotenv.config();
 
@@ -69,6 +83,22 @@ app.use('/api/hr', hrRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/comms', commsRoutes);
 app.use('/api/erp', erpRoutes);
+
+// Phase 3 Route Modules
+app.use('/api/counselling', counsellingRoutes);
+app.use('/api/health', healthRoutes);
+app.use('/api/discipline', disciplineRoutes);
+app.use('/api/activities', activitiesRoutes);
+app.use('/api/portfolio', portfolioRoutes);
+app.use('/api/enrolment', enrolmentRoutes);
+
+// Phase 4 Route Modules
+app.use('/api/facilities', facilitiesRoutes);
+app.use('/api/transport', transportRoutes);
+app.use('/api/food-service', foodServiceRoutes);
+app.use('/api/athletics', athleticsRoutes);
+app.use('/api/alumni', alumniRoutes);
+app.use('/api/platform', platformRoutes);
 
 // Helper: safe user (remove password)
 function safeUser(u: any) {
