@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Request, Response, Router } from 'express';
 import { getData, setData, listData, id, safeUser } from '../firebase';
 const router = Router();
 
@@ -145,7 +145,7 @@ router.put('/drivers/:id', async (req, res) => {
   }
 });
 
-router.get('/tracking/:vehicleId', async (req, res) => {
+router.get('/tracking/:vehicleId', async (req: Request, res: Response) => {
   try {
     const data = await getData(`vehicleTracking/${req.params.vehicleId}`);
     res.json(data || {});
@@ -154,7 +154,7 @@ router.get('/tracking/:vehicleId', async (req, res) => {
   }
 });
 
-router.post('/tracking/:vehicleId', async (req, res) => {
+router.post('/tracking/:vehicleId', async (req: Request, res: Response) => {
   try {
     const { lat, lng, speed } = req.body;
     if (lat === undefined || lng === undefined) return res.status(400).json({ error: 'Latitude and longitude are required' });
@@ -166,7 +166,7 @@ router.post('/tracking/:vehicleId', async (req, res) => {
   }
 });
 
-router.get('/ridership', async (req, res) => {
+router.get('/ridership', async (req: Request, res: Response) => {
   try {
     let data = await listData('ridershipRecords');
     const { routeId, studentId, startDate, endDate } = req.query;
@@ -180,7 +180,7 @@ router.get('/ridership', async (req, res) => {
   }
 });
 
-router.post('/ridership', async (req, res) => {
+router.post('/ridership', async (req: Request, res: Response) => {
   try {
     const { routeId, studentId, date, boarded, alighted, time } = req.body;
     if (!routeId || !date) return res.status(400).json({ error: 'RouteId and date are required' });
@@ -192,7 +192,7 @@ router.post('/ridership', async (req, res) => {
   }
 });
 
-router.get('/geofences', async (req, res) => {
+router.get('/geofences', async (req: Request, res: Response) => {
   try {
     let data = await listData('geofenceZones');
     const { name } = req.query;
@@ -203,7 +203,7 @@ router.get('/geofences', async (req, res) => {
   }
 });
 
-router.post('/geofences', async (req, res) => {
+router.post('/geofences', async (req: Request, res: Response) => {
   try {
     const { name, coordinates, radius, alertOnEntry, alertOnExit } = req.body;
     if (!name || !coordinates) return res.status(400).json({ error: 'Name and coordinates are required' });
@@ -215,7 +215,7 @@ router.post('/geofences', async (req, res) => {
   }
 });
 
-router.get('/delays', async (req, res) => {
+router.get('/delays', async (req: Request, res: Response) => {
   try {
     let data = await listData('delayReports');
     const { routeId, reason } = req.query;
@@ -227,7 +227,7 @@ router.get('/delays', async (req, res) => {
   }
 });
 
-router.post('/delays', async (req, res) => {
+router.post('/delays', async (req: Request, res: Response) => {
   try {
     const { routeId, date, delayMinutes, reason } = req.body;
     if (!routeId || delayMinutes === undefined) return res.status(400).json({ error: 'RouteId and delayMinutes are required' });
@@ -239,7 +239,7 @@ router.post('/delays', async (req, res) => {
   }
 });
 
-router.get('/route-changes', async (req, res) => {
+router.get('/route-changes', async (req: Request, res: Response) => {
   try {
     let data = await listData('routeChangeRequests');
     const { studentId, status } = req.query;
@@ -251,7 +251,7 @@ router.get('/route-changes', async (req, res) => {
   }
 });
 
-router.post('/route-changes', async (req, res) => {
+router.post('/route-changes', async (req: Request, res: Response) => {
   try {
     const { studentId, fromRoute, toRoute, reason } = req.body;
     if (!studentId || !fromRoute || !toRoute) return res.status(400).json({ error: 'StudentId, fromRoute, and toRoute are required' });
@@ -263,7 +263,7 @@ router.post('/route-changes', async (req, res) => {
   }
 });
 
-router.put('/route-changes/:id/:action', async (req, res) => {
+router.put('/route-changes/:id/:action', async (req: Request, res: Response) => {
   try {
     const { id, action } = req.params;
     if (!['approve', 'reject'].includes(action)) return res.status(400).json({ error: 'Action must be approve or reject' });
