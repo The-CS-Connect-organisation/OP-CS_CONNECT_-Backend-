@@ -105,6 +105,45 @@ app.use('/api/circulars', circularRoutes);
 app.use('/api/announcements', announcementRoutes);
 
 // Newly Added Routes
+import authRoutes from './routes/auth';
+import usersRoutes from './routes/users';
+import studentsRoutes from './routes/students';
+import teachersRoutes from './routes/teachers';
+import subjectsRoutes from './routes/subjects';
+import dashboardRoutes from './routes/dashboard';
+import assignmentsRoutes from './routes/assignments';
+import timetableRoutes from './routes/timetable';
+import schoolsRoutes from './routes/schools';
+import routesRoutes from './routes/routes';
+import eventsRoutes from './routes/events';
+import clubsRoutes from './routes/clubs';
+import messagesRoutes from './routes/messages';
+import notificationsRoutes from './routes/notifications';
+import questionBankRoutes from './routes/question-bank';
+import notesRoutes from './routes/notes';
+import chatRoutes from './routes/chat';
+import gradesRoutes from './routes/grades';
+import supplyAlertsRoutes from './routes/supply-alerts';
+import bookAlertsRoutes from './routes/book-alerts';
+import digitalFridgeRoutes from './routes/digital-fridge';
+import uniformScheduleRoutes from './routes/uniform-schedule';
+import aiRoutes from './routes/ai';
+import studyPlanRoutes from './routes/study-plan';
+import calendarRoutes from './routes/calendar';
+import nexusRoutes from './routes/nexus';
+import achievementsRoutes from './routes/achievements';
+import accoladesRoutes from './routes/accolades';
+import analyticsRoutes from './routes/analytics';
+import parentRoutes from './routes/parent';
+import busRoutes from './routes/bus';
+import feesRoutes from './routes/fees';
+import payrollRoutes from './routes/payroll';
+import booksRoutes from './routes/books';
+import dailyBriefingRoutes from './routes/daily-briefing';
+
+// ... (rest of your imports)
+
+// Newly Added Routes Wiring
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/students', studentsRoutes);
