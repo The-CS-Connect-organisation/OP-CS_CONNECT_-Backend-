@@ -1,36 +1,108 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import attendanceRoutes from './routes/attendance';
+import schedulingRoutes from './routes/scheduling';
+import sisRoutes from './routes/sis';
+import examsRoutes from './routes/exams';
+import classroomRoutes from './routes/classroom';
+import financeRoutes from './routes/finance';
+import hrRoutes from './routes/hr';
+import libraryRoutes from './routes/library';
+import commsRoutes from './routes/comms';
+import erpRoutes from './routes/erp';
+// Phase 3 Route Modules
+import counsellingRoutes from './routes/counselling';
+import healthRoutes from './routes/health';
+import disciplineRoutes from './routes/discipline';
+import activitiesRoutes from './routes/activities';
+import portfolioRoutes from './routes/portfolio';
+import enrolmentRoutes from './routes/enrolment';
+// Phase 4 Route Modules
+import facilitiesRoutes from './routes/facilities';
+import transportRoutes from './routes/transport';
+import foodServiceRoutes from './routes/food-service';
+import athleticsRoutes from './routes/athletics';
+import alumniRoutes from './routes/alumni';
+import platformRoutes from './routes/platform';
+import circularRoutes from './routes/circulars';
+import announcementRoutes from './routes/announcements';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Firebase RTDB REST API
-const DB_URL = 'https://vnthhh-7b829-default-rtdb.asia-southeast1.firebasedatabase.app';
-const DB_SECRET = 'QHrzdGqTww9m1CKdDMUKzBwVTPOU25cgM4nLoRmA';
+// Firebase RTDB REST API (credentials from environment)
+const DB_URL = process.env.FIREBASE_DATABASE_URL || 'https://vnthhh-7b829-default-rtdb.asia-southeast1.firebasedatabase.app';
+const DB_SECRET = process.env.FIREBASE_DATABASE_SECRET || '';
 
 async function getData(path: string): Promise<any> {
-  const res = await fetch(`${DB_URL}/${path}.json?auth=${DB_SECRET}`);
-  return res.json();
+  try {
+    const res = await fetch(`${DB_URL}/${path}.json?auth=${DB_SECRET}`);
+    if (!res.ok) throw new Error(`Firebase GET ${path} failed: ${res.status} ${res.statusText}`);
+    return res.json();
+  } catch (err) {
+    console.error(`[Firebase] getData(${path}) error:`, err);
+    return null;
+  }
 }
 
 async function setData(path: string, value: any): Promise<void> {
-  await fetch(`${DB_URL}/${path}.json?auth=${DB_SECRET}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(value),
-  });
+  try {
+    const res = await fetch(`${DB_URL}/${path}.json?auth=${DB_SECRET}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(value),
+    });
+    if (!res.ok) throw new Error(`Firebase PUT ${path} failed: ${res.status} ${res.statusText}`);
+  } catch (err) {
+    console.error(`[Firebase] setData(${path}) error:`, err);
+  }
 }
 
 async function removeData(path: string): Promise<void> {
-  await fetch(`${DB_URL}/${path}.json?auth=${DB_SECRET}`, { method: 'DELETE' });
+  try {
+    const res = await fetch(`${DB_URL}/${path}.json?auth=${DB_SECRET}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`Firebase DELETE ${path} failed: ${res.status} ${res.statusText}`);
+  } catch (err) {
+    console.error(`[Firebase] removeData(${path}) error:`, err);
+  }
 }
 
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+
+// Phase 1 + 2 Route Modules
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/scheduling', schedulingRoutes);
+app.use('/api/sis', sisRoutes);
+app.use('/api/exams', examsRoutes);
+app.use('/api/classroom', classroomRoutes);
+app.use('/api/finance', financeRoutes);
+app.use('/api/hr', hrRoutes);
+app.use('/api/library', libraryRoutes);
+app.use('/api/comms', commsRoutes);
+app.use('/api/erp', erpRoutes);
+
+// Phase 3 Route Modules
+app.use('/api/counselling', counsellingRoutes);
+app.use('/api/health', healthRoutes);
+app.use('/api/discipline', disciplineRoutes);
+app.use('/api/activities', activitiesRoutes);
+app.use('/api/portfolio', portfolioRoutes);
+app.use('/api/enrolment', enrolmentRoutes);
+
+// Phase 4 Route Modules
+app.use('/api/facilities', facilitiesRoutes);
+app.use('/api/transport', transportRoutes);
+app.use('/api/food-service', foodServiceRoutes);
+app.use('/api/athletics', athleticsRoutes);
+app.use('/api/alumni', alumniRoutes);
+app.use('/api/platform', platformRoutes);
+app.use('/api/circulars', circularRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 // Helper: safe user (remove password)
 function safeUser(u: any) {
@@ -41,7 +113,7 @@ function safeUser(u: any) {
 
 // Health check
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', service: 'EduVault AI Backend', version: '4.0.0', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', service: 'Cornerstone Backend', version: '4.0.0', timestamp: new Date().toISOString() });
 });
 
 // ==================== SEED DATA ====================
@@ -281,6 +353,89 @@ app.post('/api/seed', async (_req, res) => {
         { id: "lr1", studentId: "u1", studentName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", startDate: "2026-05-26", endDate: "2026-05-27", reason: "Family function - sister's wedding", type: "personal", status: "approved", requestedAt: "2026-05-20T10:00:00Z", approvedBy: "u5", approvedAt: "2026-05-20T14:00:00Z" },
         { id: "lr2", studentId: "u2", studentName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", startDate: "2026-06-01", endDate: "2026-06-02", reason: "Medical appointment", type: "medical", status: "pending", requestedAt: "2026-05-21T09:00:00Z" },
         { id: "lr3", studentId: "u3", studentName: "Rohan Kumar", avatar: "https://randomuser.me/api/portraits/men/51.jpg", startDate: "2026-05-30", endDate: "2026-05-30", reason: "Science competition in another city", type: "academic", status: "approved", requestedAt: "2026-05-18T11:00:00Z", approvedBy: "u6", approvedAt: "2026-05-18T15:00:00Z" }
+      ],
+      // Phase 1+2 seed data
+      attendancePolicies: [
+        { id: "ap1", name: "Standard Absence Policy", maxAbsentDays: 20, gracePeriod: 3, requireParentNote: true, academicYear: "2025-26" },
+        { id: "ap2", name: "Exam Attendance Policy", maxAbsentDays: 0, requireMedicalCert: true, academicYear: "2025-26" }
+      ],
+      bellSchedules: [
+        { id: "bs1", name: "Regular Day", startTime: "08:00", endTime: "15:30", periods: 8, periodDuration: 40, breakStart: "10:25", breakDuration: 20, lunchStart: "12:20", lunchDuration: 40 },
+        { id: "bs2", name: "Short Day", startTime: "08:00", endTime: "13:00", periods: 6, periodDuration: 35, breakStart: "10:00", breakDuration: 15, lunchStart: "12:00", lunchDuration: 30 }
+      ],
+      roomBookings: [
+        { id: "rb1", room: "Lab 1", date: "2026-06-01", startTime: "09:00", endTime: "10:30", bookedBy: "u5", purpose: "Physics practical", status: "confirmed" },
+        { id: "rb2", room: "IT Lab", date: "2026-06-02", startTime: "11:00", endTime: "12:30", bookedBy: "u5", purpose: "CS class 10-A", status: "confirmed" }
+      ],
+      lessonPlans: [
+        { id: "lp1", title: "Quadratic Equations - Introduction", subjectId: "sub1", class: "10-A", teacherId: "u5", week: 1, objectives: ["Understand standard form", "Solve by factorization"], resources: ["Textbook Ch5", "Worksheet 1"], status: "completed" },
+        { id: "lp2", title: "Newton's Laws - Lab Session", subjectId: "sub2", class: "10-A", teacherId: "u5", week: 2, objectives: ["Verify F=ma", "Measure acceleration"], resources: ["Lab equipment", "Data sheet"], status: "active" }
+      ],
+      exercises: [
+        { id: "ex1", title: "Algebra Basics", subjectId: "sub1", class: "10-A", questions: [
+          { id: "eq1", question: "Solve 2x + 5 = 13", type: "short", answer: "x = 4" },
+          { id: "eq2", question: "Factorize x² - 9", type: "short", answer: "(x-3)(x+3)" }
+        ], maxScore: 10 },
+        { id: "ex2", title: "Physics Numericals", subjectId: "sub2", class: "10-A", questions: [
+          { id: "eq3", question: "A force of 10N accelerates a 2kg mass. Find acceleration", type: "short", answer: "5 m/s²" }
+        ], maxScore: 5 }
+      ],
+      chartOfAccounts: [
+        { id: "coa1", code: "1000", name: "Cash", type: "asset", normalBalance: "debit" },
+        { id: "coa2", code: "2000", name: "Accounts Receivable", type: "asset", normalBalance: "debit" },
+        { id: "coa3", code: "3000", name: "Tuition Revenue", type: "revenue", normalBalance: "credit" },
+        { id: "coa4", code: "4000", name: "Salary Expense", type: "expense", normalBalance: "debit" },
+        { id: "coa5", code: "5000", name: "Accounts Payable", type: "liability", normalBalance: "credit" }
+      ],
+      budgets: [
+        { id: "bd1", name: "Annual Academic Budget 2025-26", fiscalYear: "2025-26", totalAmount: 5000000, allocated: 3200000, remaining: 1800000, status: "active", items: [
+          { category: "Salaries", amount: 3000000, spent: 2500000 },
+          { category: "Lab Equipment", amount: 500000, spent: 200000 },
+          { category: "Library", amount: 300000, spent: 100000 }
+        ] }
+      ],
+      invoices: [
+        { id: "inv1", invoiceNumber: "INV-2026-001", studentId: "u3", studentName: "Rohan Kumar", items: [
+          { description: "Term 3 Tuition Fee", amount: 25000 },
+          { description: "Lab Fee", amount: 5000 },
+          { description: "Library Fee", amount: 2000 }
+        ], subtotal: 32000, tax: 0, total: 32000, status: "pending", dueDate: "2026-07-31", issuedDate: "2026-07-01", paidAmount: 0 }
+      ],
+      payments: [
+        { id: "pmt1", invoiceId: "inv1", studentId: "u1", amount: 50000, method: "online", transactionId: "txn_001", status: "completed", date: "2026-01-15", term: "Term 1" },
+        { id: "pmt2", invoiceId: "inv2", studentId: "u2", amount: 50000, method: "bank", transactionId: "txn_002", status: "completed", date: "2026-01-20", term: "Term 1" }
+      ],
+      expenses: [
+        { id: "exp1", description: "Lab equipment purchase", category: "Lab Equipment", amount: 50000, date: "2026-06-01", paidTo: "Scientific Supplies Co.", paymentMethod: "bank", approvedBy: "u7", status: "approved" }
+      ],
+      libraryCatalogue: [
+        { id: "bk1", title: "Introduction to Algorithms", author: "CLRS", isbn: "978-0-262-04630-5", category: "Computer Science", copies: 3, available: 2, shelf: "CS-01" },
+        { id: "bk2", title: "Organic Chemistry", author: "Morrison & Boyd", isbn: "978-0-13-404228-2", category: "Chemistry", copies: 2, available: 1, shelf: "CH-03" },
+        { id: "bk3", title: "University Physics", author: "Young & Freedman", isbn: "978-0-321-69686-1", category: "Physics", copies: 4, available: 3, shelf: "PH-02" },
+        { id: "bk4", title: "English Grammar in Use", author: "Raymond Murphy", isbn: "978-1-108-45765-1", category: "English", copies: 5, available: 4, shelf: "EN-01" },
+        { id: "bk5", title: "Advanced Mathematics", author: "Kreyszig", isbn: "978-0-470-45836-8", category: "Mathematics", copies: 2, available: 1, shelf: "MA-01" }
+      ],
+      clients: [
+        { id: "cl1", name: "Sunil Book Depot", contact: "+91-9876543210", email: "sunil@bookdepot.com", type: "vendor", status: "active", creditLimit: 100000 },
+        { id: "cl2", name: "EduTech Solutions", contact: "+91-8765432109", email: "info@edutech.com", type: "vendor", status: "active", creditLimit: 500000 }
+      ],
+      leads: [
+        { id: "ld1", name: "Mr. Sharma", email: "sharma@example.com", phone: "+91-9999888777", source: "referral", status: "new", notes: "Interested in Class 11 admission for his son", createdAt: "2026-05-20T10:00:00Z" }
+      ],
+      products: [
+        { id: "pr1", name: "School Uniform - Junior", sku: "UNI-JR-001", price: 1500, unit: "set", category: "uniform", stock: 50 },
+        { id: "pr2", name: "Textbook - Mathematics Grade 10", sku: "TXT-M10-001", price: 800, unit: "piece", category: "textbook", stock: 100 }
+      ],
+      orders: [
+        { id: "or1", orderNumber: "ORD-2026-001", clientId: "cl1", status: "pending", items: [{ productId: "pr2", quantity: 30, unitPrice: 800 }], total: 24000, orderDate: "2026-06-01", expectedDelivery: "2026-06-15" }
+      ],
+      staffDirectory: [
+        { id: "sd1", firstName: "Rajesh", lastName: "Gupta", department: "Science", position: "Senior Teacher", employeeId: "EMP001", joinDate: "2020-04-01", qualification: "Ph.D. Physics", userId: "u5" },
+        { id: "sd2", firstName: "Sunita", lastName: "Verma", department: "Science", position: "Professor", employeeId: "EMP002", joinDate: "2019-08-15", qualification: "Ph.D. Chemistry", userId: "u6" }
+      ],
+      staffPositions: [
+        { id: "sp1", title: "Senior Teacher", department: "Science", salaryRange: { min: 60000, max: 90000 }, requirements: ["Ph.D.", "5+ years experience"] },
+        { id: "sp2", title: "Professor", department: "Science", salaryRange: { min: 70000, max: 110000 }, requirements: ["Ph.D.", "8+ years experience"] }
       ]
     };
     await setData('/', seedData);
