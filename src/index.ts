@@ -104,6 +104,43 @@ app.use('/api/platform', platformRoutes);
 app.use('/api/circulars', circularRoutes);
 app.use('/api/announcements', announcementRoutes);
 
+// Newly Added Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/students', studentsRoutes);
+app.use('/api/teachers', teachersRoutes);
+app.use('/api/subjects', subjectsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/assignments', assignmentsRoutes);
+app.use('/api/timetable', timetableRoutes);
+app.use('/api/schools', schoolsRoutes);
+app.use('/api/routes', routesRoutes);
+app.use('/api/events', eventsRoutes);
+app.use('/api/clubs', clubsRoutes);
+app.use('/api/messages', messagesRoutes);
+app.use('/api/notifications', notificationsRoutes);
+app.use('/api/question-bank', questionBankRoutes);
+app.use('/api/notes', notesRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/grades', gradesRoutes);
+app.use('/api/supply-alerts', supplyAlertsRoutes);
+app.use('/api/book-alerts', bookAlertsRoutes);
+app.use('/api/digital-fridge', digitalFridgeRoutes);
+app.use('/api/uniform-schedule', uniformScheduleRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/study-plan', studyPlanRoutes);
+app.use('/api/calendar', calendarRoutes);
+app.use('/api/nexus', nexusRoutes);
+app.use('/api/achievements', achievementsRoutes);
+app.use('/api/accolades', accoladesRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/parent', parentRoutes);
+app.use('/api/bus', busRoutes);
+app.use('/api/fees', feesRoutes);
+app.use('/api/payroll', payrollRoutes);
+app.use('/api/books', booksRoutes);
+app.use('/api/daily-briefing', dailyBriefingRoutes);
+
 // Helper: safe user (remove password)
 function safeUser(u: any) {
   if (!u) return null;
