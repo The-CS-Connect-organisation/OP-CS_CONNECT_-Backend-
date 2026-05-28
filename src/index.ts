@@ -49,12 +49,12 @@ app.post('/api/seed', async (_req, res) => {
   try {
     const seedData = {
       users: [
-        { id: "u1", name: "Aarav Sharma", email: "aarav@eduvault.ai", password: "demo1234", role: "student", class: "10-A", subjects: ["Math","Physics","Chemistry","English","CS"], gpa: 3.8, attendance: 92, feesPaid: true, routeId: "r1", avatar: "AS", avatarUrl: "https://randomuser.me/api/portraits/men/32.jpg" },
-        { id: "u2", name: "Priya Patel", email: "priya@eduvault.ai", password: "demo1234", role: "student", class: "10-A", subjects: ["Math","Physics","Chemistry","English","Biology"], gpa: 3.9, attendance: 96, feesPaid: true, routeId: "r1", avatar: "PP", avatarUrl: "https://randomuser.me/api/portraits/women/68.jpg" },
-        { id: "u3", name: "Rohan Kumar", email: "rohan@eduvault.ai", password: "demo1234", role: "student", class: "10-B", subjects: ["Math","Physics","Chemistry","English","CS"], gpa: 3.5, attendance: 85, feesPaid: false, routeId: "r2", avatar: "RK", avatarUrl: "https://randomuser.me/api/portraits/men/51.jpg" },
-        { id: "u4", name: "Ananya Singh", email: "ananya@eduvault.ai", password: "demo1234", role: "student", class: "10-B", subjects: ["Math","Physics","Chemistry","English","Biology"], gpa: 3.7, attendance: 89, feesPaid: true, routeId: "r2", avatar: "AS", avatarUrl: "https://randomuser.me/api/portraits/women/53.jpg" },
-        { id: "u5", name: "Dr. Rajesh Gupta", email: "rajesh@eduvault.ai", password: "demo1234", role: "teacher", subjects: ["Math","Physics","CS"], classes: ["10-A","10-B"], avatar: "RG", avatarUrl: "https://randomuser.me/api/portraits/men/33.jpg" },
-        { id: "u6", name: "Prof. Sunita Verma", email: "sunita@eduvault.ai", password: "demo1234", role: "teacher", subjects: ["Chemistry","Biology","English"], classes: ["10-A","10-B"], avatar: "SV", avatarUrl: "https://randomuser.me/api/portraits/women/44.jpg" },
+        { id: "u1", name: "Aarav Sharma", email: "aarav@eduvault.ai", password: "demo1234", role: "student", class: "10-A", subjects: ["Math", "Physics", "Chemistry", "English", "CS"], gpa: 3.8, attendance: 92, feesPaid: true, routeId: "r1", avatar: "AS", avatarUrl: "https://randomuser.me/api/portraits/men/32.jpg" },
+        { id: "u2", name: "Priya Patel", email: "priya@eduvault.ai", password: "demo1234", role: "student", class: "10-A", subjects: ["Math", "Physics", "Chemistry", "English", "Biology"], gpa: 3.9, attendance: 96, feesPaid: true, routeId: "r1", avatar: "PP", avatarUrl: "https://randomuser.me/api/portraits/women/68.jpg" },
+        { id: "u3", name: "Rohan Kumar", email: "rohan@eduvault.ai", password: "demo1234", role: "student", class: "10-B", subjects: ["Math", "Physics", "Chemistry", "English", "CS"], gpa: 3.5, attendance: 85, feesPaid: false, routeId: "r2", avatar: "RK", avatarUrl: "https://randomuser.me/api/portraits/men/51.jpg" },
+        { id: "u4", name: "Ananya Singh", email: "ananya@eduvault.ai", password: "demo1234", role: "student", class: "10-B", subjects: ["Math", "Physics", "Chemistry", "English", "Biology"], gpa: 3.7, attendance: 89, feesPaid: true, routeId: "r2", avatar: "AS", avatarUrl: "https://randomuser.me/api/portraits/women/53.jpg" },
+        { id: "u5", name: "Dr. Rajesh Gupta", email: "rajesh@eduvault.ai", password: "demo1234", role: "teacher", subjects: ["Math", "Physics", "CS"], classes: ["10-A", "10-B"], avatar: "RG", avatarUrl: "https://randomuser.me/api/portraits/men/33.jpg" },
+        { id: "u6", name: "Prof. Sunita Verma", email: "sunita@eduvault.ai", password: "demo1234", role: "teacher", subjects: ["Chemistry", "Biology", "English"], classes: ["10-A", "10-B"], avatar: "SV", avatarUrl: "https://randomuser.me/api/portraits/women/44.jpg" },
         { id: "u7", name: "Principal Meera", email: "meera@eduvault.ai", password: "demo1234", role: "admin", schoolId: "sch1", avatar: "PM", avatarUrl: "https://randomuser.me/api/portraits/women/65.jpg" },
         { id: "u8", name: "Mr. Vikram", email: "vikram@eduvault.ai", password: "demo1234", role: "coordinator", schoolId: "sch1", avatar: "MV", avatarUrl: "https://randomuser.me/api/portraits/men/22.jpg" },
         { id: "u9", name: "Raju Kumar", email: "raju@eduvault.ai", password: "demo1234", role: "driver", routeId: "r1", avatar: "RK", avatarUrl: "https://randomuser.me/api/portraits/men/75.jpg" },
@@ -62,12 +62,12 @@ app.post('/api/seed', async (_req, res) => {
         { id: "u11", name: "Dr. Bookman", email: "librarian@eduvault.ai", password: "demo1234", role: "librarian", avatar: "DB", avatarUrl: "https://randomuser.me/api/portraits/men/86.jpg" },
         { id: "u12", name: "Mr. Arjun Manager", email: "manager@eduvault.ai", password: "demo1234", role: "manager", schoolId: "sch1", avatar: "AM", avatarUrl: "https://randomuser.me/api/portraits/men/61.jpg" }
       ],
-      schools: [{ id: "sch1", name: "Cornerstone International School", address: "123 Education Lane, New Delhi", phone: "+91-11-23456789", email: "info@cornerstone.edu", principal: "Principal Meera", established: 2005, affiliation: "CBSE", grades: ["1","2","3","4","5","6","7","8","9","10","11","12"] }],
+      schools: [{ id: "sch1", name: "Cornerstone International School", address: "123 Education Lane, New Delhi", phone: "+91-11-23456789", email: "info@cornerstone.edu", principal: "Principal Meera", established: 2005, affiliation: "CBSE", grades: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"] }],
       subjects: [
-        { id: "sub1", name: "Mathematics", code: "MATH101", teacher: "Dr. Rajesh Gupta", classes: ["10-A","10-B"] },
-        { id: "sub2", name: "Physics", code: "PHY101", teacher: "Dr. Rajesh Gupta", classes: ["10-A","10-B"] },
-        { id: "sub3", name: "Chemistry", code: "CHEM101", teacher: "Prof. Sunita Verma", classes: ["10-A","10-B"] },
-        { id: "sub4", name: "English", code: "ENG101", teacher: "Prof. Sunita Verma", classes: ["10-A","10-B"] },
+        { id: "sub1", name: "Mathematics", code: "MATH101", teacher: "Dr. Rajesh Gupta", classes: ["10-A", "10-B"] },
+        { id: "sub2", name: "Physics", code: "PHY101", teacher: "Dr. Rajesh Gupta", classes: ["10-A", "10-B"] },
+        { id: "sub3", name: "Chemistry", code: "CHEM101", teacher: "Prof. Sunita Verma", classes: ["10-A", "10-B"] },
+        { id: "sub4", name: "English", code: "ENG101", teacher: "Prof. Sunita Verma", classes: ["10-A", "10-B"] },
         { id: "sub5", name: "Computer Science", code: "CS101", teacher: "Dr. Rajesh Gupta", classes: ["10-A"] },
         { id: "sub6", name: "Biology", code: "BIO101", teacher: "Prof. Sunita Verma", classes: ["10-B"] }
       ],
@@ -82,16 +82,16 @@ app.post('/api/seed', async (_req, res) => {
         { id: "a8", title: "Trigonometry Problems", subjectId: "sub1", subject: "Mathematics", class: "10-B", dueDate: "2026-05-08", status: "completed", description: "Solve trigonometric identities", maxMarks: 50, submissions: [{ studentId: "u3", content: "Completed", scoredMarks: 40, feedback: "Good work", submittedAt: "2026-05-07T12:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 46, feedback: "Excellent", submittedAt: "2026-05-07T11:00:00Z" }] }
       ],
       grades: {
-        u1: [{ subject: "Math", grade: "A", marks: 92 },{ subject: "Physics", grade: "A-", marks: 88 },{ subject: "Chemistry", grade: "B+", marks: 82 },{ subject: "English", grade: "A", marks: 90 },{ subject: "CS", grade: "A+", marks: 96 }],
-        u2: [{ subject: "Math", grade: "A+", marks: 95 },{ subject: "Physics", grade: "A", marks: 91 },{ subject: "Chemistry", grade: "A", marks: 89 },{ subject: "English", grade: "A+", marks: 94 },{ subject: "Biology", grade: "A", marks: 90 }],
-        u3: [{ subject: "Math", grade: "B+", marks: 78 },{ subject: "Physics", grade: "B", marks: 72 },{ subject: "Chemistry", grade: "A-", marks: 85 },{ subject: "English", grade: "B+", marks: 79 },{ subject: "CS", grade: "A-", marks: 86 }],
-        u4: [{ subject: "Math", grade: "A-", marks: 87 },{ subject: "Physics", grade: "B+", marks: 80 },{ subject: "Chemistry", grade: "A", marks: 88 },{ subject: "English", grade: "A", marks: 91 },{ subject: "Biology", grade: "A+", marks: 93 }]
+        u1: [{ subject: "Math", grade: "A", marks: 92 }, { subject: "Physics", grade: "A-", marks: 88 }, { subject: "Chemistry", grade: "B+", marks: 82 }, { subject: "English", grade: "A", marks: 90 }, { subject: "CS", grade: "A+", marks: 96 }],
+        u2: [{ subject: "Math", grade: "A+", marks: 95 }, { subject: "Physics", grade: "A", marks: 91 }, { subject: "Chemistry", grade: "A", marks: 89 }, { subject: "English", grade: "A+", marks: 94 }, { subject: "Biology", grade: "A", marks: 90 }],
+        u3: [{ subject: "Math", grade: "B+", marks: 78 }, { subject: "Physics", grade: "B", marks: 72 }, { subject: "Chemistry", grade: "A-", marks: 85 }, { subject: "English", grade: "B+", marks: 79 }, { subject: "CS", grade: "A-", marks: 86 }],
+        u4: [{ subject: "Math", grade: "A-", marks: 87 }, { subject: "Physics", grade: "B+", marks: 80 }, { subject: "Chemistry", grade: "A", marks: 88 }, { subject: "English", grade: "A", marks: 91 }, { subject: "Biology", grade: "A+", marks: 93 }]
       },
       attendance: {
-        u1: [{ date: "2026-05-01", status: "present" },{ date: "2026-05-02", status: "present" },{ date: "2026-05-03", status: "absent" },{ date: "2026-05-04", status: "present" },{ date: "2026-05-05", status: "present" }],
-        u2: [{ date: "2026-05-01", status: "present" },{ date: "2026-05-02", status: "present" },{ date: "2026-05-03", status: "present" },{ date: "2026-05-04", status: "present" },{ date: "2026-05-05", status: "present" }],
-        u3: [{ date: "2026-05-01", status: "present" },{ date: "2026-05-02", status: "absent" },{ date: "2026-05-03", status: "absent" },{ date: "2026-05-04", status: "present" },{ date: "2026-05-05", status: "late" }],
-        u4: [{ date: "2026-05-01", status: "present" },{ date: "2026-05-02", status: "present" },{ date: "2026-05-03", status: "late" },{ date: "2026-05-04", status: "present" },{ date: "2026-05-05", status: "present" }]
+        u1: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "absent" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }],
+        u2: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "present" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }],
+        u3: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "absent" }, { date: "2026-05-03", status: "absent" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "late" }],
+        u4: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "late" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }]
       },
       fees: {
         u1: [
@@ -117,23 +117,23 @@ app.post('/api/seed', async (_req, res) => {
       },
       timetable: {
         "10-A": [
-          { day: "Monday", periods: [{ time: "8:00-8:45", subject: "Math" },{ time: "8:45-9:30", subject: "Physics" },{ time: "9:45-10:30", subject: "Chemistry" },{ time: "10:30-11:15", subject: "English" },{ time: "11:30-12:15", subject: "CS" }] },
-          { day: "Tuesday", periods: [{ time: "8:00-8:45", subject: "English" },{ time: "8:45-9:30", subject: "Math" },{ time: "9:45-10:30", subject: "Physics" },{ time: "10:30-11:15", subject: "Chemistry" },{ time: "11:30-12:15", subject: "CS" }] },
-          { day: "Wednesday", periods: [{ time: "8:00-8:45", subject: "Chemistry" },{ time: "8:45-9:30", subject: "English" },{ time: "9:45-10:30", subject: "Math" },{ time: "10:30-11:15", subject: "CS" },{ time: "11:30-12:15", subject: "Physics" }] },
-          { day: "Thursday", periods: [{ time: "8:00-8:45", subject: "Physics" },{ time: "8:45-9:30", subject: "CS" },{ time: "9:45-10:30", subject: "English" },{ time: "10:30-11:15", subject: "Math" },{ time: "11:30-12:15", subject: "Chemistry" }] },
-          { day: "Friday", periods: [{ time: "8:00-8:45", subject: "CS" },{ time: "8:45-9:30", subject: "Chemistry" },{ time: "9:45-10:30", subject: "Math" },{ time: "10:30-11:15", subject: "Physics" },{ time: "11:30-12:15", subject: "English" }] }
+          { day: "Monday", periods: [{ time: "8:00-8:45", subject: "Math" }, { time: "8:45-9:30", subject: "Physics" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "CS" }] },
+          { day: "Tuesday", periods: [{ time: "8:00-8:45", subject: "English" }, { time: "8:45-9:30", subject: "Math" }, { time: "9:45-10:30", subject: "Physics" }, { time: "10:30-11:15", subject: "Chemistry" }, { time: "11:30-12:15", subject: "CS" }] },
+          { day: "Wednesday", periods: [{ time: "8:00-8:45", subject: "Chemistry" }, { time: "8:45-9:30", subject: "English" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "CS" }, { time: "11:30-12:15", subject: "Physics" }] },
+          { day: "Thursday", periods: [{ time: "8:00-8:45", subject: "Physics" }, { time: "8:45-9:30", subject: "CS" }, { time: "9:45-10:30", subject: "English" }, { time: "10:30-11:15", subject: "Math" }, { time: "11:30-12:15", subject: "Chemistry" }] },
+          { day: "Friday", periods: [{ time: "8:00-8:45", subject: "CS" }, { time: "8:45-9:30", subject: "Chemistry" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "Physics" }, { time: "11:30-12:15", subject: "English" }] }
         ],
         "10-B": [
-          { day: "Monday", periods: [{ time: "8:00-8:45", subject: "Math" },{ time: "8:45-9:30", subject: "Chemistry" },{ time: "9:45-10:30", subject: "English" },{ time: "10:30-11:15", subject: "Physics" },{ time: "11:30-12:15", subject: "Biology" }] },
-          { day: "Tuesday", periods: [{ time: "8:00-8:45", subject: "Biology" },{ time: "8:45-9:30", subject: "Math" },{ time: "9:45-10:30", subject: "Chemistry" },{ time: "10:30-11:15", subject: "English" },{ time: "11:30-12:15", subject: "Physics" }] },
-          { day: "Wednesday", periods: [{ time: "8:00-8:45", subject: "English" },{ time: "8:45-9:30", subject: "Physics" },{ time: "9:45-10:30", subject: "Biology" },{ time: "10:30-11:15", subject: "Math" },{ time: "11:30-12:15", subject: "Chemistry" }] },
-          { day: "Thursday", periods: [{ time: "8:00-8:45", subject: "Chemistry" },{ time: "8:45-9:30", subject: "Biology" },{ time: "9:45-10:30", subject: "Math" },{ time: "10:30-11:15", subject: "English" },{ time: "11:30-12:15", subject: "Physics" }] },
-          { day: "Friday", periods: [{ time: "8:00-8:45", subject: "Physics" },{ time: "8:45-9:30", subject: "English" },{ time: "9:45-10:30", subject: "Chemistry" },{ time: "10:30-11:15", subject: "Biology" },{ time: "11:30-12:15", subject: "Math" }] }
+          { day: "Monday", periods: [{ time: "8:00-8:45", subject: "Math" }, { time: "8:45-9:30", subject: "Chemistry" }, { time: "9:45-10:30", subject: "English" }, { time: "10:30-11:15", subject: "Physics" }, { time: "11:30-12:15", subject: "Biology" }] },
+          { day: "Tuesday", periods: [{ time: "8:00-8:45", subject: "Biology" }, { time: "8:45-9:30", subject: "Math" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "Physics" }] },
+          { day: "Wednesday", periods: [{ time: "8:00-8:45", subject: "English" }, { time: "8:45-9:30", subject: "Physics" }, { time: "9:45-10:30", subject: "Biology" }, { time: "10:30-11:15", subject: "Math" }, { time: "11:30-12:15", subject: "Chemistry" }] },
+          { day: "Thursday", periods: [{ time: "8:00-8:45", subject: "Chemistry" }, { time: "8:45-9:30", subject: "Biology" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "Physics" }] },
+          { day: "Friday", periods: [{ time: "8:00-8:45", subject: "Physics" }, { time: "8:45-9:30", subject: "English" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "Biology" }, { time: "11:30-12:15", subject: "Math" }] }
         ]
       },
       routes: [
-        { id: "r1", name: "Route A - North Campus", driver: "Raju Kumar", driverId: "u9", bus: "KA-01-1234", stops: ["Main Gate","North Block","Library","Sports Complex"], students: ["u1","u2"] },
-        { id: "r2", name: "Route B - South Campus", driver: "Raju Kumar", driverId: "u9", bus: "KA-01-5678", stops: ["South Gate","Auditorium","Lab Block","Cafeteria"], students: ["u3","u4"] }
+        { id: "r1", name: "Route A - North Campus", driver: "Raju Kumar", driverId: "u9", bus: "KA-01-1234", stops: ["Main Gate", "North Block", "Library", "Sports Complex"], students: ["u1", "u2"] },
+        { id: "r2", name: "Route B - South Campus", driver: "Raju Kumar", driverId: "u9", bus: "KA-01-5678", stops: ["South Gate", "Auditorium", "Lab Block", "Cafeteria"], students: ["u3", "u4"] }
       ],
       events: [
         { id: "e1", title: "Annual Sports Day", date: "2026-06-15", type: "sports", description: "Inter-house athletics competition" },
@@ -142,21 +142,27 @@ app.post('/api/seed', async (_req, res) => {
         { id: "e4", title: "Farewell Ceremony", date: "2026-05-20", type: "ceremony", description: "Farewell for graduating batch" }
       ],
       clubs: [
-        { id: "c1", name: "Coding Club", description: "Learn programming, build projects, compete in hackathons", members: ["u1","u3"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Technology", meetingDay: "Wednesday", meetingTime: "3:30 PM", posts: [
-          { id: "p1", authorId: "u1", authorName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", content: "Great hackathon session today! 🚀", timestamp: "2026-05-19T15:00:00Z", likes: ["u3","u5"] },
-          { id: "p2", authorId: "u3", authorName: "Rohan Kumar", avatar: "https://randomuser.me/api/portraits/men/51.jpg", content: "Just finished my first React app!", timestamp: "2026-05-18T14:00:00Z", likes: ["u1"] }
-        ]},
-        { id: "c2", name: "Science Society", description: "Explore scientific concepts through experiments and research", members: ["u2","u4"], lead: "u2", leadName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", category: "Academic", meetingDay: "Thursday", meetingTime: "4:00 PM", posts: [
-          { id: "p3", authorId: "u2", authorName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", content: "Science fair prep going well! 🧪", timestamp: "2026-05-19T16:00:00Z", likes: ["u4","u6"] }
-        ]},
-        { id: "c3", name: "Drama Club", description: "Acting, stagecraft, and theatrical productions", members: ["u1","u2","u4"], lead: "u4", leadName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", category: "Arts", meetingDay: "Friday", meetingTime: "3:00 PM", posts: [
-          { id: "p4", authorId: "u4", authorName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", content: "Auditions for the spring play next week! 🎭", timestamp: "2026-05-20T10:00:00Z", likes: ["u1","u2"] }
-        ]},
-        { id: "c4", name: "Music Ensemble", description: "Band, choir, and individual music performance", members: ["u1","u2","u3","u4"], lead: "u2", leadName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", category: "Arts", meetingDay: "Tuesday", meetingTime: "3:30 PM", posts: [] },
-        { id: "c5", name: "Sports Club", description: "Athletics, team sports, and fitness activities", members: ["u1","u3"], lead: "u3", leadName: "Rohan Kumar", avatar: "https://randomuser.me/api/portraits/men/51.jpg", category: "Sports", meetingDay: "Monday", meetingTime: "4:00 PM", posts: [] },
-        { id: "c6", name: "Debate Society", description: "Public speaking, argumentation, and competitive debate", members: ["u2","u4"], lead: "u4", leadName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", category: "Academic", meetingDay: "Wednesday", meetingTime: "4:30 PM", posts: [] },
-        { id: "c7", name: "Art Studio", description: "Painting, sculpture, and digital art creation", members: ["u1","u2","u4"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Arts", meetingDay: "Thursday", meetingTime: "3:00 PM", posts: [] },
-        { id: "c8", name: "Robotics Club", description: "Build and program robots for competitions", members: ["u1","u3"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Technology", meetingDay: "Friday", meetingTime: "4:00 PM", posts: [] }
+        {
+          id: "c1", name: "Coding Club", description: "Learn programming, build projects, compete in hackathons", members: ["u1", "u3"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Technology", meetingDay: "Wednesday", meetingTime: "3:30 PM", posts: [
+            { id: "p1", authorId: "u1", authorName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", content: "Great hackathon session today! 🚀", timestamp: "2026-05-19T15:00:00Z", likes: ["u3", "u5"] },
+            { id: "p2", authorId: "u3", authorName: "Rohan Kumar", avatar: "https://randomuser.me/api/portraits/men/51.jpg", content: "Just finished my first React app!", timestamp: "2026-05-18T14:00:00Z", likes: ["u1"] }
+          ]
+        },
+        {
+          id: "c2", name: "Science Society", description: "Explore scientific concepts through experiments and research", members: ["u2", "u4"], lead: "u2", leadName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", category: "Academic", meetingDay: "Thursday", meetingTime: "4:00 PM", posts: [
+            { id: "p3", authorId: "u2", authorName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", content: "Science fair prep going well! 🧪", timestamp: "2026-05-19T16:00:00Z", likes: ["u4", "u6"] }
+          ]
+        },
+        {
+          id: "c3", name: "Drama Club", description: "Acting, stagecraft, and theatrical productions", members: ["u1", "u2", "u4"], lead: "u4", leadName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", category: "Arts", meetingDay: "Friday", meetingTime: "3:00 PM", posts: [
+            { id: "p4", authorId: "u4", authorName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", content: "Auditions for the spring play next week! 🎭", timestamp: "2026-05-20T10:00:00Z", likes: ["u1", "u2"] }
+          ]
+        },
+        { id: "c4", name: "Music Ensemble", description: "Band, choir, and individual music performance", members: ["u1", "u2", "u3", "u4"], lead: "u2", leadName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", category: "Arts", meetingDay: "Tuesday", meetingTime: "3:30 PM", posts: [] },
+        { id: "c5", name: "Sports Club", description: "Athletics, team sports, and fitness activities", members: ["u1", "u3"], lead: "u3", leadName: "Rohan Kumar", avatar: "https://randomuser.me/api/portraits/men/51.jpg", category: "Sports", meetingDay: "Monday", meetingTime: "4:00 PM", posts: [] },
+        { id: "c6", name: "Debate Society", description: "Public speaking, argumentation, and competitive debate", members: ["u2", "u4"], lead: "u4", leadName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", category: "Academic", meetingDay: "Wednesday", meetingTime: "4:30 PM", posts: [] },
+        { id: "c7", name: "Art Studio", description: "Painting, sculpture, and digital art creation", members: ["u1", "u2", "u4"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Arts", meetingDay: "Thursday", meetingTime: "3:00 PM", posts: [] },
+        { id: "c8", name: "Robotics Club", description: "Build and program robots for competitions", members: ["u1", "u3"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Technology", meetingDay: "Friday", meetingTime: "4:00 PM", posts: [] }
       ],
       messages: {
         u1: [
@@ -211,7 +217,7 @@ app.post('/api/seed', async (_req, res) => {
         ]
       },
       questionBank: [
-        { id: "q1", subjectId: "sub1", type: "mcq", difficulty: "easy", question: "What is 2+2?", options: ["3","4","5","6"], answer: "4" },
+        { id: "q1", subjectId: "sub1", type: "mcq", difficulty: "easy", question: "What is 2+2?", options: ["3", "4", "5", "6"], answer: "4" },
         { id: "q2", subjectId: "sub2", type: "short", difficulty: "medium", question: "State Newton's second law", answer: "F = ma" }
       ],
       announcements: [
@@ -264,12 +270,12 @@ app.post('/api/seed', async (_req, res) => {
         u1: [{ id: "sp1", title: "Mathematics Mastery Plan", subject: "Math", startDate: "2026-05-20", endDate: "2026-06-10", tasks: [{ title: "Complete Chapter 5 exercises", completed: true }, { title: "Practice quadratic equations", completed: false }, { title: "Take mock test", completed: false }], createdAt: "2026-05-18T11:00:00Z" }]
       },
       achievements: [
-        { id: "ach1", authorId: "u5", authorName: "Dr. Rajesh Gupta", role: "teacher", avatar: "https://randomuser.me/api/portraits/men/33.jpg", title: "Outstanding Performance in Math Olympiad", description: "Congratulations to Aarav Sharma for winning first place in the Regional Mathematics Olympiad! 🏆", targetStudentId: "u1", targetStudentName: "Aarav Sharma", category: "academic", timestamp: "2026-05-01T10:00:00Z", likes: ["u1","u2","u7","u12"], comments: [{ authorId: "u7", authorName: "Principal Meera", content: "Well deserved! Proud of our students.", timestamp: "2026-05-01T11:00:00Z" }] },
-        { id: "ach2", authorId: "u2", authorName: "Priya Patel", role: "student", avatar: "https://randomuser.me/api/portraits/women/68.jpg", title: "Science Fair Champion", description: "Won best project in the annual science fair with my renewable energy model! 🔬", targetStudentId: "u2", targetStudentName: "Priya Patel", category: "science", timestamp: "2026-05-05T09:00:00Z", likes: ["u1","u3","u4","u6"], comments: [] },
-        { id: "ach3", authorId: "u6", authorName: "Prof. Sunita Verma", role: "teacher", avatar: "https://randomuser.me/api/portraits/women/44.jpg", title: "Best Debater Award", description: "Ananya Singh delivered an outstanding performance at the state-level debate competition! 🎤", targetStudentId: "u4", targetStudentName: "Ananya Singh", category: "extracurricular", timestamp: "2026-05-10T12:00:00Z", likes: ["u1","u2","u3","u7"], comments: [{ authorId: "u4", authorName: "Ananya Singh", content: "Thank you ma'am! 🙏", timestamp: "2026-05-10T13:00:00Z" }] },
-        { id: "ach4", authorId: "u1", authorName: "Aarav Sharma", role: "student", avatar: "https://randomuser.me/api/portraits/men/32.jpg", title: "Coding Competition Runner-up", description: "Second place in inter-school coding competition! Built a full-stack app in 24 hours 💻", targetStudentId: "u1", targetStudentName: "Aarav Sharma", category: "technology", timestamp: "2026-05-15T16:00:00Z", likes: ["u3","u5"], comments: [] },
-        { id: "ach5", authorId: "u7", authorName: "Principal Meera", role: "admin", avatar: "https://randomuser.me/api/portraits/women/65.jpg", title: "Perfect Attendance Award", description: "Priya Patel achieved 100% attendance this semester! A remarkable commitment to learning. 📚", targetStudentId: "u2", targetStudentName: "Priya Patel", category: "attendance", timestamp: "2026-05-18T08:00:00Z", likes: ["u1","u2","u5","u6","u10"], comments: [] },
-        { id: "ach6", authorId: "u3", authorName: "Rohan Kumar", role: "student", avatar: "https://randomuser.me/api/portraits/men/51.jpg", title: "Sports Day Gold Medal", description: "Won gold in 100m sprint at inter-house sports day! 🏃‍♂️", targetStudentId: "u3", targetStudentName: "Rohan Kumar", category: "sports", timestamp: "2026-05-20T14:00:00Z", likes: ["u1","u4"], comments: [] }
+        { id: "ach1", authorId: "u5", authorName: "Dr. Rajesh Gupta", role: "teacher", avatar: "https://randomuser.me/api/portraits/men/33.jpg", title: "Outstanding Performance in Math Olympiad", description: "Congratulations to Aarav Sharma for winning first place in the Regional Mathematics Olympiad! 🏆", targetStudentId: "u1", targetStudentName: "Aarav Sharma", category: "academic", timestamp: "2026-05-01T10:00:00Z", likes: ["u1", "u2", "u7", "u12"], comments: [{ authorId: "u7", authorName: "Principal Meera", content: "Well deserved! Proud of our students.", timestamp: "2026-05-01T11:00:00Z" }] },
+        { id: "ach2", authorId: "u2", authorName: "Priya Patel", role: "student", avatar: "https://randomuser.me/api/portraits/women/68.jpg", title: "Science Fair Champion", description: "Won best project in the annual science fair with my renewable energy model! 🔬", targetStudentId: "u2", targetStudentName: "Priya Patel", category: "science", timestamp: "2026-05-05T09:00:00Z", likes: ["u1", "u3", "u4", "u6"], comments: [] },
+        { id: "ach3", authorId: "u6", authorName: "Prof. Sunita Verma", role: "teacher", avatar: "https://randomuser.me/api/portraits/women/44.jpg", title: "Best Debater Award", description: "Ananya Singh delivered an outstanding performance at the state-level debate competition! 🎤", targetStudentId: "u4", targetStudentName: "Ananya Singh", category: "extracurricular", timestamp: "2026-05-10T12:00:00Z", likes: ["u1", "u2", "u3", "u7"], comments: [{ authorId: "u4", authorName: "Ananya Singh", content: "Thank you ma'am! 🙏", timestamp: "2026-05-10T13:00:00Z" }] },
+        { id: "ach4", authorId: "u1", authorName: "Aarav Sharma", role: "student", avatar: "https://randomuser.me/api/portraits/men/32.jpg", title: "Coding Competition Runner-up", description: "Second place in inter-school coding competition! Built a full-stack app in 24 hours 💻", targetStudentId: "u1", targetStudentName: "Aarav Sharma", category: "technology", timestamp: "2026-05-15T16:00:00Z", likes: ["u3", "u5"], comments: [] },
+        { id: "ach5", authorId: "u7", authorName: "Principal Meera", role: "admin", avatar: "https://randomuser.me/api/portraits/women/65.jpg", title: "Perfect Attendance Award", description: "Priya Patel achieved 100% attendance this semester! A remarkable commitment to learning. 📚", targetStudentId: "u2", targetStudentName: "Priya Patel", category: "attendance", timestamp: "2026-05-18T08:00:00Z", likes: ["u1", "u2", "u5", "u6", "u10"], comments: [] },
+        { id: "ach6", authorId: "u3", authorName: "Rohan Kumar", role: "student", avatar: "https://randomuser.me/api/portraits/men/51.jpg", title: "Sports Day Gold Medal", description: "Won gold in 100m sprint at inter-house sports day! 🏃‍♂️", targetStudentId: "u3", targetStudentName: "Rohan Kumar", category: "sports", timestamp: "2026-05-20T14:00:00Z", likes: ["u1", "u4"], comments: [] }
       ],
       leaveRequests: [
         { id: "lr1", studentId: "u1", studentName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", startDate: "2026-05-26", endDate: "2026-05-27", reason: "Family function - sister's wedding", type: "personal", status: "approved", requestedAt: "2026-05-20T10:00:00Z", approvedBy: "u5", approvedAt: "2026-05-20T14:00:00Z" },
