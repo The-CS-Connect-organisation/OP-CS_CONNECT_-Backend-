@@ -12,4 +12,4 @@ COPY package*.json ./
 RUN npm install --production
 COPY --from=builder /app/dist ./dist
 EXPOSE 5000
-CMD ["npm", "start"]
+CMD ["sh", "-c", "PORT=5000 node dist/index.js"]
