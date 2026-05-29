@@ -103,83 +103,6 @@ app.use('/api/alumni', alumniRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/circulars', circularRoutes);
 app.use('/api/announcements', announcementRoutes);
-
-// Newly Added Routes
-import authRoutes from './routes/auth';
-import usersRoutes from './routes/users';
-import studentsRoutes from './routes/students';
-import teachersRoutes from './routes/teachers';
-import subjectsRoutes from './routes/subjects';
-import dashboardRoutes from './routes/dashboard';
-import assignmentsRoutes from './routes/assignments';
-import timetableRoutes from './routes/timetable';
-import schoolsRoutes from './routes/schools';
-import routesRoutes from './routes/routes';
-import eventsRoutes from './routes/events';
-import clubsRoutes from './routes/clubs';
-import messagesRoutes from './routes/messages';
-import notificationsRoutes from './routes/notifications';
-import questionBankRoutes from './routes/question-bank';
-import notesRoutes from './routes/notes';
-import chatRoutes from './routes/chat';
-import gradesRoutes from './routes/grades';
-import supplyAlertsRoutes from './routes/supply-alerts';
-import bookAlertsRoutes from './routes/book-alerts';
-import digitalFridgeRoutes from './routes/digital-fridge';
-import uniformScheduleRoutes from './routes/uniform-schedule';
-import aiRoutes from './routes/ai';
-import studyPlanRoutes from './routes/study-plan';
-import calendarRoutes from './routes/calendar';
-import nexusRoutes from './routes/nexus';
-import achievementsRoutes from './routes/achievements';
-import accoladesRoutes from './routes/accolades';
-import analyticsRoutes from './routes/analytics';
-import parentRoutes from './routes/parent';
-import busRoutes from './routes/bus';
-import feesRoutes from './routes/fees';
-import payrollRoutes from './routes/payroll';
-import booksRoutes from './routes/books';
-import dailyBriefingRoutes from './routes/daily-briefing';
-
-// ... (rest of your imports)
-
-// Newly Added Routes Wiring
-app.use('/api/auth', authRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/students', studentsRoutes);
-app.use('/api/teachers', teachersRoutes);
-app.use('/api/subjects', subjectsRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/assignments', assignmentsRoutes);
-app.use('/api/timetable', timetableRoutes);
-app.use('/api/schools', schoolsRoutes);
-app.use('/api/routes', routesRoutes);
-app.use('/api/events', eventsRoutes);
-app.use('/api/clubs', clubsRoutes);
-app.use('/api/messages', messagesRoutes);
-app.use('/api/notifications', notificationsRoutes);
-app.use('/api/question-bank', questionBankRoutes);
-app.use('/api/notes', notesRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/grades', gradesRoutes);
-app.use('/api/supply-alerts', supplyAlertsRoutes);
-app.use('/api/book-alerts', bookAlertsRoutes);
-app.use('/api/digital-fridge', digitalFridgeRoutes);
-app.use('/api/uniform-schedule', uniformScheduleRoutes);
-app.use('/api/ai', aiRoutes);
-app.use('/api/study-plan', studyPlanRoutes);
-app.use('/api/calendar', calendarRoutes);
-app.use('/api/nexus', nexusRoutes);
-app.use('/api/achievements', achievementsRoutes);
-app.use('/api/accolades', accoladesRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/parent', parentRoutes);
-app.use('/api/bus', busRoutes);
-app.use('/api/fees', feesRoutes);
-app.use('/api/payroll', payrollRoutes);
-app.use('/api/books', booksRoutes);
-app.use('/api/daily-briefing', dailyBriefingRoutes);
-
 // Helper: safe user (remove password)
 function safeUser(u: any) {
   if (!u) return null;
@@ -569,7 +492,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     await setData(`otpStore/${email}`, { otp, expiresAt: Date.now() + 300000 });
-    res.json({ message: 'OTP sent to email', otp });
+    res.json({ message: 'OTP sent to email' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to send OTP' });
   }
@@ -1063,10 +986,11 @@ app.delete('/api/events/:id', async (req, res) => {
 });
 
 // ==================== CLUBS ====================
-app.get('/api/clubs', async (req, res) => {
+app.get('/api/clubs', async (_req, res) => {
   try {
-    const clubs = await getData('clubs');
-    res.json(clubs ? Object.values(clubs) : []);
+    const data = await getData('clubs') as any;
+    const clubs = data ? Object.values(data) as any[] : [];
+    res.json(clubs);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch clubs' });
   }
@@ -1356,11 +1280,16 @@ app.delete('/api/circulars/:id', async (req, res) => {
 // ==================== ANNOUNCEMENTS ====================
 app.get('/api/announcements', async (req, res) => {
   try {
-    const announcements = await getData('announcements');
+    const data = await getData('announcements') as any;
+    let announcements = data ? Object.values(data) as any[] : [];
     const { priority } = req.query;
-    let result = announcements ? Object.values(announcements) : [];
-    if (priority) result = result.filter((a: any) => a.priority === priority);
-    res.json(result.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    if (priority) announcements = announcements.filter((a: any) => a.priority === priority);
+    announcements.sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+    res.json(announcements);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch announcements' });
   }
@@ -1368,9 +1297,12 @@ app.get('/api/announcements', async (req, res) => {
 
 app.post('/api/announcements', async (req, res) => {
   try {
-    const announcement = { id: `ann${Date.now()}`, createdAt: new Date().toISOString(), ...req.body };
-    await setData(`announcements/${announcement.id}`, announcement);
-    res.status(201).json(announcement);
+    const data = await getData('announcements') as any;
+    const announcements = data ? Object.values(data) as any[] : [];
+    const newAnn = { ...req.body, id: `ann${Date.now()}`, pinned: false, approved: req.body.authorRole === 'admin' || req.body.authorRole === 'manager' };
+    announcements.push(newAnn);
+    await setData('announcements', Object.fromEntries(announcements.map(a => [a.id, a])));
+    res.json({ success: true, announcement: newAnn });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create announcement' });
   }
@@ -1378,11 +1310,11 @@ app.post('/api/announcements', async (req, res) => {
 
 app.put('/api/announcements/:id', async (req, res) => {
   try {
-    const existing = await getData(`announcements/${req.params.id}`);
-    if (!existing) return res.status(404).json({ error: 'Announcement not found' });
-    const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() };
-    await setData(`announcements/${req.params.id}`, updated);
-    res.json(updated);
+    const data = await getData('announcements') as any;
+    if (!data || !data[req.params.id]) return res.status(404).json({ error: 'Announcement not found' });
+    data[req.params.id] = { ...data[req.params.id], ...req.body };
+    await setData('announcements', data);
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update announcement' });
   }
@@ -1390,7 +1322,10 @@ app.put('/api/announcements/:id', async (req, res) => {
 
 app.delete('/api/announcements/:id', async (req, res) => {
   try {
-    await removeData(`announcements/${req.params.id}`);
+    const data = await getData('announcements') as any;
+    if (!data || !data[req.params.id]) return res.status(404).json({ error: 'Announcement not found' });
+    delete data[req.params.id];
+    await setData('announcements', data);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete announcement' });
@@ -1863,29 +1798,7 @@ app.put('/api/study-plans/:planId/task', async (req, res) => {
   } catch (error) { res.status(500).json({ error: 'Failed to update task' }); }
 });
 
-// ==================== ANNOUNCEMENTS (with pinning) ====================
-app.get('/api/announcements', async (_req, res) => {
-  try {
-    const data = await getData('announcements') as any;
-    const announcements = data ? Object.values(data) as any[] : [];
-    announcements.sort((a, b) => {
-      if (a.pinned && !b.pinned) return -1;
-      if (!a.pinned && b.pinned) return 1;
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
-    res.json(announcements);
-  } catch (error) { res.status(500).json({ error: 'Failed to fetch announcements' }); }
-});
-app.post('/api/announcements', async (req, res) => {
-  try {
-    const data = await getData('announcements') as any;
-    const announcements = data ? Object.values(data) as any[] : [];
-    const newAnn = { ...req.body, id: `ann${Date.now()}`, pinned: false, approved: req.body.authorRole === 'admin' || req.body.authorRole === 'manager' };
-    announcements.push(newAnn);
-    await setData('announcements', Object.fromEntries(announcements.map(a => [a.id, a])));
-    res.json({ success: true, announcement: newAnn });
-  } catch (error) { res.status(500).json({ error: 'Failed to create announcement' }); }
-});
+// ==================== ANNOUNCEMENTS (pin + approve) ====================
 app.put('/api/announcements/:id/pin', async (req, res) => {
   try {
     const data = await getData('announcements') as any;
@@ -1904,24 +1817,6 @@ app.put('/api/announcements/:id/approve', async (req, res) => {
     await setData('announcements', data);
     res.json({ success: true });
   } catch (error) { res.status(500).json({ error: 'Failed to approve announcement' }); }
-});
-app.put('/api/announcements/:id', async (req, res) => {
-  try {
-    const data = await getData('announcements') as any;
-    if (!data || !data[req.params.id]) return res.status(404).json({ error: 'Announcement not found' });
-    data[req.params.id] = { ...data[req.params.id], ...req.body };
-    await setData('announcements', data);
-    res.json({ success: true });
-  } catch (error) { res.status(500).json({ error: 'Failed to update announcement' }); }
-});
-app.delete('/api/announcements/:id', async (req, res) => {
-  try {
-    const data = await getData('announcements') as any;
-    if (!data || !data[req.params.id]) return res.status(404).json({ error: 'Announcement not found' });
-    delete data[req.params.id];
-    await setData('announcements', data);
-    res.json({ success: true });
-  } catch (error) { res.status(500).json({ error: 'Failed to delete announcement' }); }
 });
 
 // ==================== USER PROFILE UPDATE ====================
@@ -2043,54 +1938,7 @@ app.put('/api/leave-requests/:id/reject', async (req, res) => {
   } catch (error) { res.status(500).json({ error: 'Failed to reject leave request' }); }
 });
 
-// ==================== ACCOLADES (apply + approve) ====================
-app.get('/api/accolades', async (_req, res) => {
-  try {
-    const data = await getData('accolades') as any;
-    const accolades = data ? Object.values(data) as any[] : [];
-    res.json(accolades);
-  } catch (error) { res.status(500).json({ error: 'Failed to fetch accolades' }); }
-});
-app.post('/api/accolades', async (req, res) => {
-  try {
-    const data = await getData('accolades') as any;
-    const accolades = data ? Object.values(data) as any[] : [];
-    const newAcc = { ...req.body, id: `acc${Date.now()}`, status: 'pending', submittedAt: new Date().toISOString() };
-    accolades.push(newAcc);
-    await setData('accolades', Object.fromEntries(accolades.map(a => [a.id, a])));
-    res.json({ success: true, accolade: newAcc });
-  } catch (error) { res.status(500).json({ error: 'Failed to submit accolade' }); }
-});
-app.put('/api/accolades/:id/approve', async (req, res) => {
-  try {
-    const { approvedBy } = req.body;
-    const data = await getData('accolades') as any;
-    if (!data || !data[req.params.id]) return res.status(404).json({ error: 'Accolade not found' });
-    data[req.params.id].status = 'approved';
-    data[req.params.id].approvedBy = approvedBy;
-    data[req.params.id].approvedAt = new Date().toISOString();
-    await setData(`accolades/${req.params.id}`, data[req.params.id]);
-    res.json({ success: true });
-  } catch (error) { res.status(500).json({ error: 'Failed to approve accolade' }); }
-});
-app.put('/api/accolades/:id/reject', async (req, res) => {
-  try {
-    const data = await getData('accolades') as any;
-    if (!data || !data[req.params.id]) return res.status(404).json({ error: 'Accolade not found' });
-    data[req.params.id].status = 'rejected';
-    await setData(`accolades/${req.params.id}`, data[req.params.id]);
-    res.json({ success: true });
-  } catch (error) { res.status(500).json({ error: 'Failed to reject accolade' }); }
-});
-
-// ==================== CLUBS (with posts) ====================
-app.get('/api/clubs', async (_req, res) => {
-  try {
-    const data = await getData('clubs') as any;
-    const clubs = data ? Object.values(data) as any[] : [];
-    res.json(clubs);
-  } catch (error) { res.status(500).json({ error: 'Failed to fetch clubs' }); }
-});
+// ==================== CLUBS POSTS ====================
 app.post('/api/clubs/:clubId/posts', async (req, res) => {
   try {
     const data = await getData('clubs') as any;
@@ -2116,6 +1964,418 @@ app.post('/api/clubs/:clubId/posts/:postId/like', async (req, res) => {
     await setData(`clubs/${req.params.clubId}`, club);
     res.json({ success: true, likes: post.likes });
   } catch (error) { res.status(500).json({ error: 'Failed to toggle like' }); }
+});
+
+// ==================== MISSING FRONTEND ENDPOINTS ====================
+
+// Bare GET /api/attendance (with query params)
+app.get('/api/attendance', async (req, res) => {
+  try {
+    const { class: className, date, studentId } = req.query;
+    if (studentId) {
+      const att = await getData(`attendance/${studentId}`);
+      return res.json(att ? Object.values(att) : []);
+    }
+    if (className && date) {
+      const usersData = await getData('users') as any;
+      const students = usersData ? Object.values(usersData).filter((u: any) => u.role === 'student' && u.class === className) : [];
+      const result = [];
+      for (const s of students as any[]) {
+        const att = await getData(`attendance/${(s as any).id}`);
+        const records = att ? Object.values(att) : [];
+        const dayRec = date ? records.find((r: any) => r.date === date) : null;
+        result.push({ studentId: (s as any).id, name: (s as any).name, status: (dayRec as any)?.status || 'unmarked' });
+      }
+      return res.json(result);
+    }
+    const allAttendance = await getData('attendance') as any;
+    res.json(allAttendance || {});
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch attendance' });
+  }
+});
+
+// POST /api/announcements/:id/read
+app.post('/api/announcements/:id/read', async (req, res) => {
+  try {
+    const data = await getData('announcements') as any;
+    if (!data || !data[req.params.id]) return res.status(404).json({ error: 'Announcement not found' });
+    if (!data[req.params.id].readBy) data[req.params.id].readBy = [];
+    const userId = req.headers['x-user-id'] as string;
+    if (userId && !data[req.params.id].readBy.includes(userId)) {
+      data[req.params.id].readBy.push(userId);
+      await setData(`announcements/${req.params.id}`, data[req.params.id]);
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to mark as read' });
+  }
+});
+
+// GET /api/accounts
+app.get('/api/accounts', async (_req, res) => {
+  try {
+    const accounts = await getData('chartOfAccounts');
+    res.json(accounts ? Object.values(accounts) : []);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch accounts' });
+  }
+});
+
+// GET /api/books (catalogue)
+app.get('/api/books', async (_req, res) => {
+  try {
+    const books = await getData('libraryCatalogue');
+    res.json(books ? Object.values(books) : []);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch books' });
+  }
+});
+
+// GET /api/fees (bare)
+app.get('/api/fees', async (req, res) => {
+  try {
+    const { studentId } = req.query;
+    if (studentId) {
+      const fees = await getData(`fees/${studentId}`);
+      return res.json(fees ? Object.values(fees) : []);
+    }
+    const allFees = await getData('fees') as any;
+    res.json(allFees || {});
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch fees' });
+  }
+});
+
+// GET /api/payroll (bare, with month query)
+app.get('/api/payroll', async (req, res) => {
+  try {
+    const { month } = req.query;
+    const payroll = await getData('payroll') as any;
+    let records = payroll ? Object.values(payroll) : [];
+    if (month) records = records.filter((r: any) => r.month === month);
+    res.json(records);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch payroll' });
+  }
+});
+
+// GET /api/daily-briefing (bare, no userId param)
+app.get('/api/daily-briefing', async (req, res) => {
+  try {
+    const userId = req.query.userId as string || req.headers['x-user-id'] as string;
+    if (userId) {
+      const briefing = await getData(`dailyBriefing/${userId}`);
+      if (briefing) return res.json(briefing);
+    }
+    res.json({
+      date: new Date().toISOString().split('T')[0],
+      greeting: 'Good morning!',
+      events: [],
+      tasks: [],
+      weather: 'Sunny',
+      quote: 'Education is the most powerful weapon which you can use to change the world.',
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch daily briefing' });
+  }
+});
+
+// ==================== PARENT ENDPOINTS ====================
+app.get('/api/parent/dashboard', async (req, res) => {
+  try {
+    const userId = req.headers['x-user-id'] as string;
+    const user = await getData(`users/${userId}`);
+    if (!user) return res.status(404).json({ error: 'Parent not found' });
+    const children = (user.children || []) as string[];
+    const childData = [];
+    for (const childId of children) {
+      const child = await getData(`users/${childId}`);
+      if (child) {
+        const grades = await getData(`grades/${childId}`);
+        const attendance = await getData(`attendance/${childId}`);
+        const fees = await getData(`fees/${childId}`);
+        childData.push({
+          ...safeUser(child),
+          grades: grades ? Object.values(grades) : [],
+          attendance: attendance ? Object.values(attendance) : [],
+          fees: fees ? Object.values(fees) : [],
+        });
+      }
+    }
+    res.json({ children: childData });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch parent dashboard' });
+  }
+});
+
+app.get('/api/parent/attendance/:childId', async (req, res) => {
+  try {
+    const attendance = await getData(`attendance/${req.params.childId}`);
+    res.json(attendance ? Object.values(attendance) : []);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch child attendance' });
+  }
+});
+
+app.get('/api/parent/grades/:childId', async (req, res) => {
+  try {
+    const grades = await getData(`grades/${req.params.childId}`);
+    res.json(grades ? Object.values(grades) : []);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch child grades' });
+  }
+});
+
+app.get('/api/parent/timetable/:childId', async (req, res) => {
+  try {
+    const child = await getData(`users/${req.params.childId}`);
+    const className = child?.class || '10-A';
+    const timetable = await getData(`timetable/${className}`);
+    res.json(timetable || []);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch child timetable' });
+  }
+});
+
+app.get('/api/parent/fees/:childId', async (req, res) => {
+  try {
+    const fees = await getData(`fees/${req.params.childId}`);
+    res.json(fees ? Object.values(fees) : []);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch child fees' });
+  }
+});
+
+app.get('/api/parent/bus/:childId', async (req, res) => {
+  try {
+    const child = await getData(`users/${req.params.childId}`);
+    if (!child?.routeId) return res.json({ route: null, location: null });
+    const route = await getData(`routes/${child.routeId}`);
+    res.json({ route: route || null, location: null });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch child bus' });
+  }
+});
+
+// ==================== ANALYTICS ENDPOINTS ====================
+app.get('/api/analytics/class/:className', async (req, res) => {
+  try {
+    const usersData = await getData('users') as any;
+    const students = usersData ? Object.values(usersData).filter((u: any) => u.role === 'student' && u.class === req.params.className) : [];
+    const totalStudents = students.length;
+    let totalMarks = 0;
+    let presentCount = 0;
+    const subjectPerformance: Record<string, number[]> = {};
+    for (const s of students as any[]) {
+      const grades = await getData(`grades/${(s as any).id}`);
+      const gradeList = grades ? Object.values(grades) : [];
+      for (const g of gradeList as any[]) {
+        if (!subjectPerformance[g.subject]) subjectPerformance[g.subject] = [];
+        subjectPerformance[g.subject].push(g.marks || 0);
+        totalMarks += g.marks || 0;
+      }
+      const att = await getData(`attendance/${(s as any).id}`);
+      const attList = att ? Object.values(att) : [];
+      presentCount += attList.filter((a: any) => a.status === 'present').length;
+    }
+    const avgMarks = totalStudents > 0 ? Math.round(totalMarks / (totalStudents * Math.max(1, Object.keys(subjectPerformance).length))) : 0;
+    const avgAttendance = totalStudents > 0 ? Math.round(presentCount / totalStudents) : 0;
+    const subjectAverages = Object.fromEntries(
+      Object.entries(subjectPerformance).map(([sub, marks]) => [sub, Math.round(marks.reduce((a, b) => a + b, 0) / marks.length)])
+    );
+    res.json({ className: req.params.className, totalStudents, avgMarks, avgAttendance, subjectAverages, students: students.map(safeUser) });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch class analytics' });
+  }
+});
+
+app.get('/api/analytics/progress', async (req, res) => {
+  try {
+    const className = req.query.class as string;
+    const usersData = await getData('users') as any;
+    const students = usersData ? Object.values(usersData).filter((u: any) => u.role === 'student' && (!className || u.class === className)) : [];
+    const progress = [];
+    for (const s of students as any[]) {
+      const grades = await getData(`grades/${(s as any).id}`);
+      const gradeList = grades ? Object.values(grades) : [];
+      const avg = gradeList.length > 0 ? Math.round(gradeList.reduce((a: number, g: any) => a + (g.marks || 0), 0) / gradeList.length) : 0;
+      progress.push({ studentId: (s as any).id, name: (s as any).name, average: avg, trend: avg > 80 ? 'up' : avg > 60 ? 'stable' : 'down' });
+    }
+    res.json(progress);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch progress' });
+  }
+});
+
+app.get('/api/analytics/performance', async (req, res) => {
+  try {
+    const { class: className, term } = req.query;
+    const usersData = await getData('users') as any;
+    const students = usersData ? Object.values(usersData).filter((u: any) => u.role === 'student' && (!className || u.class === className)) : [];
+    const reports = [];
+    for (const s of students as any[]) {
+      const grades = await getData(`grades/${(s as any).id}`);
+      const gradeList = grades ? Object.values(grades) : [];
+      const total = gradeList.reduce((a: number, g: any) => a + (g.marks || 0), 0);
+      const count = gradeList.length || 1;
+      reports.push({
+        studentId: (s as any).id,
+        name: (s as any).name,
+        average: Math.round(total / count),
+        total,
+        subjects: gradeList,
+        term: term || 'current',
+        grade: total / count >= 90 ? 'A' : total / count >= 80 ? 'B' : total / count >= 70 ? 'C' : 'D',
+      });
+    }
+    res.json(reports);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch performance' });
+  }
+});
+
+app.get('/api/analytics/admin', async (_req, res) => {
+  try {
+    const usersData = await getData('users') as any;
+    const users = usersData ? Object.values(usersData) : [];
+    const students = users.filter((u: any) => u.role === 'student');
+    const teachers = users.filter((u: any) => u.role === 'teacher');
+    const events = await getData('events');
+    const eventList = events ? Object.values(events) : [];
+    const routes = await getData('routes');
+    const routeList = routes ? Object.values(routes) : [];
+    res.json({
+      totalStudents: students.length,
+      totalTeachers: teachers.length,
+      totalEvents: eventList.length,
+      totalRoutes: routeList.length,
+      attendanceRate: 87,
+      feeCollectionRate: 92,
+      studentTeacherRatio: students.length > 0 ? Math.round(students.length / Math.max(1, teachers.length)) : 0,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch admin analytics' });
+  }
+});
+
+app.get('/api/analytics/manager', async (_req, res) => {
+  try {
+    const usersData = await getData('users') as any;
+    const users = usersData ? Object.values(usersData) : [];
+    const schools = await getData('schools');
+    const schoolList = schools ? Object.values(schools) : [];
+    res.json({
+      totalUsers: users.length,
+      totalSchools: schoolList.length,
+      activeUsers: users.filter((u: any) => u.status !== 'inactive').length,
+      systemHealth: 'healthy',
+      uptime: process.uptime(),
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch manager analytics' });
+  }
+});
+
+app.get('/api/analytics/manager/academics', async (_req, res) => {
+  try {
+    const usersData = await getData('users') as any;
+    const users = usersData ? Object.values(usersData) : [];
+    const students = users.filter((u: any) => u.role === 'student');
+    const teachers = users.filter((u: any) => u.role === 'teacher');
+    const subjects = await getData('subjects');
+    const subjectList = subjects ? Object.values(subjects) : [];
+    const assignments = await getData('assignments');
+    const assignmentList = assignments ? Object.values(assignments) : [];
+    res.json({
+      totalStudents: students.length,
+      totalTeachers: teachers.length,
+      totalSubjects: subjectList.length,
+      totalAssignments: assignmentList.length,
+      avgClassSize: teachers.length > 0 ? Math.round(students.length / teachers.length) : 0,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch manager academics' });
+  }
+});
+
+app.get('/api/analytics/manager/finance', async (_req, res) => {
+  try {
+    const feesData = await getData('fees') as any;
+    let totalCollected = 0;
+    let totalOutstanding = 0;
+    if (feesData) {
+      for (const studentFees of Object.values(feesData) as any[]) {
+        const feeList = Object.values(studentFees) as any[];
+        for (const f of feeList) {
+          totalCollected += f.paid || 0;
+          totalOutstanding += (f.amount || 0) - (f.paid || 0);
+        }
+      }
+    }
+    res.json({ totalCollected, totalOutstanding, collectionRate: totalCollected + totalOutstanding > 0 ? Math.round((totalCollected / (totalCollected + totalOutstanding)) * 100) : 0 });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch manager finance' });
+  }
+});
+
+app.get('/api/analytics/manager/transport', async (_req, res) => {
+  try {
+    const routes = await getData('routes');
+    const routeList = routes ? Object.values(routes) : [];
+    const totalStudents = routeList.reduce((a: number, r: any) => a + (r.students?.length || 0), 0);
+    res.json({ totalRoutes: routeList.length, totalStudents, activeVehicles: routeList.length, avgStudentsPerRoute: routeList.length > 0 ? Math.round(totalStudents / routeList.length) : 0 });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch manager transport' });
+  }
+});
+
+app.get('/api/analytics/coordinator', async (_req, res) => {
+  try {
+    const schools = await getData('schools');
+    const schoolList = schools ? Object.values(schools) : [];
+    const usersData = await getData('users') as any;
+    const users = usersData ? Object.values(usersData) : [];
+    const bySchool: Record<string, any> = {};
+    for (const s of schoolList as any[]) {
+      bySchool[(s as any).id] = { ...(s as any), studentCount: users.filter((u: any) => u.role === 'student' && u.schoolId === (s as any).id).length, teacherCount: users.filter((u: any) => u.role === 'teacher' && u.schoolId === (s as any).id).length };
+    }
+    res.json({ schools: Object.values(bySchool), totalSchools: schoolList.length, totalStudents: users.filter((u: any) => u.role === 'student').length, totalTeachers: users.filter((u: any) => u.role === 'teacher').length });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch coordinator analytics' });
+  }
+});
+
+// ==================== BUS ASSIGNMENTS ====================
+app.get('/api/bus/assignments', async (_req, res) => {
+  try {
+    const routes = await getData('routes');
+    res.json(routes ? Object.values(routes) : []);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch bus assignments' });
+  }
+});
+
+app.post('/api/bus/assignments', async (req, res) => {
+  try {
+    const data = await getData('busAssignments') as any;
+    const assignments = data ? Object.values(data) : [];
+    const newAss = { id: `ba${Date.now()}`, ...req.body, createdAt: new Date().toISOString() };
+    assignments.push(newAss);
+    await setData('busAssignments', Object.fromEntries(assignments.map((a: any) => [a.id, a])));
+    res.status(201).json(newAss);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create bus assignment' });
+  }
+});
+
+app.delete('/api/bus/assignments/:id', async (req, res) => {
+  try {
+    await removeData(`busAssignments/${req.params.id}`);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete bus assignment' });
+  }
 });
 
 // Start server

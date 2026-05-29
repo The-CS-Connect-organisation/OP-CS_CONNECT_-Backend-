@@ -63,9 +63,6 @@ async function callCerebras(messages: ChatMessage[], systemPrompt?: string): Pro
 // POST /api/ai/chat
 router.post('/chat', async (req, res) => {
   try {
-    // #region agent log
-    fetch('http://127.0.0.1:7648/ingest/9083a094-cb0a-4860-b6f2-236bb876b0d0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6a311b'},body:JSON.stringify({sessionId:'6a311b',runId:'pre-fix',hypothesisId:'H1',location:'routes/ai.ts:chat-entry',message:'routes/ai chat handler entered',data:{hasMessages:Array.isArray(req.body?.messages),model:req.body?.model || 'none'},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     const body = req.body as { messages?: ChatMessage[]; model?: string; systemPrompt?: string };
     const messages = Array.isArray(body.messages) ? body.messages : [];
     const systemPrompt = typeof body.systemPrompt === 'string' ? body.systemPrompt : undefined;
@@ -78,22 +75,13 @@ router.post('/chat', async (req, res) => {
     try {
       // Gemini is the default model used in AI Lab.
       responseText = await callGemini(messages, systemPrompt);
-      // #region agent log
-      fetch('http://127.0.0.1:7648/ingest/9083a094-cb0a-4860-b6f2-236bb876b0d0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6a311b'},body:JSON.stringify({sessionId:'6a311b',runId:'pre-fix',hypothesisId:'H2',location:'routes/ai.ts:gemini-success',message:'routes/ai gemini success',data:{responseLength:responseText.length},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       return res.json({ response: responseText, provider: 'gemini', model: body.model || 'gemini' });
     } catch (geminiErr) {
-      // #region agent log
-      fetch('http://127.0.0.1:7648/ingest/9083a094-cb0a-4860-b6f2-236bb876b0d0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6a311b'},body:JSON.stringify({sessionId:'6a311b',runId:'pre-fix',hypothesisId:'H3',location:'routes/ai.ts:gemini-failed',message:'routes/ai gemini failed',data:{error:geminiErr instanceof Error ? geminiErr.message : 'unknown'},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       // Fallback to Cerebras when Gemini fails or is not configured.
       responseText = await callCerebras(messages, systemPrompt);
       return res.json({ response: responseText, provider: 'cerebras', model: body.model || 'cerebras' });
     }
   } catch (error: any) {
-    // #region agent log
-    fetch('http://127.0.0.1:7648/ingest/9083a094-cb0a-4860-b6f2-236bb876b0d0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6a311b'},body:JSON.stringify({sessionId:'6a311b',runId:'pre-fix',hypothesisId:'H4',location:'routes/ai.ts:chat-error',message:'routes/ai chat outer error',data:{error:error?.message || 'unknown'},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     return res.status(500).json({
       error: 'AI chat failed',
       message: error?.message || 'Unknown error',
