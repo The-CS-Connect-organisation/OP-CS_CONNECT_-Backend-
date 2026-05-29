@@ -15,7 +15,7 @@ interface DB {
 }
 
 const router = Router();
-const dbPath = path.resolve(process.cwd(), 'dist/data/db.json');
+const dbPath = path.join(__dirname, '../data/db.json');
 
 async function readDB(): Promise<DB> {
   const dbData = await fs.readFile(dbPath, 'utf-8');
