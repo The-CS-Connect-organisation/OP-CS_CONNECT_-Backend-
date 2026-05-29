@@ -15,14 +15,29 @@ interface DB {
 }
 
 const router = Router();
-const dbPath = path.join(__dirname, '../data/db.json');
+// Try multiple possible paths to find db.json, works in all environments
+const possibleDbPaths = [
+  path.join(process.cwd(), 'src/data/db.json'),
+  path.join(process.cwd(), 'dist/data/db.json'),
+  path.join(__dirname, '../data/db.json'),
+  path.join(__dirname, '../../src/data/db.json'),
+  path.join(__dirname, '../../dist/data/db.json')
+];
 
 async function readDB(): Promise<DB> {
-  console.log('Current __dirname:', __dirname);
-  console.log('Resolved dbPath:', dbPath);
-  console.log('Files in __dirname:', await fs.readdir(__dirname));
-  const dbData = await fs.readFile(dbPath, 'utf-8');
-  return JSON.parse(dbData) as DB;
+  let lastError;
+  for (const tryPath of possibleDbPaths) {
+    try {
+      console.log('Trying to read db from:', tryPath);
+      const dbData = await fs.readFile(tryPath, 'utf-8');
+      console.log('Successfully read db from:', tryPath);
+      return JSON.parse(dbData) as DB;
+    } catch (err) {
+      lastError = err;
+      console.log('Failed to read from:', tryPath, 'Error:', err.message);
+    }
+  }
+  throw lastError;
 }
 
 // GET /api/students
