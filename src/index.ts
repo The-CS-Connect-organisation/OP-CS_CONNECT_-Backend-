@@ -11,6 +11,7 @@ import hrRoutes from './routes/hr';
 import libraryRoutes from './routes/library';
 import commsRoutes from './routes/comms';
 import erpRoutes from './routes/erp';
+import studentsRoutes from './routes/students';
 // Phase 3 Route Modules
 import counsellingRoutes from './routes/counselling';
 import healthRoutes from './routes/health';
@@ -85,6 +86,7 @@ app.use('/api/hr', hrRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/comms', commsRoutes);
 app.use('/api/erp', erpRoutes);
+app.use('/api/students', studentsRoutes);
 
 // Phase 3 Route Modules
 app.use('/api/counselling', counsellingRoutes);
