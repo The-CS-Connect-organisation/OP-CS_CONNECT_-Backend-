@@ -492,7 +492,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     await setData(`otpStore/${email}`, { otp, expiresAt: Date.now() + 300000 });
-    res.json({ message: 'OTP sent to email', otp });
+    res.json({ message: 'OTP sent to email' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to send OTP' });
   }
