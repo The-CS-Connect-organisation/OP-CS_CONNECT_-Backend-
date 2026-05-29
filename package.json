@@ -14,6 +14,7 @@
     "@types/express": "^4.17.21",
     "@types/node": "^22.5.4",
     "cors": "^2.8.5",
+    "cpy-cli": "^7.0.0",
     "date-fns": "^4.3.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
@@ -23,7 +24,6 @@
     "uuid": "^14.0.0"
   },
   "devDependencies": {
-    "cpy-cli": "^7.0.0",
     "ts-node-dev": "^2.0.0"
   }
 }
