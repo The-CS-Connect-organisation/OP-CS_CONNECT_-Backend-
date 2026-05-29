@@ -1,4 +1,5 @@
 import { Request, Response, Router } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 import { listData, setData, getData, id, pushData } from '../firebase';
 
 const router = Router();
@@ -107,7 +108,7 @@ router.post('/:id/comment', async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Achievement not found' });
         }
 
-        const commentId = id('comment');
+        const commentId = uuidv4();
         const newComment = {
             id: commentId,
             userId: requesterId,

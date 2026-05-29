@@ -1,4 +1,5 @@
 import { Request, Response, Router } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 import { getData, setData, listData, id, removeData, pushData } from '../firebase';
 
 const router = Router();
@@ -187,7 +188,7 @@ router.post('/:id/submit', async (req: Request, res: Response) => {
 
     const submitter = await getData(`users/${requesterId}`);
     const submission = {
-      id: id('sub'),
+      id: uuidv4(),
       assignmentId: id,
       studentId: requesterId,
       studentName: submitter?.name || 'Unknown',

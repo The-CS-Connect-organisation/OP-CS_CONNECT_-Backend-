@@ -162,7 +162,7 @@ router.get('/children/:childId/timetable', async (req: Request, res: Response) =
     
     // Organize by day for easier frontend rendering
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const organized = days.reduce((acc, day) => {
+    const organized = days.reduce((acc: { [key: string]: any[] }, day) => {
       acc[day] = childTimetable.filter(t => t.day === day).sort((a, b) => a.period - b.period);
       return acc;
     }, {});

@@ -1,5 +1,6 @@
 import { Request, Response, Router } from 'express';
-import { getData, setData, listData, id } from '../firebase';
+import { v4 as uuidv4 } from 'uuid';
+import { getData, setData, listData } from '../firebase';
 
 const router = Router();
 
@@ -25,12 +26,13 @@ router.get('/', async (req: Request, res: Response) => {
     }
 
     const summary = {
-      totalGross: filtered.reduce((sum, p) => sum + p.grossSalary, 0),
-      totalNet: filtered.reduce((sum, p) => sum + p.netSalary, 0),
-      totalDeductions: filtered.reduce((sum, p) => sum + p.totalDeductions, 0),
+      totalGross: filtered.reduce((sum: number, p: any) => sum + p.grossSalary, 0),
+      totalNet: filtered.reduce((sum: number, p: any) => sum + p.netSalary, 0),
+      totalDeductions: filtered.reduce((sum: number, p: any) => sum + p.totalDeductions, 0),
       pending: filtered.filter(p => p.status === 'pending').length,
       processed: filtered.filter(p => p.status === 'processed').length,
-      paid: filtered.filter(p => p.status === 'paid').length
+      paid: filtered.filter(p => p.status === 'paid').length,
+      total: filtered.length
     };
 
     res.json({
@@ -109,11 +111,11 @@ router.post('/create', async (req: Request, res: Response) => {
       return res.status(409).json({ error: 'Payroll record already exists for this teacher and month' });
     }
 
-    const totalDeductions = deductions.reduce((sum, d) => sum + d.amount, 0);
-    const totalAllowances = allowances.reduce((sum, a) => sum + a.amount, 0);
+    const totalDeductions = deductions.reduce((sum: number, d: any) => sum + d.amount, 0);
+    const totalAllowances = allowances.reduce((sum: number, a: any) => sum + a.amount, 0);
     const netSalary = grossSalary + totalAllowances - totalDeductions;
 
-    const payrollId = id('payroll');
+    const payrollId = uuidv4();
     const payrollRecord = {
       id: payrollId,
       teacherId,
@@ -390,7 +392,7 @@ router.post('/bulk-create', async (req: Request, res: Response) => {
           continue;
         }
 
-        const payrollId = id('payroll');
+        const payrollId = uuidv4();
         const payrollRecord = {
           id: payrollId,
           teacherId,
