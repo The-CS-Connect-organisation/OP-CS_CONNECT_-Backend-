@@ -1,15 +1,39 @@
 import { Router } from 'express';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 const router = Router();
+const dbPath = path.join(__dirname, '../../data/db.json');
+
+async function readDB() {
+  const dbData = await fs.readFile(dbPath, 'utf-8');
+  return JSON.parse(dbData);
+}
 
 // GET /api/students
-router.get('/', (req, res) => {
-  res.json({ message: 'Get students endpoint not implemented yet' });
+router.get('/', async (req, res) => {
+  try {
+    const db = await readDB();
+    const students = db.users.filter(user => user.role === 'student');
+    res.json(students);
+  } catch (error) {
+    res.status(500).json({ message: 'Error reading database' });
+  }
 });
 
 // GET /api/students/:id
-router.get('/:id', (req, res) => {
-  res.json({ message: `Get student ${req.params.id} endpoint not implemented yet` });
+router.get('/:id', async (req, res) => {
+  try {
+    const db = await readDB();
+    const student = db.users.find(user => user.id === req.params.id && user.role === 'student');
+    if (student) {
+      res.json(student);
+    } else {
+      res.status(404).json({ message: 'Student not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Error reading database' });
+  }
 });
 
 // GET /api/students/:id/grades
