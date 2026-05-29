@@ -34,7 +34,7 @@ async function readDB(): Promise<DB> {
       return JSON.parse(dbData) as DB;
     } catch (err) {
       lastError = err;
-      console.log('Failed to read from:', tryPath, 'Error:', err.message);
+      console.log('Failed to read from:', tryPath, 'Error:', (err as Error).message);
     }
   }
   throw lastError;
