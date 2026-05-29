@@ -3,7 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 
 const router = Router();
-const dbPath = path.join(__dirname, '../../data/db.json');
+const dbPath = path.resolve(process.cwd(), 'data/db.json');
 
 async function readDB() {
   const dbData = await fs.readFile(dbPath, 'utf-8');
