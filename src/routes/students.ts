@@ -15,13 +15,15 @@ interface DB {
 }
 
 const router = Router();
-// Try multiple possible paths to find db.json, works in all environments
+// Try multiple possible paths to find db.json, works in all environments (including Render!)
 const possibleDbPaths = [
   path.join(process.cwd(), 'src/data/db.json'),
   path.join(process.cwd(), 'dist/data/db.json'),
+  path.join(process.cwd(), 'src/src/data/db.json'), // Render's project root has src folder inside
   path.join(__dirname, '../data/db.json'),
   path.join(__dirname, '../../src/data/db.json'),
-  path.join(__dirname, '../../dist/data/db.json')
+  path.join(__dirname, '../../dist/data/db.json'),
+  path.join('/opt/render/project/src/src/data/db.json') // Hardcode Render's path just in case
 ];
 
 async function readDB(): Promise<DB> {
