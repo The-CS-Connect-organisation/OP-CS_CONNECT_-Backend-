@@ -2,12 +2,24 @@ import { Router } from 'express';
 import { promises as fs } from 'fs';
 import path from 'path';
 
+// Define interfaces for our data structure to satisfy the strict compiler
+interface User {
+  id: string;
+  role: string;
+  [key: string]: any; // Allow other properties
+}
+
+interface DB {
+  users: User[];
+  [key: string]: any; // Allow other top-level keys
+}
+
 const router = Router();
 const dbPath = path.resolve(process.cwd(), 'data/db.json');
 
-async function readDB() {
+async function readDB(): Promise<DB> {
   const dbData = await fs.readFile(dbPath, 'utf-8');
-  return JSON.parse(dbData);
+  return JSON.parse(dbData) as DB;
 }
 
 // GET /api/students
@@ -17,6 +29,7 @@ router.get('/', async (req, res) => {
     const students = db.users.filter(user => user.role === 'student');
     res.json(students);
   } catch (error) {
+    console.error('Error in /api/students:', error);
     res.status(500).json({ message: 'Error reading database' });
   }
 });
@@ -32,6 +45,7 @@ router.get('/:id', async (req, res) => {
       res.status(404).json({ message: 'Student not found' });
     }
   } catch (error) {
+    console.error(`Error in /api/students/${req.params.id}:`, error);
     res.status(500).json({ message: 'Error reading database' });
   }
 });
