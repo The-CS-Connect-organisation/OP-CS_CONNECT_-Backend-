@@ -1,10 +1,10 @@
 
 {
   "users": [
-    { "id": "s1", "name": "Aarav Sharma", "email": "aarav@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-A", "rollNo": "001", "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face", "gpa": 3.8, "attendance": 94, "feesPaid": true },
-    { "id": "s2", "name": "Priya Patel", "email": "priya@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-A", "rollNo": "002", "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face", "gpa": 3.9, "attendance": 97, "feesPaid": true },
-    { "id": "s3", "name": "Rohan Kumar", "email": "rohan@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-B", "rollNo": "003", "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face", "gpa": 3.2, "attendance": 85, "feesPaid": false },
-    { "id": "s4", "name": "Ananya Singh", "email": "ananya@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-B", "rollNo": "004", "avatar": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face", "gpa": 3.6, "attendance": 91, "feesPaid": true },
+    { "id": "u1", "name": "Aarav Sharma", "email": "aarav@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-A", "rollNo": "001", "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face", "gpa": 3.8, "attendance": 94, "feesPaid": true },
+    { "id": "u2", "name": "Priya Patel", "email": "priya@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-A", "rollNo": "002", "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face", "gpa": 3.9, "attendance": 97, "feesPaid": true },
+    { "id": "u3", "name": "Rohan Kumar", "email": "rohan@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-B", "rollNo": "003", "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face", "gpa": 3.2, "attendance": 85, "feesPaid": false },
+    { "id": "u4", "name": "Ananya Singh", "email": "ananya@eduvault.ai", "password": "demo1234", "role": "student", "class": "10-B", "rollNo": "004", "avatar": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face", "gpa": 3.6, "attendance": 91, "feesPaid": true },
     { "id": "t1", "name": "Dr. Rajesh Gupta", "email": "rajesh@eduvault.ai", "password": "demo1234", "role": "teacher", "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face", "subjects": ["Mathematics", "Physics", "Computer Science"], "classes": ["10-A", "10-B"], "rating": 4.8 },
     { "id": "t2", "name": "Prof. Sunita Verma", "email": "sunita@eduvault.ai", "password": "demo1234", "role": "teacher", "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face", "subjects": ["Chemistry", "Biology", "English"], "classes": ["10-A", "10-B"], "rating": 4.6 },
     { "id": "a1", "name": "Principal Meera", "email": "meera@eduvault.ai", "password": "demo1234", "role": "admin", "avatar": "https://images.unsplash.com/photo-1580894732444-8ecded7900cd?w=150&h=150&fit=crop&crop=face" },
@@ -21,16 +21,16 @@
   ],
   "assignments": [
     { "id": "a1", "title": "Quadratic Equations Worksheet", "subjectId": "sub1", "class": "10-A", "dueDate": "2025-01-20", "status": "pending", "maxMarks": 50, "description": "Solve all problems from Chapter 5", "submissions": [] },
-    { "id": "a2", "title": "Physics Lab Report", "subjectId": "sub2", "class": "10-A", "dueDate": "2025-01-18", "status": "submitted", "maxMarks": 30, "description": "Write lab report for Ohms Law experiment", "submissions": [{ "studentId": "s1", "scoredMarks": 27, "feedback": "Good work on the analysis" }, { "studentId": "s2", "scoredMarks": 28 }] },
+    { "id": "a2", "title": "Physics Lab Report", "subjectId": "sub2", "class": "10-A", "dueDate": "2025-01-18", "status": "submitted", "maxMarks": 30, "description": "Write lab report for Ohms Law experiment", "submissions": [{ "studentId": "u1", "scoredMarks": 27, "feedback": "Good work on the analysis" }, { "studentId": "u2", "scoredMarks": 28 }] },
     { "id": "a3", "title": "Organic Chemistry Notes", "subjectId": "sub4", "class": "10-A", "dueDate": "2025-01-22", "status": "pending", "maxMarks": 20, "description": "Prepare comprehensive notes on alkanes", "submissions": [] },
-    { "id": "a4", "title": "Essay: Modern Poetry", "subjectId": "sub6", "class": "10-A", "dueDate": "2025-01-15", "status": "graded", "maxMarks": 40, "description": "Write a 1000-word essay on modern Indian poetry", "submissions": [{ "studentId": "s1", "scoredMarks": 36 }, { "studentId": "s2", "scoredMarks": 38 }] },
+    { "id": "a4", "title": "Essay: Modern Poetry", "subjectId": "sub6", "class": "10-A", "dueDate": "2025-01-15", "status": "graded", "maxMarks": 40, "description": "Write a 1000-word essay on modern Indian poetry", "submissions": [{ "studentId": "u1", "scoredMarks": 36 }, { "studentId": "u2", "scoredMarks": 38 }] },
     { "id": "a5", "title": "Data Structures Assignment", "subjectId": "sub3", "class": "10-B", "dueDate": "2025-01-25", "status": "pending", "maxMarks": 60, "description": "Implement linked list and binary tree", "submissions": [] },
-    { "id": "a6", "title": "Cell Biology Diagram", "subjectId": "sub5", "class": "10-B", "dueDate": "2025-01-17", "status": "late", "maxMarks": 25, "description": "Draw and label cell organelles", "submissions": [{ "studentId": "s3", "scoredMarks": 18 }] },
+    { "id": "a6", "title": "Cell Biology Diagram", "subjectId": "sub5", "class": "10-B", "dueDate": "2025-01-17", "status": "late", "maxMarks": 25, "description": "Draw and label cell organelles", "submissions": [{ "studentId": "u3", "scoredMarks": 18 }] },
     { "id": "a7", "title": "Trigonometry Problems", "subjectId": "sub1", "class": "10-B", "dueDate": "2025-01-23", "status": "pending", "maxMarks": 40, "description": "Solve trigonometric identities", "submissions": [] },
-    { "id": "a8", "title": "English Comprehension", "subjectId": "sub6", "class": "10-B", "dueDate": "2025-01-19", "status": "graded", "maxMarks": 30, "description": "Read and answer questions on Chapter 8", "submissions": [{ "studentId": "s3", "scoredMarks": 25 }, { "studentId": "s4", "scoredMarks": 27 }] }
+    { "id": "a8", "title": "English Comprehension", "subjectId": "sub6", "class": "10-B", "dueDate": "2025-01-19", "status": "graded", "maxMarks": 30, "description": "Read and answer questions on Chapter 8", "submissions": [{ "studentId": "u3", "scoredMarks": 25 }, { "studentId": "u4", "scoredMarks": 27 }] }
   ],
   "grades": {
-    "s1": [
+    "u1": [
       { "subjectId": "sub1", "subject": "Mathematics", "midTerm": 85, "final": 92, "assignments": 88, "overall": 89, "grade": "A", "trend": "up" },
       { "subjectId": "sub2", "subject": "Physics", "midTerm": 78, "final": 82, "assignments": 90, "overall": 83, "grade": "B+", "trend": "up" },
       { "subjectId": "sub4", "subject": "Chemistry", "midTerm": 90, "final": 88, "assignments": 85, "overall": 88, "grade": "A", "trend": "stable" },
@@ -38,7 +38,7 @@
       { "subjectId": "sub5", "subject": "Biology", "midTerm": 75, "final": 80, "assignments": 78, "overall": 78, "grade": "B+", "trend": "down" },
       { "subjectId": "sub3", "subject": "Computer Science", "midTerm": 95, "final": 98, "assignments": 96, "overall": 97, "grade": "A+", "trend": "up" }
     ],
-    "s2": [
+    "u2": [
       { "subjectId": "sub1", "subject": "Mathematics", "midTerm": 92, "final": 95, "assignments": 90, "overall": 93, "grade": "A+", "trend": "up" },
       { "subjectId": "sub2", "subject": "Physics", "midTerm": 88, "final": 91, "assignments": 87, "overall": 89, "grade": "A", "trend": "up" },
       { "subjectId": "sub4", "subject": "Chemistry", "midTerm": 85, "final": 90, "assignments": 88, "overall": 88, "grade": "A", "trend": "up" },
@@ -46,7 +46,7 @@
       { "subjectId": "sub5", "subject": "Biology", "midTerm": 82, "final": 85, "assignments": 80, "overall": 83, "grade": "B+", "trend": "up" },
       { "subjectId": "sub3", "subject": "Computer Science", "midTerm": 90, "final": 93, "assignments": 92, "overall": 92, "grade": "A", "trend": "up" }
     ],
-    "s3": [
+    "u3": [
       { "subjectId": "sub1", "subject": "Mathematics", "midTerm": 65, "final": 72, "assignments": 70, "overall": 69, "grade": "C+", "trend": "up" },
       { "subjectId": "sub2", "subject": "Physics", "midTerm": 70, "final": 68, "assignments": 75, "overall": 71, "grade": "B-", "trend": "down" },
       { "subjectId": "sub4", "subject": "Chemistry", "midTerm": 78, "final": 75, "assignments": 72, "overall": 75, "grade": "B", "trend": "down" },
@@ -54,7 +54,7 @@
       { "subjectId": "sub5", "subject": "Biology", "midTerm": 72, "final": 70, "assignments": 68, "overall": 70, "grade": "B-", "trend": "down" },
       { "subjectId": "sub3", "subject": "Computer Science", "midTerm": 85, "final": 88, "assignments": 82, "overall": 85, "grade": "A-", "trend": "up" }
     ],
-    "s4": [
+    "u4": [
       { "subjectId": "sub1", "subject": "Mathematics", "midTerm": 80, "final": 85, "assignments": 82, "overall": 82, "grade": "B+", "trend": "up" },
       { "subjectId": "sub2", "subject": "Physics", "midTerm": 75, "final": 78, "assignments": 80, "overall": 78, "grade": "B+", "trend": "up" },
       { "subjectId": "sub4", "subject": "Chemistry", "midTerm": 88, "final": 85, "assignments": 90, "overall": 88, "grade": "A", "trend": "stable" },
@@ -64,7 +64,7 @@
     ]
   },
   "attendance": {
-    "s1": [
+    "u1": [
       { "month": "Aug", "present": 22, "absent": 2, "late": 1, "percentage": 88 },
       { "month": "Sep", "present": 20, "absent": 3, "late": 2, "percentage": 80 },
       { "month": "Oct", "present": 23, "absent": 1, "late": 0, "percentage": 96 },
@@ -72,7 +72,7 @@
       { "month": "Dec", "present": 19, "absent": 4, "late": 2, "percentage": 76 },
       { "month": "Jan", "present": 15, "absent": 1, "late": 0, "percentage": 94 }
     ],
-    "s2": [
+    "u2": [
       { "month": "Aug", "present": 24, "absent": 0, "late": 1, "percentage": 96 },
       { "month": "Sep", "present": 22, "absent": 1, "late": 2, "percentage": 88 },
       { "month": "Oct", "present": 24, "absent": 0, "late": 0, "percentage": 100 },
@@ -80,7 +80,7 @@
       { "month": "Dec", "present": 22, "absent": 1, "late": 2, "percentage": 88 },
       { "month": "Jan", "present": 16, "absent": 0, "late": 0, "percentage": 100 }
     ],
-    "s3": [
+    "u3": [
       { "month": "Aug", "present": 18, "absent": 6, "late": 1, "percentage": 72 },
       { "month": "Sep", "present": 17, "absent": 6, "late": 2, "percentage": 68 },
       { "month": "Oct", "present": 20, "absent": 4, "late": 0, "percentage": 83 },
@@ -88,7 +88,7 @@
       { "month": "Dec", "present": 15, "absent": 8, "late": 2, "percentage": 60 },
       { "month": "Jan", "present": 13, "absent": 3, "late": 0, "percentage": 81 }
     ],
-    "s4": [
+    "u4": [
       { "month": "Aug", "present": 21, "absent": 3, "late": 1, "percentage": 84 },
       { "month": "Sep", "present": 20, "absent": 3, "late": 2, "percentage": 80 },
       { "month": "Oct", "present": 22, "absent": 2, "late": 0, "percentage": 92 },
