@@ -4,7 +4,7 @@
   "description": "EduVault AI Backend - Firebase Cloud Functions for Railway",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && xcopy /E /I src\\data dist\\data",
     "postinstall": "npm run build",
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn src/index.ts"
