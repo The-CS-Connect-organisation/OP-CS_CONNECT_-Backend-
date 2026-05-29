@@ -18,6 +18,9 @@ const router = Router();
 const dbPath = path.join(__dirname, '../data/db.json');
 
 async function readDB(): Promise<DB> {
+  console.log('Current __dirname:', __dirname);
+  console.log('Resolved dbPath:', dbPath);
+  console.log('Files in __dirname:', await fs.readdir(__dirname));
   const dbData = await fs.readFile(dbPath, 'utf-8');
   return JSON.parse(dbData) as DB;
 }
