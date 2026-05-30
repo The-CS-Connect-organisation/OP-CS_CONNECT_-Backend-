@@ -1,12 +1,12 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-const DB_URL = process.env.FIREBASE_DATABASE_URL || 'https://vnthhh-7b829-default-rtdb.asia-southeast1.firebasedatabase.app';
+const DB_URL = process.env.FIREBASE_DATABASE_URL || 'https://schoolsync-op-csconnect-default-rtdb.asia-southeast1.firebasedatabase.app';
 const DB_SECRET = process.env.FIREBASE_DATABASE_SECRET || '';
 
 export async function getData(path: string): Promise<any> {
   try {
-    const res = await fetch(`${DB_URL}/${path}.json?auth=${DB_SECRET}`);
+    const res = await fetch(`${DB_URL}/${path}.json`);
     if (!res.ok) throw new Error(`Firebase GET ${path} failed: ${res.status}`);
     return res.json();
   } catch (err) {
@@ -17,7 +17,7 @@ export async function getData(path: string): Promise<any> {
 
 export async function setData(path: string, value: any): Promise<void> {
   try {
-    const res = await fetch(`${DB_URL}/${path}.json?auth=${DB_SECRET}`, {
+    const res = await fetch(`${DB_URL}/${path}.json`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(value),
@@ -30,7 +30,7 @@ export async function setData(path: string, value: any): Promise<void> {
 
 export async function pushData(basePath: string, value: any): Promise<string> {
   try {
-    const res = await fetch(`${DB_URL}/${basePath}.json?auth=${DB_SECRET}`, {
+    const res = await fetch(`${DB_URL}/${basePath}.json`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(value),
@@ -46,7 +46,7 @@ export async function pushData(basePath: string, value: any): Promise<string> {
 
 export async function removeData(path: string): Promise<void> {
   try {
-    await fetch(`${DB_URL}/${path}.json?auth=${DB_SECRET}`, { method: 'DELETE' });
+    await fetch(`${DB_URL}/${path}.json`, { method: 'DELETE' });
   } catch (err) {
     console.error(`[Firebase] removeData(${path}):`, (err as Error).message);
   }
