@@ -80,28 +80,23 @@ async function removeData(path: string): Promise<void> {
 
 // Middleware
 const corsOptions = {
-  origin: 'https://the-cs-connect-organisation.github.io',
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    const allowedOrigins = ['https://the-cs-connect-organisation.github.io'];
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      console.log(`[CORS] Origin ${origin} allowed.`);
+      callback(null, true);
+    } else {
+      console.error(`[CORS] Origin ${origin} blocked by CORS.`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
+  credentials: true, // Allow cookies to be sent
   optionsSuccessStatus: 200,
 };
 
-// Handle preflight requests explicitly
-app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', corsOptions.origin);
-    res.header('Access-Control-Allow-Methods', corsOptions.methods.join(','));
-    res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(','));
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
-
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
-app.options('/api/auth/login', cors(corsOptions)); // Explicit pre-flight for login route
-app.options('/', cors(corsOptions)); // Explicit pre-flight for root path
 app.use(express.json({ limit: '10mb' }));
 
 // Phase 1 + 2 Route Modules
