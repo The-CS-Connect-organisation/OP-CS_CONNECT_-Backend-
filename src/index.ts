@@ -79,17 +79,9 @@ async function removeData(path: string): Promise<void> {
 }
 
 // Middleware
+console.log('[CORS] Applying CORS middleware...');
 const corsOptions = {
-  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    const allowedOrigins = ['https://the-cs-connect-organisation.github.io'];
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      console.log(`[CORS] Origin ${origin} allowed.`);
-      callback(null, true);
-    } else {
-      console.error(`[CORS] Origin ${origin} blocked by CORS.`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: 'https://the-cs-connect-organisation.github.io',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
   credentials: true, // Allow cookies to be sent
@@ -97,6 +89,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
 app.use(express.json({ limit: '10mb' }));
 
 // Phase 1 + 2 Route Modules
