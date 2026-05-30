@@ -2,8 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import attendanceRoutes from './routes/attendance';
-import schedulingRoutes from './routes/scheduling';
-import sisRoutes from './routes/sis';
+import schedulingRoutes from './routes/scheduling';\import sisRoutes from './routes/sis';
 import examsRoutes from './routes/exams';
 import classroomRoutes from './routes/classroom';
 import financeRoutes from './routes/finance';
@@ -2399,7 +2398,8 @@ app.delete('/api/bus/assignments/:id', async (req, res) => {
 
 // Start server
 app.listen(process.env.PORT || PORT, () => {
-  console.log(`EduVault AI Backend running on port ${PORT}`);
+  const actualPort = process.env.PORT || PORT;
+  console.log(`EduVault AI Backend running on port ${actualPort}`);
   console.log(`Firebase RTDB: ${process.env.FIREBASE_DATABASE_URL}`);
   console.log(`API endpoints ready at http://localhost:${PORT}/api/`);
   console.log(`POST /api/seed to populate the database`);
