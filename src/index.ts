@@ -33,6 +33,12 @@ import authRoutes from './routes/auth';
 dotenv.config();
 
 const app = express();
+
+// Request Logger - Add this at the very top
+app.use((req, res, next) => {
+  console.log(`[Request Logger] Method: ${req.method}, Path: ${req.path}`);
+  next();
+});
 const PORT = process.env.PORT || 3001;
 
 // Firebase RTDB REST API (credentials from environment)
