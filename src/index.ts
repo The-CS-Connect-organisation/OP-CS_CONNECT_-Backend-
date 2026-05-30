@@ -89,6 +89,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
 app.options('/api/auth/login', cors(corsOptions)); // Explicit pre-flight for login route
+app.options('/', cors(corsOptions)); // Explicit pre-flight for root path
 app.use(express.json({ limit: '10mb' }));
 
 // Phase 1 + 2 Route Modules
