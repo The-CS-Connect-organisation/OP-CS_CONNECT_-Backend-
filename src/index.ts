@@ -34,13 +34,7 @@ dotenv.config();
 
 const app = express();
 
-// Request Logger - Add this at the very top
-app.use((req, res, next) => {
-  console.log(`[Request Logger] Method: ${req.method}, Path: ${req.path}`);
-  next();
-});
-
-// Manual CORS headers (fallback)
+// Manual CORS headers - MUST BE FIRST MIDDLEWARE!
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -50,6 +44,12 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
   }
+  next();
+});
+
+// Request Logger
+app.use((req, res, next) => {
+  console.log(`[Request Logger] Method: ${req.method}, Path: ${req.path}`);
   next();
 });
 
