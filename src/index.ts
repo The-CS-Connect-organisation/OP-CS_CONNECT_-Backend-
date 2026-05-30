@@ -86,6 +86,18 @@ const corsOptions = {
   optionsSuccessStatus: 200,
 };
 
+// Handle preflight requests explicitly
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', corsOptions.origin);
+    res.header('Access-Control-Allow-Methods', corsOptions.methods.join(','));
+    res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(','));
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
 app.options('/api/auth/login', cors(corsOptions)); // Explicit pre-flight for login route
