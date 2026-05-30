@@ -19,7 +19,7 @@ import disciplineRoutes from './routes/discipline';
 import activitiesRoutes from './routes/activities';
 import portfolioRoutes from './routes/portfolio';
 import enrolmentRoutes from './routes/enrolment';
-// Phase 4 Route Modules
+// Phase 4 Route Modules 
 import facilitiesRoutes from './routes/facilities';
 import transportRoutes from './routes/transport';
 import foodServiceRoutes from './routes/food-service';
@@ -79,6 +79,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
 app.use(express.json({ limit: '10mb' }));
 
 // Phase 1 + 2 Route Modules
