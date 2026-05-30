@@ -28,6 +28,7 @@ import alumniRoutes from './routes/alumni';
 import platformRoutes from './routes/platform';
 import circularRoutes from './routes/circulars';
 import announcementRoutes from './routes/announcements';
+import authRoutes from './routes/auth';
 
 dotenv.config();
 

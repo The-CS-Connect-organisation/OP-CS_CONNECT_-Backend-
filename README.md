@@ -43,7 +43,7 @@ This project taught us more than any classroom ever could:
 - **5 utility functions** — `getData()`, `setData()`, `removeData()`, `pushData()`, `listData()` in `firebase.ts`. Every route uses the same 5 functions.
 - **Full ERP features** — chart of accounts, budgets, invoices, payments, expenses, purchase orders, products, clients, leads, orders.
 - **One-call seed** — `POST /api/seed` creates 12 users, 6 subjects, 8 assignments, and much more.
-- **Docker-ready** — multi-stage build, port 5000, works on Railway and Render.
+- **Docker-ready** — multi-stage build, port 5000, works on Render.
 - **No ORM** — just raw Firebase REST with `fetch()` and JSON. We kept it simple.
 
 ---
@@ -72,7 +72,7 @@ PDF Generation   → html-pdf
 Dev Server       → ts-node-dev with hot reload
 Build Tool       → TypeScript compiler (tsc)
 Container        → Docker (multi-stage, Node 20 Alpine)
-Deployment       → Railway / Render
+Deployment       → Render
 ```
 
 ---

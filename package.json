@@ -1,7 +1,7 @@
 {
   "name": "eduvault-backend",
   "version": "1.0.0",
-  "description": "EduVault AI Backend - Firebase Cloud Functions for Railway",
+  "description": "EduVault AI Backend - Firebase Cloud Functions for Render",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc && cpy src/data dist --recursive",
