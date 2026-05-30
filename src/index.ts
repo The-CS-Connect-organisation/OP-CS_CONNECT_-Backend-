@@ -39,6 +39,20 @@ app.use((req, res, next) => {
   console.log(`[Request Logger] Method: ${req.method}, Path: ${req.path}`);
   next();
 });
+
+// Manual CORS headers (fallback)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-user-id');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 const PORT = process.env.PORT || 3001;
 
 // Firebase RTDB REST API (credentials from environment)
