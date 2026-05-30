@@ -88,6 +88,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
+app.options('/api/auth/login', cors(corsOptions)); // Explicit pre-flight for login route
 app.use(express.json({ limit: '10mb' }));
 
 // Phase 1 + 2 Route Modules
@@ -2397,7 +2398,7 @@ app.delete('/api/bus/assignments/:id', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(process.env.PORT || PORT, () => {
   console.log(`EduVault AI Backend running on port ${PORT}`);
   console.log(`Firebase RTDB: ${process.env.FIREBASE_DATABASE_URL}`);
   console.log(`API endpoints ready at http://localhost:${PORT}/api/`);
