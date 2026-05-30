@@ -92,6 +92,15 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
 app.use(express.json({ limit: '10mb' }));
 
+// Temporary catch-all OPTIONS route for debugging Render proxy issues
+app.options('/*', (req, res) => {
+  console.log(`[DEBUG] Catch-all OPTIONS hit for path: ${req.path}`);
+  res.header('Access-Control-Allow-Origin', 'https://the-cs-connect-organisation.github.io');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,x-user-id');
+  res.sendStatus(200);
+});
+
 // Phase 1 + 2 Route Modules
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/scheduling', schedulingRoutes);
