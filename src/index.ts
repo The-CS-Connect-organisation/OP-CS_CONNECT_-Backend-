@@ -92,19 +92,6 @@ async function removeData(path: string): Promise<void> {
   }
 }
 
-// Middleware
-console.log('[CORS] Applying CORS middleware...');
-console.log('[DEBUG] Fresh backend build loaded! CORS headers active!');
-const corsOptions = {
-  origin: true, // Allow all origins for testing
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
-  credentials: true, // Allow cookies to be sent
-  optionsSuccessStatus: 200,
-};
-
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
 app.use(express.json({ limit: '10mb' }));
 
 // Phase 1 + 2 Route Modules
