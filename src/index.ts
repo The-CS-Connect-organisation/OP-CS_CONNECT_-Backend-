@@ -73,7 +73,12 @@ async function removeData(path: string): Promise<void> {
 }
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: 'https://the-cs-connect-organisation.github.io',
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 
 // Phase 1 + 2 Route Modules
@@ -106,6 +111,7 @@ app.use('/api/alumni', alumniRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/circulars', circularRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/auth', authRoutes);
 // Helper: safe user (remove password)
 function safeUser(u: any) {
   if (!u) return null;
