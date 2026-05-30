@@ -6,8 +6,19 @@ const path = require('path');
 
 console.log('🚀 EduVault AI Backend - Universal Starter');
 
-// --- ALWAYS Build Step ---
-// Always rebuild EVERY time, don't skip!
+// --- ALWAYS Clean & Build Step ---
+// Clean dist folder first, then rebuild EVERY time
+const distPath = path.join(__dirname, 'dist');
+console.log("🧹 Cleaning dist folder...");
+try {
+  if (fs.existsSync(distPath)) {
+    fs.rmSync(distPath, { recursive: true, force: true });
+    console.log("✅ dist folder cleaned!");
+  }
+} catch (err) {
+  console.error("⚠️  Warning: Couldn't clean dist folder, continuing anyway...", err.message);
+}
+
 console.log("🔨 Building backend...");
 try {
   // Execute 'npm run build' synchronously.
