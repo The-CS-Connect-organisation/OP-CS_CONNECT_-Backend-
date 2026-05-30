@@ -138,7 +138,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 // ==================== SEED DATA ====================
-app.post('/api/seed', async (_req, res) => {
+app.all('/api/seed', async (_req, res) => {
   try {
     const seedData = {
       users: [
