@@ -81,6 +81,8 @@ async function removeData(path: string): Promise<void> {
 // Middleware
 const corsOptions = {
   origin: 'https://the-cs-connect-organisation.github.io',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
   optionsSuccessStatus: 200,
 };
 
