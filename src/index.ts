@@ -140,6 +140,7 @@ app.get('/api/health', (_req, res) => {
 // ==================== SEED DATA ====================
 app.all('/api/seed', async (_req, res) => {
   try {
+    console.log('[Seed] Starting database seed...');
     const seedData = {
       users: [
         { id: "u1", name: "Aarav Sharma", email: "aarav@eduvault.ai", password: "demo1234", role: "student", class: "10-A", subjects: ["Math", "Physics", "Chemistry", "English", "CS"], gpa: 3.8, attendance: 92, feesPaid: true, routeId: "r1", avatar: "AS", avatarUrl: "https://randomuser.me/api/portraits/men/32.jpg" },
@@ -460,10 +461,11 @@ app.all('/api/seed', async (_req, res) => {
       ]
     };
     await setData('/', seedData);
+    console.log('[Seed] Database seeded SUCCESSFULLY!');
     res.json({ success: true, message: 'Database seeded successfully' });
   } catch (error) {
-    console.error('Seed error:', error);
-    res.status(500).json({ error: 'Seed failed' });
+    console.error('[Seed] Seed error:', error);
+    res.status(500).json({ error: 'Seed failed', details: error });
   }
 });
 
@@ -471,12 +473,21 @@ app.all('/api/seed', async (_req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('[Login] Attempting login with:', { email, password });
     const usersData = await getData('users') as any;
+    console.log('[Login] Users from Firebase:', usersData);
     const users = usersData ? (Object.values(usersData) as any[]) : [];
+    console.log('[Login] User array:', users);
     const user = users.find((u: any) => u.email === email && u.password === password);
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    console.log('[Login] Found user:', user);
+    if (!user) {
+      console.log('[Login] Invalid credentials!');
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    console.log('[Login] Login SUCCESSFUL!');
     res.json({ user: safeUser(user), token: `eduvault-token-${(user as any).id}-${Date.now()}` });
   } catch (error) {
+    console.error('[Login] Login error:', error);
     res.status(500).json({ error: 'Login failed' });
   }
 });
