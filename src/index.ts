@@ -94,6 +94,7 @@ async function removeData(path: string): Promise<void> {
 
 // Middleware
 console.log('[CORS] Applying CORS middleware...');
+console.log('[DEBUG] Fresh backend build loaded! CORS headers active!');
 const corsOptions = {
   origin: true, // Allow all origins for testing
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
