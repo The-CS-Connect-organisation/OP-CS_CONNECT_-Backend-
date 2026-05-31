@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getData, listData } from '../firebase';
+import { getData, listData, setData, pushData } from '../firebase';
 
 const router = Router();
 
@@ -28,28 +28,65 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.get('/:id/grades', (req, res) => {
-    res.json({ message: `Get student grades for ${req.params.id} endpoint not implemented yet` });
+router.get('/:id/grades', async (req, res) => {
+  try {
+    const grades = await getData(`grades/${req.params.id}`);
+    res.json(Array.isArray(grades) ? grades : (grades ? Object.values(grades) : []));
+  } catch (error) {
+    console.error(`Error in /api/students/${req.params.id}/grades:`, error);
+    res.status(500).json({ message: 'Error reading grades' });
+  }
 });
 
-router.get('/:id/attendance', (req, res) => {
-    res.json({ message: `Get student attendance for ${req.params.id} endpoint not implemented yet` });
+router.get('/:id/attendance', async (req, res) => {
+  try {
+    const attendance = await getData(`attendance/${req.params.id}`);
+    res.json(Array.isArray(attendance) ? attendance : (attendance ? Object.values(attendance) : []));
+  } catch (error) {
+    console.error(`Error in /api/students/${req.params.id}/attendance:`, error);
+    res.status(500).json({ message: 'Error reading attendance' });
+  }
 });
 
-router.get('/:id/fees', (req, res) => {
-    res.json({ message: `Get student fees for ${req.params.id} endpoint not implemented yet` });
+router.get('/:id/fees', async (req, res) => {
+  try {
+    const fees = await getData(`fees/${req.params.id}`);
+    res.json(Array.isArray(fees) ? fees : (fees ? Object.values(fees) : []));
+  } catch (error) {
+    console.error(`Error in /api/students/${req.params.id}/fees:`, error);
+    res.status(500).json({ message: 'Error reading fees' });
+  }
 });
 
-router.get('/:id/goals', (req, res) => {
-    res.json({ message: `Get student goals for ${req.params.id} endpoint not implemented yet` });
+router.get('/:id/goals', async (req, res) => {
+  try {
+    const goals = await getData(`goals/${req.params.id}`);
+    res.json(Array.isArray(goals) ? goals : (goals ? Object.values(goals) : []));
+  } catch (error) {
+    console.error(`Error in /api/students/${req.params.id}/goals:`, error);
+    res.json([]);
+  }
 });
 
-router.post('/:id/goals', (req, res) => {
-    res.json({ message: `Create goal for student ${req.params.id} endpoint not implemented yet` });
+router.post('/:id/goals', async (req, res) => {
+  try {
+    const goal = { ...req.body, id: `goal_${Date.now()}`, createdAt: new Date().toISOString() };
+    await pushData(`goals/${req.params.id}`, goal);
+    res.json(goal);
+  } catch (error) {
+    console.error(`Error creating goal for ${req.params.id}:`, error);
+    res.status(500).json({ message: 'Error creating goal' });
+  }
 });
 
-router.put('/:id/goals/:goalId', (req, res) => {
-    res.json({ message: `Update goal ${req.params.goalId} for student ${req.params.id} endpoint not implemented yet` });
+router.put('/:id/goals/:goalId', async (req, res) => {
+  try {
+    await setData(`goals/${req.params.id}/${req.params.goalId}`, req.body);
+    res.json({ success: true });
+  } catch (error) {
+    console.error(`Error updating goal ${req.params.goalId}:`, error);
+    res.status(500).json({ message: 'Error updating goal' });
+  }
 });
 
 export default router;
