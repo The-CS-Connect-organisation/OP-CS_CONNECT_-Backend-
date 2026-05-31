@@ -1,52 +1,12 @@
 import { Router } from 'express';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-// Define interfaces for our data structure to satisfy the strict compiler
-interface User {
-  id: string;
-  role: string;
-  [key: string]: any; // Allow other properties
-}
-
-interface DB {
-  users: User[];
-  [key: string]: any; // Allow other top-level keys
-}
+import { getData, listData } from '../firebase';
 
 const router = Router();
-// Try multiple possible paths to find db.json, works in all environments (including Render!)
-const possibleDbPaths = [
-  path.join(process.cwd(), 'src/data/db.json'),
-  path.join(process.cwd(), 'dist/data/db.json'),
-  path.join(process.cwd(), 'src/src/data/db.json'), // Render's project root has src folder inside
-  path.join(__dirname, '../data/db.json'),
-  path.join(__dirname, '../../src/data/db.json'),
-  path.join(__dirname, '../../dist/data/db.json'),
-  path.join('/opt/render/project/src/src/data/db.json') // Hardcode Render's path just in case
-];
 
-async function readDB(): Promise<DB> {
-  let lastError;
-  for (const tryPath of possibleDbPaths) {
-    try {
-      console.log('Trying to read db from:', tryPath);
-      const dbData = await fs.readFile(tryPath, 'utf-8');
-      console.log('Successfully read db from:', tryPath);
-      return JSON.parse(dbData) as DB;
-    } catch (err) {
-      lastError = err;
-      console.log('Failed to read from:', tryPath, 'Error:', (err as Error).message);
-    }
-  }
-  throw lastError;
-}
-
-// GET /api/students
 router.get('/', async (req, res) => {
   try {
-    const db = await readDB();
-    const students = db.users.filter(user => user.role === 'student');
+    const users = await listData('users');
+    const students = users.filter(u => u.role === 'student');
     res.json(students);
   } catch (error) {
     console.error('Error in /api/students:', error);
@@ -54,13 +14,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/students/:id
 router.get('/:id', async (req, res) => {
   try {
-    const db = await readDB();
-    const student = db.users.find(user => user.id === req.params.id && user.role === 'student');
-    if (student) {
-      res.json(student);
+    const user = await getData(`users/${req.params.id}`);
+    if (user && user.role === 'student') {
+      res.json(user);
     } else {
       res.status(404).json({ message: 'Student not found' });
     }
@@ -70,32 +28,26 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// GET /api/students/:id/grades
 router.get('/:id/grades', (req, res) => {
     res.json({ message: `Get student grades for ${req.params.id} endpoint not implemented yet` });
 });
 
-// GET /api/students/:id/attendance
 router.get('/:id/attendance', (req, res) => {
     res.json({ message: `Get student attendance for ${req.params.id} endpoint not implemented yet` });
 });
 
-// GET /api/students/:id/fees
 router.get('/:id/fees', (req, res) => {
     res.json({ message: `Get student fees for ${req.params.id} endpoint not implemented yet` });
 });
 
-// GET /api/students/:id/goals
 router.get('/:id/goals', (req, res) => {
     res.json({ message: `Get student goals for ${req.params.id} endpoint not implemented yet` });
 });
 
-// POST /api/students/:id/goals
 router.post('/:id/goals', (req, res) => {
     res.json({ message: `Create goal for student ${req.params.id} endpoint not implemented yet` });
 });
 
-// PUT /api/students/:id/goals/:goalId
 router.put('/:id/goals/:goalId', (req, res) => {
     res.json({ message: `Update goal ${req.params.goalId} for student ${req.params.id} endpoint not implemented yet` });
 });
