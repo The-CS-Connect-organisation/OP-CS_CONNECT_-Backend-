@@ -216,10 +216,34 @@ const buildSeedData = () => ({
     { id: "a8", title: "Trigonometry Problems", subjectId: "sub1", subject: "Mathematics", class: "10-B", dueDate: "2026-05-08", status: "completed", description: "Solve trigonometric identities", maxMarks: 50, submissions: [{ studentId: "u3", content: "Completed", scoredMarks: 40, feedback: "Good work", submittedAt: "2026-05-07T12:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 46, feedback: "Excellent", submittedAt: "2026-05-07T11:00:00Z" }] }
   ]),
   grades: {
-    u1: [{ subject: "Math", grade: "A", marks: 92 }, { subject: "Physics", grade: "A-", marks: 88 }, { subject: "Chemistry", grade: "B+", marks: 82 }, { subject: "English", grade: "A", marks: 90 }, { subject: "CS", grade: "A+", marks: 96 }],
-    u2: [{ subject: "Math", grade: "A+", marks: 95 }, { subject: "Physics", grade: "A", marks: 91 }, { subject: "Chemistry", grade: "A", marks: 89 }, { subject: "English", grade: "A+", marks: 94 }, { subject: "Biology", grade: "A", marks: 90 }],
-    u3: [{ subject: "Math", grade: "B+", marks: 78 }, { subject: "Physics", grade: "B", marks: 72 }, { subject: "Chemistry", grade: "A-", marks: 85 }, { subject: "English", grade: "B+", marks: 79 }, { subject: "CS", grade: "A-", marks: 86 }],
-    u4: [{ subject: "Math", grade: "A-", marks: 87 }, { subject: "Physics", grade: "B+", marks: 80 }, { subject: "Chemistry", grade: "A", marks: 88 }, { subject: "English", grade: "A", marks: 91 }, { subject: "Biology", grade: "A+", marks: 93 }]
+    u1: [
+      { subject: "Math", overall: 92, marks: 92, midTerm: 45, finalTerm: 47, grade: "A", trend: "up" },
+      { subject: "Physics", overall: 88, marks: 88, midTerm: 42, finalTerm: 46, grade: "A-", trend: "up" },
+      { subject: "Chemistry", overall: 82, marks: 82, midTerm: 40, finalTerm: 42, grade: "B+", trend: "down" },
+      { subject: "English", overall: 90, marks: 90, midTerm: 44, finalTerm: 46, grade: "A", trend: "up" },
+      { subject: "CS", overall: 96, marks: 96, midTerm: 48, finalTerm: 48, grade: "A+", trend: "up" }
+    ],
+    u2: [
+      { subject: "Math", overall: 95, marks: 95, midTerm: 47, finalTerm: 48, grade: "A+", trend: "up" },
+      { subject: "Physics", overall: 91, marks: 91, midTerm: 45, finalTerm: 46, grade: "A", trend: "up" },
+      { subject: "Chemistry", overall: 89, marks: 89, midTerm: 44, finalTerm: 45, grade: "A", trend: "up" },
+      { subject: "English", overall: 94, marks: 94, midTerm: 47, finalTerm: 47, grade: "A+", trend: "up" },
+      { subject: "Biology", overall: 90, marks: 90, midTerm: 45, finalTerm: 45, grade: "A", trend: "down" }
+    ],
+    u3: [
+      { subject: "Math", overall: 78, marks: 78, midTerm: 38, finalTerm: 40, grade: "B+", trend: "down" },
+      { subject: "Physics", overall: 72, marks: 72, midTerm: 35, finalTerm: 37, grade: "B", trend: "down" },
+      { subject: "Chemistry", overall: 85, marks: 85, midTerm: 42, finalTerm: 43, grade: "A-", trend: "up" },
+      { subject: "English", overall: 79, marks: 79, midTerm: 39, finalTerm: 40, grade: "B+", trend: "up" },
+      { subject: "CS", overall: 86, marks: 86, midTerm: 43, finalTerm: 43, grade: "A-", trend: "up" }
+    ],
+    u4: [
+      { subject: "Math", overall: 87, marks: 87, midTerm: 43, finalTerm: 44, grade: "A-", trend: "down" },
+      { subject: "Physics", overall: 80, marks: 80, midTerm: 40, finalTerm: 40, grade: "B+", trend: "up" },
+      { subject: "Chemistry", overall: 88, marks: 88, midTerm: 44, finalTerm: 44, grade: "A", trend: "up" },
+      { subject: "English", overall: 91, marks: 91, midTerm: 45, finalTerm: 46, grade: "A", trend: "up" },
+      { subject: "Biology", overall: 93, marks: 93, midTerm: 46, finalTerm: 47, grade: "A+", trend: "up" }
+    ]
   },
   attendance: {
     u1: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "absent" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }],
@@ -277,6 +301,59 @@ const buildSeedData = () => ({
       { id: "eq3", question: "A force of 10N accelerates a 2kg mass. Find acceleration", type: "short", answer: "5 m/s²" }
     ], maxScore: 5 }
   ]),
+  exams: toObj([
+    { id: "exam1", title: "Mid Term Mathematics", subjectId: "sub1", class: "10-A", date: "2026-05-20", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Mathematics - Algebra and Geometry" },
+    { id: "exam2", title: "Mid Term Physics", subjectId: "sub2", class: "10-A", date: "2026-05-22", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Physics - Mechanics" },
+    { id: "exam3", title: "Mid Term English", subjectId: "sub4", class: "10-A", date: "2026-05-24", totalMarks: 80, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for English - Grammar and Literature" },
+    { id: "exam4", title: "Mid Term Chemistry", subjectId: "sub3", class: "10-A", date: "2026-05-21", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Chemistry" },
+    { id: "exam5", title: "Mid Term CS", subjectId: "sub5", class: "10-A", date: "2026-05-23", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Computer Science" },
+    { id: "exam6", title: "Mid Term Mathematics", subjectId: "sub1", class: "10-B", date: "2026-05-20", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Mathematics" },
+    { id: "exam7", title: "Mid Term Physics", subjectId: "sub2", class: "10-B", date: "2026-05-22", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Physics" },
+    { id: "exam8", title: "Mid Term English", subjectId: "sub4", class: "10-B", date: "2026-05-24", totalMarks: 80, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for English" },
+    { id: "exam9", title: "Mid Term Biology", subjectId: "sub6", class: "10-B", date: "2026-05-23", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Biology" },
+    { id: "exam10", title: "Mid Term Chemistry", subjectId: "sub3", class: "10-B", date: "2026-05-21", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Chemistry" }
+  ]),
+  examResults: {
+    exam1: {
+      u1: { studentId: "u1", marks: 92, grade: "A", remarks: "Excellent work", enteredBy: "u5", enteredAt: "2026-05-21T10:00:00Z", status: "published" },
+      u2: { studentId: "u2", marks: 95, grade: "A+", remarks: "Outstanding", enteredBy: "u5", enteredAt: "2026-05-21T10:00:00Z", status: "published" }
+    },
+    exam2: {
+      u1: { studentId: "u1", marks: 88, grade: "A-", remarks: "Good", enteredBy: "u5", enteredAt: "2026-05-23T10:00:00Z", status: "published" },
+      u2: { studentId: "u2", marks: 91, grade: "A", remarks: "Very good", enteredBy: "u5", enteredAt: "2026-05-23T10:00:00Z", status: "published" }
+    },
+    exam3: {
+      u1: { studentId: "u1", marks: 72, grade: "A", remarks: "Good grammar", enteredBy: "u5", enteredAt: "2026-05-25T10:00:00Z", status: "published" },
+      u2: { studentId: "u2", marks: 75, grade: "A+", remarks: "Excellent", enteredBy: "u5", enteredAt: "2026-05-25T10:00:00Z", status: "published" }
+    },
+    exam4: {
+      u1: { studentId: "u1", marks: 82, grade: "B+", remarks: "Needs improvement in organic", enteredBy: "u5", enteredAt: "2026-05-22T10:00:00Z", status: "published" },
+      u2: { studentId: "u2", marks: 89, grade: "A", remarks: "Good", enteredBy: "u5", enteredAt: "2026-05-22T10:00:00Z", status: "published" }
+    },
+    exam5: {
+      u1: { studentId: "u1", marks: 96, grade: "A+", remarks: "Excellent programmer", enteredBy: "u5", enteredAt: "2026-05-24T10:00:00Z", status: "published" }
+    },
+    exam6: {
+      u3: { studentId: "u3", marks: 78, grade: "B+", remarks: "Fair", enteredBy: "u5", enteredAt: "2026-05-21T10:00:00Z", status: "published" },
+      u4: { studentId: "u4", marks: 87, grade: "A-", remarks: "Good", enteredBy: "u5", enteredAt: "2026-05-21T10:00:00Z", status: "published" }
+    },
+    exam7: {
+      u3: { studentId: "u3", marks: 72, grade: "B", remarks: "Needs practice", enteredBy: "u5", enteredAt: "2026-05-23T10:00:00Z", status: "published" },
+      u4: { studentId: "u4", marks: 80, grade: "B+", remarks: "Good", enteredBy: "u5", enteredAt: "2026-05-23T10:00:00Z", status: "published" }
+    },
+    exam8: {
+      u3: { studentId: "u3", marks: 63, grade: "B+", remarks: "Good essay", enteredBy: "u5", enteredAt: "2026-05-25T10:00:00Z", status: "published" },
+      u4: { studentId: "u4", marks: 73, grade: "A", remarks: "Excellent analysis", enteredBy: "u5", enteredAt: "2026-05-25T10:00:00Z", status: "published" }
+    },
+    exam9: {
+      u3: { studentId: "u3", marks: 86, grade: "A-", remarks: "Good", enteredBy: "u5", enteredAt: "2026-05-24T10:00:00Z", status: "published" },
+      u4: { studentId: "u4", marks: 93, grade: "A+", remarks: "Outstanding", enteredBy: "u5", enteredAt: "2026-05-24T10:00:00Z", status: "published" }
+    },
+    exam10: {
+      u3: { studentId: "u3", marks: 85, grade: "A-", remarks: "Good", enteredBy: "u5", enteredAt: "2026-05-22T10:00:00Z", status: "published" },
+      u4: { studentId: "u4", marks: 88, grade: "A", remarks: "Very good", enteredBy: "u5", enteredAt: "2026-05-22T10:00:00Z", status: "published" }
+    }
+  },
   chartOfAccounts: toObj([
     { id: "coa1", code: "1000", name: "Cash", type: "asset", normalBalance: "debit" },
     { id: "coa2", code: "2000", name: "Accounts Receivable", type: "asset", normalBalance: "debit" },
