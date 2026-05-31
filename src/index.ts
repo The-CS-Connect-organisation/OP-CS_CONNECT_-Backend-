@@ -2416,6 +2416,290 @@ app.delete('/api/bus/assignments/:id', async (req, res) => {
   }
 });
 
+// ==================== FRONTEND-COMPATIBLE ROUTE ALIASES ====================
+// These match what the frontend api.ts expects, redirecting to the correct data
+// without requiring frontend rebuilds.
+
+// --- Library Aliases ---
+app.get('/api/library/catalogue', async (_req, res) => {
+  try { const data = await getData('bookCatalogue'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch catalogue' }); }
+});
+app.post('/api/library/catalogue', async (req, res) => {
+  try { const item = { id: id('bk'), ...req.body, addedAt: new Date().toISOString() }; await setData(`bookCatalogue/${item.id}`, item); res.status(201).json(item); }
+  catch (e) { res.status(500).json({ error: 'Failed to add book' }); }
+});
+app.put('/api/library/catalogue/:id', async (req, res) => {
+  try { const existing = await getData(`bookCatalogue/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData(`bookCatalogue/${req.params.id}`, updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update book' }); }
+});
+app.delete('/api/library/catalogue/:id', async (req, res) => {
+  try { await removeData(`bookCatalogue/${req.params.id}`); res.json({ success: true }); }
+  catch (e) { res.status(500).json({ error: 'Failed to delete book' }); }
+});
+app.get('/api/library/holds', async (_req, res) => {
+  try { const data = await getData('bookHolds'); const all: any[] = []; if (data) { for (const v of Object.values(data) as any) { const holds = Object.values(v) as any[]; all.push(...holds); } } res.json(all.filter((h: any) => h.status === 'active')); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch holds' }); }
+});
+app.post('/api/library/holds', async (req, res) => {
+  try { const { bookId, studentId, studentName } = req.body; const book = await getData(`bookCatalogue/${bookId}`); if (!book) return res.status(404).json({ error: 'Book not found' }); const holds = await getData(`bookHolds/${bookId}`); const holdList = holds ? Object.values(holds) : []; if (holdList.some((h: any) => h.studentId === studentId && h.status === 'active')) return res.status(409).json({ error: 'Already have a hold' }); const hold = { id: id('bh'), bookId, studentId, studentName, bookTitle: book.title, status: 'active', placedAt: new Date().toISOString(), position: holdList.filter((h: any) => h.status === 'active').length + 1 }; await setData(`bookHolds/${bookId}/${hold.id}`, hold); await setData(`studentHolds/${studentId}/${hold.id}`, hold); res.status(201).json(hold); }
+  catch (e) { res.status(500).json({ error: 'Failed to place hold' }); }
+});
+app.get('/api/library/holds/:bookId', async (req, res) => {
+  try { const holds = await listData(`bookHolds/${req.params.bookId}`); res.json(holds.filter((h: any) => h.status === 'active').sort((a: any, b: any) => a.position - b.position)); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch holds' }); }
+});
+app.post('/api/library/holds/:id/fulfill', async (req, res) => {
+  try { const allData = await getData('bookHolds') as any; if (!allData) return res.status(404).json({ error: 'Hold not found' }); let found: any = null; let foundBookId = ''; for (const [bookId, holds] of Object.entries(allData) as any) { const hold = holds[req.params.id]; if (hold) { found = hold; foundBookId = bookId; break; } } if (!found) return res.status(404).json({ error: 'Hold not found' }); found.status = 'fulfilled'; found.fulfilledAt = new Date().toISOString(); await setData(`bookHolds/${foundBookId}/${req.params.id}`, found); const studentHold = await getData(`studentHolds/${found.studentId}/${req.params.id}`); if (studentHold) { studentHold.status = 'fulfilled'; await setData(`studentHolds/${found.studentId}/${req.params.id}`, studentHold); } const borrow = { id: id('bb'), bookId: foundBookId, bookTitle: found.bookTitle, studentId: found.studentId, studentName: found.studentName, borrowedDate: new Date().toISOString().split('T')[0], dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], status: 'borrowed' }; await setData(`borrowedBooks/${borrow.id}`, borrow); res.json({ hold: found, borrow }); }
+  catch (e) { res.status(500).json({ error: 'Failed to fulfill hold' }); }
+});
+app.get('/api/library/fines', async (_req, res) => {
+  try { const data = await getData('bookFines'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch fines' }); }
+});
+app.post('/api/library/fines', async (req, res) => {
+  try { const fine = { id: id('bf'), ...req.body, status: 'unpaid', calculatedAt: new Date().toISOString() }; await setData(`bookFines/${fine.id}`, fine); res.status(201).json(fine); }
+  catch (e) { res.status(500).json({ error: 'Failed to create fine' }); }
+});
+app.post('/api/library/fines/:id/pay', async (req, res) => {
+  try { const fine = await getData(`bookFines/${req.params.id}`); if (!fine) return res.status(404).json({ error: 'Fine not found' }); fine.status = 'paid'; fine.paidAt = new Date().toISOString(); fine.paidBy = req.body.paidBy; await setData(`bookFines/${req.params.id}`, fine); res.json(fine); }
+  catch (e) { res.status(500).json({ error: 'Failed to pay fine' }); }
+});
+app.get('/api/library/class-sets', async (_req, res) => {
+  try { const data = await getData('classSets'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch class sets' }); }
+});
+app.post('/api/library/class-sets', async (req, res) => {
+  try { const set = { id: id('cs'), ...req.body, createdAt: new Date().toISOString() }; await setData(`classSets/${set.id}`, set); res.status(201).json(set); }
+  catch (e) { res.status(500).json({ error: 'Failed to create class set' }); }
+});
+app.get('/api/library/reading-logs/:studentId', async (req, res) => {
+  try { const data = await getData('readingLogs'); const logs = data ? Object.values(data) : []; res.json(logs.filter((l: any) => l.studentId === req.params.studentId)); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch logs' }); }
+});
+app.post('/api/library/reading-logs', async (req, res) => {
+  try { const log = { id: id('rl'), ...req.body, loggedAt: new Date().toISOString() }; await setData(`readingLogs/${log.id}`, log); res.status(201).json(log); }
+  catch (e) { res.status(500).json({ error: 'Failed to log reading' }); }
+});
+app.get('/api/library/programmes', async (_req, res) => {
+  try { const data = await getData('readingProgrammes'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch programmes' }); }
+});
+app.post('/api/library/programmes', async (req, res) => {
+  try { const prog = { id: id('rp'), ...req.body, createdAt: new Date().toISOString() }; await setData(`readingProgrammes/${prog.id}`, prog); res.status(201).json(prog); }
+  catch (e) { res.status(500).json({ error: 'Failed to create programme' }); }
+});
+app.get('/api/library/reviews/:bookId', async (req, res) => {
+  try { const data = await getData('bookReviews'); const reviews = data ? Object.values(data) : []; res.json(reviews.filter((r: any) => r.bookId === req.params.bookId)); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch reviews' }); }
+});
+app.post('/api/library/reviews', async (req, res) => {
+  try { const review = { id: id('br'), ...req.body, createdAt: new Date().toISOString() }; await setData(`bookReviews/${review.id}`, review); res.status(201).json(review); }
+  catch (e) { res.status(500).json({ error: 'Failed to submit review' }); }
+});
+app.get('/api/library/ill', async (_req, res) => {
+  try { const data = await getData('interlibraryLoans'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch ILLs' }); }
+});
+app.post('/api/library/ill', async (req, res) => {
+  try { const loan = { id: id('ill'), ...req.body, status: 'requested', createdAt: new Date().toISOString() }; await setData(`interlibraryLoans/${loan.id}`, loan); res.status(201).json(loan); }
+  catch (e) { res.status(500).json({ error: 'Failed to create ILL' }); }
+});
+
+// --- Comms Aliases ---
+app.get('/api/comms/push', async (_req, res) => {
+  try { const data = await getData('notifications'); const all: any[] = []; if (data) { for (const v of Object.values(data) as any) { const items = Object.values(v) as any[]; all.push(...items); } } res.json(all.sort((a, b) => new Date(b.sentAt || b.timestamp).getTime() - new Date(a.sentAt || a.timestamp).getTime())); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch notifications' }); }
+});
+app.post('/api/comms/push', async (req, res) => {
+  try { const { userId, title, body, data: extData } = req.body; const n = { id: id('pn'), userId, title, body, data: extData || {}, sentAt: new Date().toISOString(), read: false }; await setData(`notifications/${userId}/${n.id}`, n); res.status(201).json(n); }
+  catch (e) { res.status(500).json({ error: 'Failed to send notification' }); }
+});
+app.get('/api/comms/emergency', async (_req, res) => {
+  try { const data = await getData('emergencyAlerts'); res.json(data ? Object.values(data).sort((a: any, b: any) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch alerts' }); }
+});
+app.post('/api/comms/emergency', async (req, res) => {
+  try { const alert = { id: id('ea'), ...req.body, status: 'active', sentAt: new Date().toISOString(), acknowledged: [] }; await setData(`emergencyAlerts/${alert.id}`, alert); const usersData = await getData('users') as any; if (usersData) { for (const user of Object.values(usersData) as any[]) { const n = { id: id('en'), title: '🚨 EMERGENCY: ' + (alert.title || 'Alert'), body: alert.message, type: 'emergency', sentAt: new Date().toISOString(), read: false, emergencyAlertId: alert.id }; await setData(`notifications/${user.id}/${n.id}`, n); } } res.status(201).json(alert); }
+  catch (e) { res.status(500).json({ error: 'Failed to send alert' }); }
+});
+app.get('/api/comms/moderation', async (req, res) => {
+  try { const data = await getData('moderationReports'); let reports = data ? Object.values(data) : []; const { status } = req.query; if (status) reports = reports.filter((r: any) => r.status === status); res.json(reports.sort((a: any, b: any) => new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime())); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch reports' }); }
+});
+app.put('/api/comms/moderation/:id', async (req, res) => {
+  try { const report = await getData(`moderationReports/${req.params.id}`); if (!report) return res.status(404).json({ error: 'Report not found' }); report.status = req.body.action === 'remove' ? 'removed' : 'dismissed'; report.reviewedBy = req.body.moderatedBy; report.reviewedAt = new Date().toISOString(); report.action = req.body.action; await setData(`moderationReports/${req.params.id}`, report); res.json(report); }
+  catch (e) { res.status(500).json({ error: 'Failed to review report' }); }
+});
+app.get('/api/comms/email', async (req, res) => {
+  try { const data = await getData('emailLog'); let emails = data ? Object.values(data) : []; const { status } = req.query; if (status) emails = emails.filter((e: any) => e.status === status); res.json(emails.sort((a: any, b: any) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch email log' }); }
+});
+app.post('/api/comms/email', async (req, res) => {
+  try { const { to, subject, body } = req.body; const email = { id: id('em'), to, subject, body, status: 'sent', sentAt: new Date().toISOString() }; await setData(`emailLog/${email.id}`, email); res.status(201).json(email); }
+  catch (e) { res.status(500).json({ error: 'Failed to send email' }); }
+});
+
+// --- HR Aliases ---
+app.post('/api/hr/staff', async (req, res) => {
+  try { const staff = { id: `u${Date.now()}`, ...req.body, createdAt: new Date().toISOString() }; await setData(`users/${staff.id}`, staff); res.status(201).json(staff); }
+  catch (e) { res.status(500).json({ error: 'Failed to create staff' }); }
+});
+app.put('/api/hr/staff/:id', async (req, res) => {
+  try { const existing = await getData(`users/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData(`users/${req.params.id}`, updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update staff' }); }
+});
+app.get('/api/hr/certifications/:staffId', async (req, res) => {
+  try { const data = await getData('certifications'); let certs = data ? Object.values(data) : []; certs = certs.filter((c: any) => c.userId === req.params.staffId); res.json(certs); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch certifications' }); }
+});
+app.post('/api/hr/certifications/:staffId', async (req, res) => {
+  try { const cert = { id: id('cert'), ...req.body, userId: req.params.staffId, createdAt: new Date().toISOString() }; await setData(`certifications/${cert.id}`, cert); res.status(201).json(cert); }
+  catch (e) { res.status(500).json({ error: 'Failed to add certification' }); }
+});
+app.get('/api/hr/appraisals/:staffId', async (req, res) => {
+  try { const data = await getData('appraisals'); let appraisals = data ? Object.values(data) : []; appraisals = appraisals.filter((a: any) => a.userId === req.params.staffId); res.json(appraisals); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch appraisals' }); }
+});
+app.post('/api/hr/appraisals/:staffId', async (req, res) => {
+  try { const appraisal = { id: id('appr'), ...req.body, userId: req.params.staffId, status: 'pending', createdAt: new Date().toISOString() }; await setData(`appraisals/${appraisal.id}`, appraisal); res.status(201).json(appraisal); }
+  catch (e) { res.status(500).json({ error: 'Failed to create appraisal' }); }
+});
+app.get('/api/hr/recruitment', async (_req, res) => {
+  try { const data = await getData('recruitmentJobs'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch jobs' }); }
+});
+app.post('/api/hr/recruitment', async (req, res) => {
+  try { const job = { id: id('job'), ...req.body, status: 'open', createdAt: new Date().toISOString() }; await setData(`recruitmentJobs/${job.id}`, job); res.status(201).json(job); }
+  catch (e) { res.status(500).json({ error: 'Failed to create job' }); }
+});
+app.put('/api/hr/recruitment/:id', async (req, res) => {
+  try { const app = await getData(`recruitmentApplications/${req.params.id}`); if (!app) return res.status(404).json({ error: 'Not found' }); app.status = req.body.status; app.updatedAt = new Date().toISOString(); await setData(`recruitmentApplications/${req.params.id}`, app); res.json(app); }
+  catch (e) { res.status(500).json({ error: 'Failed to update recruitment' }); }
+});
+app.get('/api/hr/onboarding', async (_req, res) => {
+  try { const data = await getData('onboardingTasks'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch tasks' }); }
+});
+app.post('/api/hr/onboarding', async (req, res) => {
+  try { const task = { id: id('obt'), ...req.body, completed: false, createdAt: new Date().toISOString() }; await setData(`onboardingTasks/${task.id}`, task); res.status(201).json(task); }
+  catch (e) { res.status(500).json({ error: 'Failed to create task' }); }
+});
+app.get('/api/hr/payroll', async (req, res) => {
+  try { const data = await getData('payslips'); let slips = data ? Object.values(data) : []; const { month } = req.query; if (month) slips = slips.filter((s: any) => s.period === month || s.month === month); res.json(slips); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch payslips' }); }
+});
+app.post('/api/hr/payroll', async (req, res) => {
+  try { const scale = { id: id('psc'), ...req.body, createdAt: new Date().toISOString() }; await setData(`salaryScales/${scale.id}`, scale); res.status(201).json(scale); }
+  catch (e) { res.status(500).json({ error: 'Failed to create salary scale' }); }
+});
+app.post('/api/hr/payroll/process/:month', async (req, res) => {
+  try { const { month, year, processedBy } = req.params; const staff = await listData('users'); const employees = staff.filter((u: any) => ['teacher', 'admin', 'coordinator', 'manager', 'librarian'].includes(u.role)); const scales = await listData('salaryScales'); const payslips: any[] = []; for (const emp of employees) { const scale = scales.find((s: any) => s.position === emp.position || s.role === emp.role); const baseSalary = scale?.baseSalary || 0; const allowances = scale?.allowances || 0; const deductions = scale?.deductions || 0; const netSalary = baseSalary + allowances - deductions; const payslip = { id: id('ps'), userId: emp.id, name: emp.name, position: emp.position || emp.role, month, year, baseSalary, allowances, deductions, netSalary, status: 'draft', processedBy, processedAt: new Date().toISOString() }; await setData(`payslips/${payslip.id}`, payslip); payslips.push(payslip); } res.json({ success: true, count: payslips.length, payslips }); }
+  catch (e) { res.status(500).json({ error: 'Failed to run payroll' }); }
+});
+app.post('/api/hr/leave/:id/approve', async (req, res) => {
+  try { const leave = await getData(`staffLeaves/${req.params.id}`); if (!leave) return res.status(404).json({ error: 'Leave not found' }); leave.status = 'approved'; leave.approvedBy = req.body.approvedBy; leave.approvedAt = new Date().toISOString(); await setData(`staffLeaves/${req.params.id}`, leave); const balances = await getData(`leaveBalances/${leave.userId}`) || {}; balances[leave.type || 'annual'] = (balances[leave.type || 'annual'] || 0) - (leave.days || 1); await setData(`leaveBalances/${leave.userId}`, balances); res.json(leave); }
+  catch (e) { res.status(500).json({ error: 'Failed to approve leave' }); }
+});
+
+// --- Finance Aliases ---
+app.put('/api/finance/budgets/:id', async (req, res) => {
+  try { const existing = await getData(`budgets/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData(`budgets/${req.params.id}`, updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update budget' }); }
+});
+app.post('/api/finance/expenses/:id/approve', async (req, res) => {
+  try { const expense = await getData(`expenses/${req.params.id}`); if (!expense) return res.status(404).json({ error: 'Not found' }); expense.status = 'approved'; expense.approvedBy = req.body.approvedBy; expense.approvedAt = new Date().toISOString(); await setData(`expenses/${req.params.id}`, expense); res.json(expense); }
+  catch (e) { res.status(500).json({ error: 'Failed to approve expense' }); }
+});
+app.put('/api/finance/expenses/:id', async (req, res) => {
+  try { const existing = await getData(`expenses/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData(`expenses/${req.params.id}`, updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update expense' }); }
+});
+app.get('/api/finance/procurement', async (_req, res) => {
+  try { const reqs = await listData('procurementRequisitions'); const pos = await listData('purchaseOrders'); res.json({ requisitions: reqs, purchaseOrders: pos }); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch procurement' }); }
+});
+app.post('/api/finance/procurement', async (req, res) => {
+  try { const { type } = req.body; if (type === 'purchase-order') { const po = { id: id('po'), ...req.body, createdAt: new Date().toISOString() }; await setData(`purchaseOrders/${po.id}`, po); return res.status(201).json(po); } const reqData = { id: id('prq'), ...req.body, status: 'pending', createdAt: new Date().toISOString() }; await setData(`procurementRequisitions/${reqData.id}`, reqData); res.status(201).json(reqData); }
+  catch (e) { res.status(500).json({ error: 'Failed to create procurement' }); }
+});
+app.get('/api/finance/recurring', async (_req, res) => {
+  try { const data = await getData('recurringInvoices'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch recurring invoices' }); }
+});
+app.post('/api/finance/recurring', async (req, res) => {
+  try { const ri = { id: id('ri'), ...req.body, status: 'active', createdAt: new Date().toISOString() }; await setData(`recurringInvoices/${ri.id}`, ri); res.status(201).json(ri); }
+  catch (e) { res.status(500).json({ error: 'Failed to create recurring invoice' }); }
+});
+app.get('/api/finance/fee-automation', async (_req, res) => {
+  try { const data = await getData('feeAutomationRules'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch fee automation' }); }
+});
+app.post('/api/finance/fee-automation', async (req, res) => {
+  try { const rule = { id: id('far'), ...req.body, createdAt: new Date().toISOString() }; await setData(`feeAutomationRules/${rule.id}`, rule); res.status(201).json(rule); }
+  catch (e) { res.status(500).json({ error: 'Failed to create fee automation rule' }); }
+});
+app.post('/api/finance/financial-aid/:id/approve', async (req, res) => {
+  try { const aid = await getData(`financialAid/${req.params.id}`); if (!aid) return res.status(404).json({ error: 'Not found' }); aid.status = 'approved'; aid.approvedBy = req.body.approvedBy; aid.approvedAt = new Date().toISOString(); await setData(`financialAid/${req.params.id}`, aid); res.json(aid); }
+  catch (e) { res.status(500).json({ error: 'Failed to approve aid' }); }
+});
+app.delete('/api/finance/invoices/:id', async (req, res) => {
+  try { await removeData(`invoices/${req.params.id}`); res.json({ success: true }); }
+  catch (e) { res.status(500).json({ error: 'Failed to delete invoice' }); }
+});
+app.post('/api/finance/invoices/:id/pay', async (req, res) => {
+  try { const invoice = await getData(`invoices/${req.params.id}`); if (!invoice) return res.status(404).json({ error: 'Invoice not found' }); const { amount, paymentMode, createdBy } = req.body; const payment = { id: id('pay'), paymentNumber: `PAY-${Date.now()}`, invoiceId: req.params.id, clientName: invoice.clientName, amount, paymentMode: paymentMode || 'cash', createdBy, createdAt: new Date().toISOString() }; await setData(`payments/${payment.id}`, payment); const allPayments = await listData('payments'); const invoicePayments = allPayments.filter((p: any) => p.invoiceId === req.params.id); const totalPaid = invoicePayments.reduce((s: number, p: any) => s + p.amount, 0); invoice.paymentStatus = totalPaid >= invoice.total ? 'paid' : 'partial'; invoice.lastPaymentAt = new Date().toISOString(); await setData(`invoices/${req.params.id}`, invoice); res.status(201).json(payment); }
+  catch (e) { res.status(500).json({ error: 'Failed to record payment' }); }
+});
+
+// --- ERP Aliases ---
+app.get('/api/erp/company', async (_req, res) => {
+  try { const settings = await getData('companySettings'); res.json(settings || {}); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch settings' }); }
+});
+app.put('/api/erp/company', async (req, res) => {
+  try { const existing = await getData('companySettings') || {}; const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData('companySettings', updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update settings' }); }
+});
+app.put('/api/erp/products/:id', async (req, res) => {
+  try { const existing = await getData(`products/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData(`products/${req.params.id}`, updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update product' }); }
+});
+
+// --- Scheduling Aliases ---
+app.get('/api/scheduling/rooms/list', async (_req, res) => {
+  try { const data = await getData('rooms'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to list rooms' }); }
+});
+app.put('/api/scheduling/rooms/:id', async (req, res) => {
+  try { const existing = await getData(`roomBookings/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData(`roomBookings/${req.params.id}`, updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update room' }); }
+});
+app.delete('/api/scheduling/rooms/:id', async (req, res) => {
+  try { const existing = await getData(`roomBookings/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); existing.status = 'cancelled'; existing.cancelledAt = new Date().toISOString(); await setData(`roomBookings/${req.params.id}`, existing); res.json(existing); }
+  catch (e) { res.status(500).json({ error: 'Failed to cancel booking' }); }
+});
+app.get('/api/scheduling/coverage', async (_req, res) => {
+  try { const data = await getData('coverages'); res.json(data ? Object.values(data).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch coverages' }); }
+});
+app.post('/api/scheduling/coverage', async (req, res) => {
+  try { const coverage = { id: id('cov'), ...req.body, status: 'pending', createdAt: new Date().toISOString() }; await setData(`coverages/${coverage.id}`, coverage); res.status(201).json(coverage); }
+  catch (e) { res.status(500).json({ error: 'Failed to create coverage' }); }
+});
+app.put('/api/scheduling/coverage/:id', async (req, res) => {
+  try { const existing = await getData(`coverages/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData(`coverages/${req.params.id}`, updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update coverage' }); }
+});
+app.delete('/api/scheduling/bell-schedules/:id', async (req, res) => {
+  try { await removeData(`bellSchedules/${req.params.id}`); res.json({ success: true }); }
+  catch (e) { res.status(500).json({ error: 'Failed to delete bell schedule' }); }
+});
+app.put('/api/scheduling/timetable/:className/:day/:periodIdx', async (req, res) => {
+  try { const timetable = await getData(`timetable/${req.params.className}`) as any[]; if (!timetable) return res.status(404).json({ error: 'Timetable not found' }); const dayEntry = timetable.find((d: any) => d.day === req.params.day); if (!dayEntry) return res.status(404).json({ error: 'Day not found' }); const idx = parseInt(req.params.periodIdx); if (idx < 0 || idx >= dayEntry.periods.length) return res.status(404).json({ error: 'Period not found' }); dayEntry.periods[idx] = { ...dayEntry.periods[idx], ...req.body }; await setData(`timetable/${req.params.className}`, timetable); res.json({ success: true, timetable }); }
+  catch (e) { res.status(500).json({ error: 'Failed to update entry' }); }
+});
+
 // Start server
 app.listen(process.env.PORT || PORT, () => {
   const actualPort = process.env.PORT || PORT;
