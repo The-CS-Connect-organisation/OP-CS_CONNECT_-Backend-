@@ -142,333 +142,210 @@ app.get('/api/health', (_req, res) => {
 });
 
 // ==================== SEED DATA ====================
+// Seed data
+const toObj = (arr: any[]) => Object.fromEntries(arr.map((item: any) => [item.id, item]));
+const buildSeedData = () => ({
+  users: toObj([
+    { id: "u1", name: "Aarav Sharma", email: "aarav@eduvault.ai", password: "demo1234", role: "student", class: "10-A", subjects: ["Math", "Physics", "Chemistry", "English", "CS"], gpa: 3.8, attendance: 92, feesPaid: true, routeId: "r1", avatar: "AS", avatarUrl: "https://randomuser.me/api/portraits/men/32.jpg", phone: "+91-9876543210", address: "42 Knowledge Park, New Delhi", dateOfBirth: "2008-06-15", admissionNo: "ADM-2024-001", rollNo: "1001", bloodGroup: "O+", aadharNo: "1234-5678-9012", penNo: "PEN-001", apaarId: "APAAR-001", religion: "Hindu", nationality: "Indian", schoolHouse: "Blue House", houseLocation: "Delhi NCR", fatherName: "Mr. Raj Sharma", fatherPhone: "+91-9876543211", motherName: "Mrs. Kavita Sharma", motherPhone: "+91-9876543212" },
+    { id: "u2", name: "Priya Patel", email: "priya@eduvault.ai", password: "demo1234", role: "student", class: "10-A", subjects: ["Math", "Physics", "Chemistry", "English", "Biology"], gpa: 3.9, attendance: 96, feesPaid: true, routeId: "r1", avatar: "PP", avatarUrl: "https://randomuser.me/api/portraits/women/68.jpg", phone: "+91-9876543220", address: "15 Garden Colony, New Delhi", dateOfBirth: "2008-03-22", admissionNo: "ADM-2024-002", rollNo: "1002", bloodGroup: "A+", aadharNo: "2345-6789-0123", penNo: "PEN-002", apaarId: "APAAR-002", religion: "Hindu", nationality: "Indian", schoolHouse: "Green House", houseLocation: "Delhi NCR", fatherName: "Mr. Amit Patel", fatherPhone: "+91-9876543221", motherName: "Mrs. Neha Patel", motherPhone: "+91-9876543222" },
+    { id: "u3", name: "Rohan Kumar", email: "rohan@eduvault.ai", password: "demo1234", role: "student", class: "10-B", subjects: ["Math", "Physics", "Chemistry", "English", "CS"], gpa: 3.5, attendance: 85, feesPaid: false, routeId: "r2", avatar: "RK", avatarUrl: "https://randomuser.me/api/portraits/men/51.jpg", phone: "+91-9876543230", address: "8 Sunshine Apartments, New Delhi", dateOfBirth: "2008-11-08", admissionNo: "ADM-2024-003", rollNo: "1003", bloodGroup: "B+", aadharNo: "3456-7890-1234", penNo: "PEN-003", apaarId: "APAAR-003", religion: "Hindu", nationality: "Indian", schoolHouse: "Red House", houseLocation: "Delhi NCR", fatherName: "Mr. Suresh Kumar", fatherPhone: "+91-9876543231", motherName: "Mrs. Poonam Kumar", motherPhone: "+91-9876543232" },
+    { id: "u4", name: "Ananya Singh", email: "ananya@eduvault.ai", password: "demo1234", role: "student", class: "10-B", subjects: ["Math", "Physics", "Chemistry", "English", "Biology"], gpa: 3.7, attendance: 89, feesPaid: true, routeId: "r2", avatar: "AS", avatarUrl: "https://randomuser.me/api/portraits/women/53.jpg", phone: "+91-9876543240", address: "27 Royal Enclave, New Delhi", dateOfBirth: "2008-07-19", admissionNo: "ADM-2024-004", rollNo: "1004", bloodGroup: "AB+", aadharNo: "4567-8901-2345", penNo: "PEN-004", apaarId: "APAAR-004", religion: "Hindu", nationality: "Indian", schoolHouse: "Green House", houseLocation: "Delhi NCR", fatherName: "Mr. Vikram Singh", fatherPhone: "+91-9876543241", motherName: "Mrs. Anita Singh", motherPhone: "+91-9876543242" },
+    { id: "u5", name: "Mr. Rajesh Gupta", email: "rajesh@eduvault.ai", password: "demo1234", role: "teacher", class: "10-A", subjects: ["Math", "Physics"] },
+    { id: "u6", name: "Dr. Sunita Verma", email: "sunita@eduvault.ai", password: "demo1234", role: "teacher", class: "10-B", subjects: ["Chemistry", "Biology"] },
+    { id: "u7", name: "Admin User", email: "admin@eduvault.ai", password: "admin123", role: "admin", avatar: "AU" },
+    { id: "u8", name: "Mrs. Meera Kapoor", email: "meera@eduvault.ai", password: "demo1234", role: "teacher" },
+    { id: "u9", name: "Raju Kumar", email: "raju@eduvault.ai", password: "demo1234", role: "driver" }
+  ]),
+  timetable: {
+    "10-A": [
+      { day: "Monday", periods: [{ time: "8:00-8:45", subject: "Math" }, { time: "8:45-9:30", subject: "Physics" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "CS" }] },
+      { day: "Tuesday", periods: [{ time: "8:00-8:45", subject: "English" }, { time: "8:45-9:30", subject: "Math" }, { time: "9:45-10:30", subject: "Physics" }, { time: "10:30-11:15", subject: "Chemistry" }, { time: "11:30-12:15", subject: "CS" }] },
+      { day: "Wednesday", periods: [{ time: "8:00-8:45", subject: "Chemistry" }, { time: "8:45-9:30", subject: "English" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "CS" }, { time: "11:30-12:15", subject: "Physics" }] },
+      { day: "Thursday", periods: [{ time: "8:00-8:45", subject: "Physics" }, { time: "8:45-9:30", subject: "CS" }, { time: "9:45-10:30", subject: "English" }, { time: "10:30-11:15", subject: "Math" }, { time: "11:30-12:15", subject: "Chemistry" }] },
+      { day: "Friday", periods: [{ time: "8:00-8:45", subject: "CS" }, { time: "8:45-9:30", subject: "Chemistry" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "Physics" }, { time: "11:30-12:15", subject: "English" }] }
+    ],
+    "10-B": [
+      { day: "Monday", periods: [{ time: "8:00-8:45", subject: "Math" }, { time: "8:45-9:30", subject: "Chemistry" }, { time: "9:45-10:30", subject: "English" }, { time: "10:30-11:15", subject: "Physics" }, { time: "11:30-12:15", subject: "Biology" }] },
+      { day: "Tuesday", periods: [{ time: "8:00-8:45", subject: "Biology" }, { time: "8:45-9:30", subject: "Math" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "Physics" }] },
+      { day: "Wednesday", periods: [{ time: "8:00-8:45", subject: "English" }, { time: "8:45-9:30", subject: "Physics" }, { time: "9:45-10:30", subject: "Biology" }, { time: "10:30-11:15", subject: "Math" }, { time: "11:30-12:15", subject: "Chemistry" }] },
+      { day: "Thursday", periods: [{ time: "8:00-8:45", subject: "Chemistry" }, { time: "8:45-9:30", subject: "Biology" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "Physics" }] },
+      { day: "Friday", periods: [{ time: "8:00-8:45", subject: "Physics" }, { time: "8:45-9:30", subject: "English" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "Biology" }, { time: "11:30-12:15", subject: "Math" }] }
+    ]
+  },
+  routes: toObj([
+    { id: "r1", name: "Route A - North Campus", driver: "Raju Kumar", driverId: "u9", bus: "KA-01-1234", stops: ["Main Gate", "North Block", "Library", "Sports Complex"], students: ["u1", "u2"] },
+    { id: "r2", name: "Route B - South Campus", driver: "Raju Kumar", driverId: "u9", bus: "KA-01-5678", stops: ["South Gate", "Auditorium", "Lab Block", "Cafeteria"], students: ["u3", "u4"] }
+  ]),
+  events: toObj([
+    { id: "e1", title: "Annual Sports Day", date: "2026-06-15", type: "sports", description: "Inter-house athletics competition" },
+    { id: "e2", title: "Science Fair", date: "2026-06-22", type: "academic", description: "Student science project exhibition" },
+    { id: "e3", title: "Parent-Teacher Meeting", date: "2026-05-30", type: "meeting", description: "Quarterly PTM for all classes" },
+    { id: "e4", title: "Farewell Ceremony", date: "2026-05-20", type: "ceremony", description: "Farewell for graduating batch" }
+  ]),
+  clubs: toObj([
+    {
+      id: "c1", name: "Coding Club", description: "Learn programming, build projects, compete in hackathons", members: ["u1", "u3"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Technology", meetingDay: "Wednesday", meetingTime: "3:30 PM", posts: [
+        { id: "p1", authorId: "u1", authorName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", content: "Great hackathon session today! 🚀", timestamp: "2026-05-19T15:00:00Z", likes: ["u3", "u5"] },
+        { id: "p2", authorId: "u3", authorName: "Rohan Kumar", avatar: "https://randomuser.me/api/portraits/men/51.jpg", content: "Just finished my first React app!", timestamp: "2026-05-18T14:00:00Z", likes: ["u1"] }
+      ]
+    },
+    {
+      id: "c2", name: "Science Society", description: "Explore scientific concepts through experiments and research", members: ["u2", "u4"], lead: "u2", leadName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", category: "Academic", meetingDay: "Thursday", meetingTime: "4:00 PM", posts: [
+        { id: "p3", authorId: "u2", authorName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", content: "Science fair prep going well! 🧪", timestamp: "2026-05-19T16:00:00Z", likes: ["u4", "u6"] }
+      ]
+    },
+    {
+      id: "c3", name: "Drama Club", description: "Acting, stagecraft, and theatrical productions", members: ["u1", "u2", "u4"], lead: "u4", leadName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", category: "Arts", meetingDay: "Friday", meetingTime: "3:00 PM", posts: [
+        { id: "p4", authorId: "u4", authorName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", content: "Auditions for the spring play next week! 🎭", timestamp: "2026-05-20T10:00:00Z", likes: ["u1", "u2"] }
+      ]
+    },
+    { id: "c4", name: "Music Ensemble", description: "Band, choir, and individual music performance", members: ["u1", "u2", "u3", "u4"], lead: "u2", leadName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", category: "Arts", meetingDay: "Tuesday", meetingTime: "3:30 PM", posts: [] },
+    { id: "c5", name: "Sports Club", description: "Athletics, team sports, and fitness activities", members: ["u1", "u3"], lead: "u3", leadName: "Rohan Kumar", avatar: "https://randomuser.me/api/portraits/men/51.jpg", category: "Sports", meetingDay: "Monday", meetingTime: "4:00 PM", posts: [] },
+    { id: "c6", name: "Debate Society", description: "Public speaking, argumentation, and competitive debate", members: ["u2", "u4"], lead: "u4", leadName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", category: "Academic", meetingDay: "Wednesday", meetingTime: "4:30 PM", posts: [] },
+    { id: "c7", name: "Art Studio", description: "Painting, sculpture, and digital art creation", members: ["u1", "u2", "u4"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Arts", meetingDay: "Thursday", meetingTime: "3:00 PM", posts: [] },
+    { id: "c8", name: "Robotics Club", description: "Build and program robots for competitions", members: ["u1", "u3"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Technology", meetingDay: "Friday", meetingTime: "4:00 PM", posts: [] }
+  ]),
+  assignments: toObj([
+    { id: "a1", title: "Quadratic Equations", subjectId: "sub1", subject: "Mathematics", class: "10-A", dueDate: "2026-05-05", status: "active", description: "Solve 20 quadratic equations", maxMarks: 50, submissions: [] },
+    { id: "a2", title: "Newton's Laws Essay", subjectId: "sub2", subject: "Physics", class: "10-A", dueDate: "2026-05-10", status: "active", description: "Write an essay on Newton's three laws", maxMarks: 30, submissions: [] },
+    { id: "a3", title: "Organic Chemistry Basics", subjectId: "sub3", subject: "Chemistry", class: "10-A", dueDate: "2026-05-12", status: "active", description: "Complete the worksheet", maxMarks: 40, submissions: [] },
+    { id: "a4", title: "Essay: Climate Change", subjectId: "sub4", subject: "English", class: "10-A", dueDate: "2026-05-15", status: "active", description: "Write a 500-word essay", maxMarks: 25, submissions: [] },
+    { id: "a5", title: "HTML Basics Project", subjectId: "sub5", subject: "CS", class: "10-A", dueDate: "2026-05-08", status: "active", description: "Create a personal webpage", maxMarks: 50, submissions: [] },
+    { id: "a6", title: "Quadratic Equations", subjectId: "sub1", subject: "Mathematics", class: "10-B", dueDate: "2026-05-05", status: "active", description: "Solve 20 quadratic equations", maxMarks: 50, submissions: [] },
+    { id: "a7", title: "Shakespeare Analysis", subjectId: "sub4", subject: "English", class: "10-B", dueDate: "2026-05-10", status: "completed", description: "Analyze Hamlet's soliloquy", maxMarks: 40, submissions: [{ studentId: "u3", content: "Analysis submitted", scoredMarks: 35, feedback: "Well written", submittedAt: "2026-05-09T16:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 38, feedback: "Excellent analysis", submittedAt: "2026-05-09T14:00:00Z" }] },
+    { id: "a8", title: "Trigonometry Problems", subjectId: "sub1", subject: "Mathematics", class: "10-B", dueDate: "2026-05-08", status: "completed", description: "Solve trigonometric identities", maxMarks: 50, submissions: [{ studentId: "u3", content: "Completed", scoredMarks: 40, feedback: "Good work", submittedAt: "2026-05-07T12:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 46, feedback: "Excellent", submittedAt: "2026-05-07T11:00:00Z" }] }
+  ]),
+  grades: {
+    u1: [{ subject: "Math", grade: "A", marks: 92 }, { subject: "Physics", grade: "A-", marks: 88 }, { subject: "Chemistry", grade: "B+", marks: 82 }, { subject: "English", grade: "A", marks: 90 }, { subject: "CS", grade: "A+", marks: 96 }],
+    u2: [{ subject: "Math", grade: "A+", marks: 95 }, { subject: "Physics", grade: "A", marks: 91 }, { subject: "Chemistry", grade: "A", marks: 89 }, { subject: "English", grade: "A+", marks: 94 }, { subject: "Biology", grade: "A", marks: 90 }],
+    u3: [{ subject: "Math", grade: "B+", marks: 78 }, { subject: "Physics", grade: "B", marks: 72 }, { subject: "Chemistry", grade: "A-", marks: 85 }, { subject: "English", grade: "B+", marks: 79 }, { subject: "CS", grade: "A-", marks: 86 }],
+    u4: [{ subject: "Math", grade: "A-", marks: 87 }, { subject: "Physics", grade: "B+", marks: 80 }, { subject: "Chemistry", grade: "A", marks: 88 }, { subject: "English", grade: "A", marks: 91 }, { subject: "Biology", grade: "A+", marks: 93 }]
+  },
+  attendance: {
+    u1: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "absent" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }],
+    u2: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "present" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }],
+    u3: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "absent" }, { date: "2026-05-03", status: "absent" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "late" }],
+    u4: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "late" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }]
+  },
+  subjects: toObj([
+    { id: "sub1", name: "Mathematics", code: "MTH10", credits: 5, classes: ["10-A", "10-B"] },
+    { id: "sub2", name: "Physics", code: "PHY10", credits: 4, classes: ["10-A", "10-B"] },
+    { id: "sub3", name: "Chemistry", code: "CHM10", credits: 4, classes: ["10-A"] },
+    { id: "sub4", name: "English", code: "ENG10", credits: 3, classes: ["10-A", "10-B"] },
+    { id: "sub5", name: "Computer Science", code: "CSC10", credits: 4, classes: ["10-A"] },
+    { id: "sub6", name: "Biology", code: "BIO10", credits: 4, classes: ["10-B"] }
+  ]),
+  fees: {
+    u1: [{ type: "tuition", amount: 50000, paid: 50000, due: "2026-01-15", status: "paid" }, { type: "lab", amount: 10000, paid: 5000, due: "2026-03-15", status: "partial" }, { type: "sports", amount: 5000, paid: 5000, due: "2026-04-01", status: "paid" }],
+    u2: [{ type: "tuition", amount: 50000, paid: 50000, due: "2026-01-15", status: "paid" }, { type: "lab", amount: 10000, paid: 10000, due: "2026-03-15", status: "paid" }, { type: "library", amount: 3000, paid: 0, due: "2026-05-01", status: "unpaid" }],
+    u3: [{ type: "tuition", amount: 45000, paid: 45000, due: "2026-01-15", status: "paid" }, { type: "lab", amount: 8000, paid: 0, due: "2026-03-15", status: "unpaid" }, { type: "transport", amount: 12000, paid: 12000, due: "2026-04-01", status: "paid" }],
+    u4: [{ type: "tuition", amount: 45000, paid: 45000, due: "2026-01-15", status: "paid" }, { type: "lab", amount: 8000, paid: 8000, due: "2026-03-15", status: "paid" }]
+  },
+  feeRecords: toObj([
+    { id: "fr1", studentId: "u1", studentName: "Aarav Sharma", class: "10-A", type: "tuition", amount: 50000, paid: 50000, due: "2026-01-15", status: "paid" },
+    { id: "fr2", studentId: "u2", studentName: "Priya Patel", class: "10-A", type: "tuition", amount: 50000, paid: 50000, due: "2026-01-15", status: "paid" },
+    { id: "fr3", studentId: "u3", studentName: "Rohan Kumar", class: "10-B", type: "tuition", amount: 45000, paid: 45000, due: "2026-01-15", status: "paid" },
+    { id: "fr4", studentId: "u4", studentName: "Ananya Singh", class: "10-B", type: "tuition", amount: 45000, paid: 45000, due: "2026-01-15", status: "paid" }
+  ]),
+  attendancePolicies: toObj([
+    { id: "ap1", name: "Standard Absence Policy", maxAbsentDays: 20, gracePeriod: 3, requireParentNote: true, academicYear: "2025-26" },
+    { id: "ap2", name: "Exam Attendance Policy", maxAbsentDays: 0, requireMedicalCert: true, academicYear: "2025-26" }
+  ]),
+  bellSchedules: toObj([
+    { id: "bs1", name: "Regular Day", startTime: "08:00", endTime: "15:30", periods: 8, periodDuration: 40, breakStart: "10:25", breakDuration: 20, lunchStart: "12:20", lunchDuration: 40 },
+    { id: "bs2", name: "Short Day", startTime: "08:00", endTime: "13:00", periods: 6, periodDuration: 35, breakStart: "10:00", breakDuration: 15, lunchStart: "12:00", lunchDuration: 30 }
+  ]),
+  roomBookings: toObj([
+    { id: "rb1", room: "Lab 1", date: "2026-06-01", startTime: "09:00", endTime: "10:30", bookedBy: "u5", purpose: "Physics practical", status: "confirmed" },
+    { id: "rb2", room: "IT Lab", date: "2026-06-02", startTime: "11:00", endTime: "12:30", bookedBy: "u5", purpose: "CS class 10-A", status: "confirmed" }
+  ]),
+  lessonPlans: toObj([
+    { id: "lp1", title: "Quadratic Equations - Introduction", subjectId: "sub1", class: "10-A", teacherId: "u5", week: 1, objectives: ["Understand standard form", "Solve by factorization"], resources: ["Textbook Ch5", "Worksheet 1"], status: "completed" },
+    { id: "lp2", title: "Newton's Laws - Lab Session", subjectId: "sub2", class: "10-A", teacherId: "u5", week: 2, objectives: ["Verify F=ma", "Measure acceleration"], resources: ["Lab equipment", "Data sheet"], status: "active" }
+  ]),
+  exercises: toObj([
+    { id: "ex1", title: "Algebra Basics", subjectId: "sub1", class: "10-A", questions: [
+      { id: "eq1", question: "Solve 2x + 5 = 13", type: "short", answer: "x = 4" },
+      { id: "eq2", question: "Factorize x² - 9", type: "short", answer: "(x-3)(x+3)" }
+    ], maxScore: 10 },
+    { id: "ex2", title: "Physics Numericals", subjectId: "sub2", class: "10-A", questions: [
+      { id: "eq3", question: "A force of 10N accelerates a 2kg mass. Find acceleration", type: "short", answer: "5 m/s²" }
+    ], maxScore: 5 }
+  ]),
+  chartOfAccounts: toObj([
+    { id: "coa1", code: "1000", name: "Cash", type: "asset", normalBalance: "debit" },
+    { id: "coa2", code: "2000", name: "Accounts Receivable", type: "asset", normalBalance: "debit" },
+    { id: "coa3", code: "3000", name: "Tuition Revenue", type: "revenue", normalBalance: "credit" },
+    { id: "coa4", code: "4000", name: "Salary Expense", type: "expense", normalBalance: "debit" },
+    { id: "coa5", code: "5000", name: "Accounts Payable", type: "liability", normalBalance: "credit" }
+  ]),
+  budgets: toObj([
+    { id: "bd1", name: "Annual Academic Budget 2025-26", fiscalYear: "2025-26", totalAmount: 5000000, allocated: 3200000, remaining: 1800000, status: "active", items: [
+      { category: "Salaries", amount: 3000000, spent: 2500000 },
+      { category: "Lab Equipment", amount: 500000, spent: 200000 },
+      { category: "Library", amount: 300000, spent: 100000 }
+    ] }
+  ]),
+  invoices: toObj([
+    { id: "inv1", invoiceNumber: "INV-2026-001", studentId: "u3", studentName: "Rohan Kumar", items: [
+      { description: "Term 3 Tuition Fee", amount: 25000 },
+      { description: "Lab Fee", amount: 5000 },
+      { description: "Library Fee", amount: 2000 }
+    ], subtotal: 32000, tax: 0, total: 32000, status: "pending", dueDate: "2026-07-31", issuedDate: "2026-07-01", paidAmount: 0 }
+  ]),
+  payments: toObj([
+    { id: "pmt1", invoiceId: "inv1", studentId: "u1", amount: 50000, method: "online", transactionId: "txn_001", status: "completed", date: "2026-01-15", term: "Term 1" },
+    { id: "pmt2", invoiceId: "inv2", studentId: "u2", amount: 50000, method: "bank", transactionId: "txn_002", status: "completed", date: "2026-01-20", term: "Term 1" }
+  ]),
+  expenses: toObj([
+    { id: "exp1", description: "Lab equipment purchase", category: "Lab Equipment", amount: 50000, date: "2026-06-01", paidTo: "Scientific Supplies Co.", paymentMethod: "bank", approvedBy: "u7", status: "approved" },
+    { id: "exp2", description: "Classroom whiteboard replacement", category: "Supplies", amount: 12000, date: "2026-06-10", paidTo: "School Supplies Ltd.", paymentMethod: "cash", status: "pending" },
+    { id: "exp3", description: "Bus maintenance - Route A", category: "Transport", amount: 8500, date: "2026-06-12", paidTo: "Auto Service Center", paymentMethod: "bank", status: "pending" }
+  ]),
+  bookCatalogue: toObj([
+    { id: "bk1", title: "Introduction to Algorithms", author: "CLRS", isbn: "978-0-262-04630-5", category: "Computer Science", copies: 3, available: 2, shelf: "CS-01" },
+    { id: "bk2", title: "Organic Chemistry", author: "Morrison & Boyd", isbn: "978-0-13-404228-2", category: "Chemistry", copies: 2, available: 1, shelf: "CH-03" },
+    { id: "bk3", title: "University Physics", author: "Young & Freedman", isbn: "978-0-321-69686-1", category: "Physics", copies: 4, available: 3, shelf: "PH-02" }
+  ]),
+  disciplineRecords: toObj([]),
+  healthRecords: toObj([]),
+  counsellingRecords: toObj([]),
+  activityRecords: toObj([]),
+  portfolioRecords: toObj([]),
+  enrolmentRecords: toObj([]),
+  libraryRecords: toObj([]),
+  cautionDeposits: toObj([]),
+  diplomaManagement: toObj([]),
+  studentServices: toObj([]),
+  leads: toObj([
+    { id: "ld1", name: "Mr. Sharma", email: "sharma@example.com", phone: "+91-9999888777", source: "referral", status: "new", notes: "Interested in Class 11 admission for his son", createdAt: "2026-05-20T10:00:00Z" }
+  ]),
+  products: toObj([
+    { id: "pr1", name: "School Uniform - Junior", sku: "UNI-JR-001", price: 1500, unit: "set", category: "uniform", stock: 50 },
+    { id: "pr2", name: "Textbook - Mathematics Grade 10", sku: "TXT-M10-001", price: 800, unit: "piece", category: "textbook", stock: 100 }
+  ]),
+  orders: toObj([
+    { id: "or1", orderNumber: "ORD-2026-001", clientId: "cl1", status: "pending", items: [{ productId: "pr2", quantity: 30, unitPrice: 800 }], total: 24000, orderDate: "2026-06-01", expectedDelivery: "2026-06-15" }
+  ]),
+  staffDirectory: toObj([
+    { id: "sd1", firstName: "Rajesh", lastName: "Gupta", department: "Science", position: "Senior Teacher", employeeId: "EMP001", joinDate: "2020-04-01", qualification: "Ph.D. Physics", userId: "u5" },
+    { id: "sd2", firstName: "Sunita", lastName: "Verma", department: "Science", position: "Professor", employeeId: "EMP002", joinDate: "2019-08-15", qualification: "Ph.D. Chemistry", userId: "u6" }
+  ]),
+  staffPositions: toObj([
+    { id: "sp1", title: "Senior Teacher", department: "Science", salaryRange: { min: 60000, max: 90000 }, requirements: ["Ph.D.", "5+ years experience"] },
+    { id: "sp2", title: "Professor", department: "Science", salaryRange: { min: 70000, max: 110000 }, requirements: ["Ph.D.", "8+ years experience"] }
+  ])
+});
+
+async function seedDatabase() {
+  console.log('[Seed] Starting database seed...');
+  await setData('/', buildSeedData());
+  console.log('[Seed] Database seeded SUCCESSFULLY!');
+}
+
 app.all('/api/seed', async (_req, res) => {
   try {
-    console.log('[Seed] Starting database seed...');
-    const toObj = (arr: any[]) => Object.fromEntries(arr.map((item: any) => [item.id, item]));
-    const seedData = {
-      users: toObj([
-        { id: "u1", name: "Aarav Sharma", email: "aarav@eduvault.ai", password: "demo1234", role: "student", class: "10-A", subjects: ["Math", "Physics", "Chemistry", "English", "CS"], gpa: 3.8, attendance: 92, feesPaid: true, routeId: "r1", avatar: "AS", avatarUrl: "https://randomuser.me/api/portraits/men/32.jpg", phone: "+91-9876543210", address: "42 Knowledge Park, New Delhi", dateOfBirth: "2008-06-15", admissionNo: "ADM-2024-001", rollNo: "1001", bloodGroup: "O+", aadharNo: "1234-5678-9012", penNo: "PEN-001", apaarId: "APAAR-001", religion: "Hindu", nationality: "Indian", schoolHouse: "Blue House", houseLocation: "Delhi NCR", fatherName: "Mr. Raj Sharma", fatherPhone: "+91-9876543211", motherName: "Mrs. Kavita Sharma", motherPhone: "+91-9876543212" },
-        { id: "u2", name: "Priya Patel", email: "priya@eduvault.ai", password: "demo1234", role: "student", class: "10-A", subjects: ["Math", "Physics", "Chemistry", "English", "Biology"], gpa: 3.9, attendance: 96, feesPaid: true, routeId: "r1", avatar: "PP", avatarUrl: "https://randomuser.me/api/portraits/women/68.jpg", phone: "+91-9876543220", address: "15 Garden Colony, New Delhi", dateOfBirth: "2008-03-22", admissionNo: "ADM-2024-002", rollNo: "1002", bloodGroup: "A+", aadharNo: "2345-6789-0123", penNo: "PEN-002", apaarId: "APAAR-002", religion: "Hindu", nationality: "Indian", schoolHouse: "Green House", houseLocation: "Delhi NCR", fatherName: "Mr. Amit Patel", fatherPhone: "+91-9876543221", motherName: "Mrs. Neha Patel", motherPhone: "+91-9876543222" },
-        { id: "u3", name: "Rohan Kumar", email: "rohan@eduvault.ai", password: "demo1234", role: "student", class: "10-B", subjects: ["Math", "Physics", "Chemistry", "English", "CS"], gpa: 3.5, attendance: 85, feesPaid: false, routeId: "r2", avatar: "RK", avatarUrl: "https://randomuser.me/api/portraits/men/51.jpg", phone: "+91-9876543230", address: "8 Sunshine Apartments, New Delhi", dateOfBirth: "2008-11-08", admissionNo: "ADM-2024-003", rollNo: "1003", bloodGroup: "B+", aadharNo: "3456-7890-1234", penNo: "PEN-003", apaarId: "APAAR-003", religion: "Hindu", nationality: "Indian", schoolHouse: "Red House", houseLocation: "Delhi NCR", fatherName: "Mr. Suresh Kumar", fatherPhone: "+91-9876543231", motherName: "Mrs. Poonam Kumar", motherPhone: "+91-9876543232" },
-        { id: "u4", name: "Ananya Singh", email: "ananya@eduvault.ai", password: "demo1234", role: "student", class: "10-B", subjects: ["Math", "Physics", "Chemistry", "English", "Biology"], gpa: 3.7, attendance: 89, feesPaid: true, routeId: "r2", avatar: "AS", avatarUrl: "https://randomuser.me/api/portraits/women/53.jpg", phone: "+91-9876543240", address: "27 Royal Enclave, New Delhi", dateOfBirth: "2008-07-19", admissionNo: "ADM-2024-004", rollNo: "1004", bloodGroup: "AB+", aadharNo: "4567-8901-2345", penNo: "PEN-004", apaarId: "APAAR-004", religion: "Hindu", nationality: "Indian", schoolHouse: "Green House", houseLocation: "Delhi NCR", fatherName: "Mr. Vikram Singh", fatherPhone: "+91-9876543241", motherName: "Mrs. Anita Singh", motherPhone: "+91-9876543242" },
-        { id: "u5", name: "Dr. Rajesh Gupta", email: "rajesh@eduvault.ai", password: "demo1234", role: "teacher", subjects: ["Math", "Physics", "CS"], classes: ["10-A", "10-B"], avatar: "RG", avatarUrl: "https://randomuser.me/api/portraits/men/33.jpg", phone: "+91-9876543215", address: "55 Teacher Colony, New Delhi", bloodGroup: "B+", religion: "Hindu", nationality: "Indian", dateOfBirth: "1975-04-10", admissionNo: "TCH-001" },
-        { id: "u6", name: "Prof. Sunita Verma", email: "sunita@eduvault.ai", password: "demo1234", role: "teacher", subjects: ["Chemistry", "Biology", "English"], classes: ["10-A", "10-B"], avatar: "SV", avatarUrl: "https://randomuser.me/api/portraits/women/44.jpg", phone: "+91-9876543216", address: "33 Academic Residency, New Delhi", bloodGroup: "A+", religion: "Hindu", nationality: "Indian", dateOfBirth: "1980-08-22", admissionNo: "TCH-002" },
-        { id: "u7", name: "Principal Meera", email: "meera@eduvault.ai", password: "demo1234", role: "admin", schoolId: "sch1", avatar: "PM", avatarUrl: "https://randomuser.me/api/portraits/women/65.jpg", phone: "+91-9876543217", address: "100 Admin Block, School Campus" },
-        { id: "u8", name: "Mr. Vikram", email: "vikram@eduvault.ai", password: "demo1234", role: "coordinator", schoolId: "sch1", avatar: "MV", avatarUrl: "https://randomuser.me/api/portraits/men/22.jpg", phone: "+91-9876543218" },
-        { id: "u9", name: "Raju Kumar", email: "raju@eduvault.ai", password: "demo1234", role: "driver", routeId: "r1", avatar: "RK", avatarUrl: "https://randomuser.me/api/portraits/men/75.jpg", phone: "+91-9876543219" },
-        { id: "u10", name: "Mrs. Sharma", email: "parent@eduvault.ai", password: "demo1234", role: "parent", children: ["u1"], avatar: "MS", avatarUrl: "https://randomuser.me/api/portraits/women/33.jpg", phone: "+91-9876543212", address: "42 Knowledge Park, New Delhi" },
-        { id: "u11", name: "Dr. Bookman", email: "librarian@eduvault.ai", password: "demo1234", role: "librarian", avatar: "DB", avatarUrl: "https://randomuser.me/api/portraits/men/86.jpg", phone: "+91-9876543225" },
-        { id: "u12", name: "Mr. Arjun Manager", email: "manager@eduvault.ai", password: "demo1234", role: "manager", schoolId: "sch1", avatar: "AM", avatarUrl: "https://randomuser.me/api/portraits/men/61.jpg", phone: "+91-9876543226" }
-      ]),
-      schools: toObj([{ id: "sch1", name: "Cornerstone International School", address: "123 Education Lane, New Delhi", phone: "+91-11-23456789", email: "info@cornerstone.edu", principal: "Principal Meera", established: 2005, affiliation: "CBSE", grades: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"] }]),
-      subjects: toObj([
-        { id: "sub1", name: "Mathematics", code: "MATH101", teacher: "Dr. Rajesh Gupta", classes: ["10-A", "10-B"] },
-        { id: "sub2", name: "Physics", code: "PHY101", teacher: "Dr. Rajesh Gupta", classes: ["10-A", "10-B"] },
-        { id: "sub3", name: "Chemistry", code: "CHEM101", teacher: "Prof. Sunita Verma", classes: ["10-A", "10-B"] },
-        { id: "sub4", name: "English", code: "ENG101", teacher: "Prof. Sunita Verma", classes: ["10-A", "10-B"] },
-        { id: "sub5", name: "Computer Science", code: "CS101", teacher: "Dr. Rajesh Gupta", classes: ["10-A"] },
-        { id: "sub6", name: "Biology", code: "BIO101", teacher: "Prof. Sunita Verma", classes: ["10-B"] }
-      ]),
-      assignments: toObj([
-        { id: "a1", title: "Quadratic Equations Worksheet", subjectId: "sub1", subject: "Mathematics", class: "10-A", dueDate: "2026-05-25", status: "active", description: "Solve all problems from Chapter 5", maxMarks: 50, submissions: [{ studentId: "u1", content: "Completed all problems", scoredMarks: 45, feedback: "Excellent work!", submittedAt: "2026-05-20T10:00:00Z" }, { studentId: "u2", content: "Done", scoredMarks: 48, feedback: "Perfect!", submittedAt: "2026-05-21T09:00:00Z" }] },
-        { id: "a2", title: "Newton's Laws Lab Report", subjectId: "sub2", subject: "Physics", class: "10-A", dueDate: "2026-05-28", status: "active", description: "Write a lab report on Newton's three laws", maxMarks: 40, submissions: [] },
-        { id: "a3", title: "Organic Chemistry Notes", subjectId: "sub3", subject: "Chemistry", class: "10-B", dueDate: "2026-05-22", status: "active", description: "Summarize chapter on organic compounds", maxMarks: 30, submissions: [{ studentId: "u3", content: "Submitted notes", scoredMarks: 25, feedback: "Good effort", submittedAt: "2026-05-19T14:00:00Z" }] },
-        { id: "a4", title: "Essay: Climate Change", subjectId: "sub4", subject: "English", class: "10-A", dueDate: "2026-06-01", status: "active", description: "Write a 1000-word essay on climate change", maxMarks: 50, submissions: [] },
-        { id: "a5", title: "Data Structures Assignment", subjectId: "sub5", subject: "Computer Science", class: "10-A", dueDate: "2026-06-05", status: "active", description: "Implement linked list and binary tree", maxMarks: 60, submissions: [] },
-        { id: "a6", title: "Periodic Table Quiz", subjectId: "sub3", subject: "Chemistry", class: "10-A", dueDate: "2026-05-15", status: "completed", description: "Complete the periodic table quiz", maxMarks: 25, submissions: [{ studentId: "u1", content: "Completed", scoredMarks: 23, feedback: "Great job!", submittedAt: "2026-05-14T11:00:00Z" }, { studentId: "u2", content: "Done", scoredMarks: 25, feedback: "Perfect score!", submittedAt: "2026-05-14T10:00:00Z" }] },
-        { id: "a7", title: "Shakespeare Analysis", subjectId: "sub4", subject: "English", class: "10-B", dueDate: "2026-05-10", status: "completed", description: "Analyze Hamlet's soliloquy", maxMarks: 40, submissions: [{ studentId: "u3", content: "Analysis submitted", scoredMarks: 35, feedback: "Well written", submittedAt: "2026-05-09T16:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 38, feedback: "Excellent analysis", submittedAt: "2026-05-09T14:00:00Z" }] },
-        { id: "a8", title: "Trigonometry Problems", subjectId: "sub1", subject: "Mathematics", class: "10-B", dueDate: "2026-05-08", status: "completed", description: "Solve trigonometric identities", maxMarks: 50, submissions: [{ studentId: "u3", content: "Completed", scoredMarks: 40, feedback: "Good work", submittedAt: "2026-05-07T12:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 46, feedback: "Excellent", submittedAt: "2026-05-07T11:00:00Z" }] }
-      ]),
-      grades: {
-        u1: [{ subject: "Math", grade: "A", marks: 92 }, { subject: "Physics", grade: "A-", marks: 88 }, { subject: "Chemistry", grade: "B+", marks: 82 }, { subject: "English", grade: "A", marks: 90 }, { subject: "CS", grade: "A+", marks: 96 }],
-        u2: [{ subject: "Math", grade: "A+", marks: 95 }, { subject: "Physics", grade: "A", marks: 91 }, { subject: "Chemistry", grade: "A", marks: 89 }, { subject: "English", grade: "A+", marks: 94 }, { subject: "Biology", grade: "A", marks: 90 }],
-        u3: [{ subject: "Math", grade: "B+", marks: 78 }, { subject: "Physics", grade: "B", marks: 72 }, { subject: "Chemistry", grade: "A-", marks: 85 }, { subject: "English", grade: "B+", marks: 79 }, { subject: "CS", grade: "A-", marks: 86 }],
-        u4: [{ subject: "Math", grade: "A-", marks: 87 }, { subject: "Physics", grade: "B+", marks: 80 }, { subject: "Chemistry", grade: "A", marks: 88 }, { subject: "English", grade: "A", marks: 91 }, { subject: "Biology", grade: "A+", marks: 93 }]
-      },
-      attendance: {
-        u1: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "absent" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }],
-        u2: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "present" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }],
-        u3: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "absent" }, { date: "2026-05-03", status: "absent" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "late" }],
-        u4: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "late" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }]
-      },
-      fees: {
-        u1: [
-          { term: "Term 1", amount: 50000, paid: 50000, date: "2026-01-15", status: "paid", dueDate: "2026-01-31" },
-          { term: "Term 2", amount: 50000, paid: 50000, date: "2026-04-10", status: "paid", dueDate: "2026-04-30" },
-          { term: "Term 3", amount: 50000, paid: 50000, date: "2026-07-05", status: "paid", dueDate: "2026-07-31" }
-        ],
-        u2: [
-          { term: "Term 1", amount: 50000, paid: 50000, date: "2026-01-20", status: "paid", dueDate: "2026-01-31" },
-          { term: "Term 2", amount: 50000, paid: 50000, date: "2026-04-12", status: "paid", dueDate: "2026-04-30" },
-          { term: "Term 3", amount: 50000, paid: 50000, date: "2026-07-08", status: "paid", dueDate: "2026-07-31" }
-        ],
-        u3: [
-          { term: "Term 1", amount: 50000, paid: 50000, date: "2026-01-18", status: "paid", dueDate: "2026-01-31" },
-          { term: "Term 2", amount: 50000, paid: 50000, date: "2026-04-15", status: "paid", dueDate: "2026-04-30" },
-          { term: "Term 3", amount: 50000, paid: 25000, date: "2026-07-10", status: "partial", dueDate: "2026-07-31" }
-        ],
-        u4: [
-          { term: "Term 1", amount: 50000, paid: 50000, date: "2026-01-22", status: "paid", dueDate: "2026-01-31" },
-          { term: "Term 2", amount: 50000, paid: 50000, date: "2026-04-08", status: "paid", dueDate: "2026-04-30" },
-          { term: "Term 3", amount: 50000, paid: 50000, date: "2026-07-02", status: "paid", dueDate: "2026-07-31" }
-        ]
-      },
-      timetable: {
-        "10-A": [
-          { day: "Monday", periods: [{ time: "8:00-8:45", subject: "Math" }, { time: "8:45-9:30", subject: "Physics" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "CS" }] },
-          { day: "Tuesday", periods: [{ time: "8:00-8:45", subject: "English" }, { time: "8:45-9:30", subject: "Math" }, { time: "9:45-10:30", subject: "Physics" }, { time: "10:30-11:15", subject: "Chemistry" }, { time: "11:30-12:15", subject: "CS" }] },
-          { day: "Wednesday", periods: [{ time: "8:00-8:45", subject: "Chemistry" }, { time: "8:45-9:30", subject: "English" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "CS" }, { time: "11:30-12:15", subject: "Physics" }] },
-          { day: "Thursday", periods: [{ time: "8:00-8:45", subject: "Physics" }, { time: "8:45-9:30", subject: "CS" }, { time: "9:45-10:30", subject: "English" }, { time: "10:30-11:15", subject: "Math" }, { time: "11:30-12:15", subject: "Chemistry" }] },
-          { day: "Friday", periods: [{ time: "8:00-8:45", subject: "CS" }, { time: "8:45-9:30", subject: "Chemistry" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "Physics" }, { time: "11:30-12:15", subject: "English" }] }
-        ],
-        "10-B": [
-          { day: "Monday", periods: [{ time: "8:00-8:45", subject: "Math" }, { time: "8:45-9:30", subject: "Chemistry" }, { time: "9:45-10:30", subject: "English" }, { time: "10:30-11:15", subject: "Physics" }, { time: "11:30-12:15", subject: "Biology" }] },
-          { day: "Tuesday", periods: [{ time: "8:00-8:45", subject: "Biology" }, { time: "8:45-9:30", subject: "Math" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "Physics" }] },
-          { day: "Wednesday", periods: [{ time: "8:00-8:45", subject: "English" }, { time: "8:45-9:30", subject: "Physics" }, { time: "9:45-10:30", subject: "Biology" }, { time: "10:30-11:15", subject: "Math" }, { time: "11:30-12:15", subject: "Chemistry" }] },
-          { day: "Thursday", periods: [{ time: "8:00-8:45", subject: "Chemistry" }, { time: "8:45-9:30", subject: "Biology" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "Physics" }] },
-          { day: "Friday", periods: [{ time: "8:00-8:45", subject: "Physics" }, { time: "8:45-9:30", subject: "English" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "Biology" }, { time: "11:30-12:15", subject: "Math" }] }
-        ]
-      },
-      routes: toObj([
-        { id: "r1", name: "Route A - North Campus", driver: "Raju Kumar", driverId: "u9", bus: "KA-01-1234", stops: ["Main Gate", "North Block", "Library", "Sports Complex"], students: ["u1", "u2"] },
-        { id: "r2", name: "Route B - South Campus", driver: "Raju Kumar", driverId: "u9", bus: "KA-01-5678", stops: ["South Gate", "Auditorium", "Lab Block", "Cafeteria"], students: ["u3", "u4"] }
-      ]),
-      events: toObj([
-        { id: "e1", title: "Annual Sports Day", date: "2026-06-15", type: "sports", description: "Inter-house athletics competition" },
-        { id: "e2", title: "Science Fair", date: "2026-06-22", type: "academic", description: "Student science project exhibition" },
-        { id: "e3", title: "Parent-Teacher Meeting", date: "2026-05-30", type: "meeting", description: "Quarterly PTM for all classes" },
-        { id: "e4", title: "Farewell Ceremony", date: "2026-05-20", type: "ceremony", description: "Farewell for graduating batch" }
-      ]),
-      clubs: toObj([
-        {
-          id: "c1", name: "Coding Club", description: "Learn programming, build projects, compete in hackathons", members: ["u1", "u3"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Technology", meetingDay: "Wednesday", meetingTime: "3:30 PM", posts: [
-            { id: "p1", authorId: "u1", authorName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", content: "Great hackathon session today! 🚀", timestamp: "2026-05-19T15:00:00Z", likes: ["u3", "u5"] },
-            { id: "p2", authorId: "u3", authorName: "Rohan Kumar", avatar: "https://randomuser.me/api/portraits/men/51.jpg", content: "Just finished my first React app!", timestamp: "2026-05-18T14:00:00Z", likes: ["u1"] }
-          ]
-        },
-        {
-          id: "c2", name: "Science Society", description: "Explore scientific concepts through experiments and research", members: ["u2", "u4"], lead: "u2", leadName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", category: "Academic", meetingDay: "Thursday", meetingTime: "4:00 PM", posts: [
-            { id: "p3", authorId: "u2", authorName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", content: "Science fair prep going well! 🧪", timestamp: "2026-05-19T16:00:00Z", likes: ["u4", "u6"] }
-          ]
-        },
-        {
-          id: "c3", name: "Drama Club", description: "Acting, stagecraft, and theatrical productions", members: ["u1", "u2", "u4"], lead: "u4", leadName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", category: "Arts", meetingDay: "Friday", meetingTime: "3:00 PM", posts: [
-            { id: "p4", authorId: "u4", authorName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", content: "Auditions for the spring play next week! 🎭", timestamp: "2026-05-20T10:00:00Z", likes: ["u1", "u2"] }
-          ]
-        },
-        { id: "c4", name: "Music Ensemble", description: "Band, choir, and individual music performance", members: ["u1", "u2", "u3", "u4"], lead: "u2", leadName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", category: "Arts", meetingDay: "Tuesday", meetingTime: "3:30 PM", posts: [] },
-        { id: "c5", name: "Sports Club", description: "Athletics, team sports, and fitness activities", members: ["u1", "u3"], lead: "u3", leadName: "Rohan Kumar", avatar: "https://randomuser.me/api/portraits/men/51.jpg", category: "Sports", meetingDay: "Monday", meetingTime: "4:00 PM", posts: [] },
-        { id: "c6", name: "Debate Society", description: "Public speaking, argumentation, and competitive debate", members: ["u2", "u4"], lead: "u4", leadName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", category: "Academic", meetingDay: "Wednesday", meetingTime: "4:30 PM", posts: [] },
-        { id: "c7", name: "Art Studio", description: "Painting, sculpture, and digital art creation", members: ["u1", "u2", "u4"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Arts", meetingDay: "Thursday", meetingTime: "3:00 PM", posts: [] },
-        { id: "c8", name: "Robotics Club", description: "Build and program robots for competitions", members: ["u1", "u3"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Technology", meetingDay: "Friday", meetingTime: "4:00 PM", posts: [] }
-      ]),
-      messages: {
-        u1: [
-          { id: "msg1", from: "u5", to: "u1", content: "Great work on the math assignment!", timestamp: "2026-05-18T10:00:00Z", read: true },
-          { id: "msg2", from: "u2", to: "u1", content: "Hey, want to study together for the physics exam?", timestamp: "2026-05-19T14:00:00Z", read: false }
-        ],
-        u2: [
-          { id: "msg2", from: "u2", to: "u1", content: "Hey, want to study together for the physics exam?", timestamp: "2026-05-19T14:00:00Z", read: false },
-          { id: "msg3", from: "u6", to: "u2", content: "Your biology project proposal looks excellent!", timestamp: "2026-05-19T16:00:00Z", read: true }
-        ],
-        u3: [
-          { id: "msg4", from: "u5", to: "u3", content: "Please submit your pending physics lab report by Friday.", timestamp: "2026-05-19T09:00:00Z", read: false }
-        ],
-        u4: [
-          { id: "msg5", from: "u6", to: "u4", content: "Your debate performance was outstanding!", timestamp: "2026-05-18T15:00:00Z", read: true }
-        ],
-        u5: [
-          { id: "msg1", from: "u5", to: "u1", content: "Great work on the math assignment!", timestamp: "2026-05-18T10:00:00Z", read: true },
-          { id: "msg4", from: "u5", to: "u3", content: "Please submit your pending physics lab report by Friday.", timestamp: "2026-05-19T09:00:00Z", read: false }
-        ],
-        u6: [
-          { id: "msg3", from: "u6", to: "u2", content: "Your biology project proposal looks excellent!", timestamp: "2026-05-19T16:00:00Z", read: true },
-          { id: "msg5", from: "u6", to: "u4", content: "Your debate performance was outstanding!", timestamp: "2026-05-18T15:00:00Z", read: true }
-        ],
-        u7: [
-          { id: "msg6", from: "u12", to: "u7", content: "Please review the new fee structure proposal.", timestamp: "2026-05-20T08:00:00Z", read: false }
-        ],
-        u10: [
-          { id: "msg7", from: "u5", to: "u10", content: "Aarav is doing great in math this semester!", timestamp: "2026-05-19T11:00:00Z", read: true }
-        ],
-        u11: [
-          { id: "msg8", from: "u1", to: "u11", content: "Can I extend the due date for Physics Textbook?", timestamp: "2026-05-20T10:00:00Z", read: false }
-        ],
-        u12: [
-          { id: "msg6", from: "u12", to: "u7", content: "Please review the new fee structure proposal.", timestamp: "2026-05-20T08:00:00Z", read: false }
-        ]
-      },
-      notifications: {
-        u1: [
-          { id: "n1", title: "AI Study Plan Generated", message: "Your personalized Mathematics study plan is ready! Click to view.", type: "success", timestamp: "2026-05-18T11:00:00Z", read: false, link: "/student/study-planner" },
-          { id: "n2", title: "Assignment Graded", message: "Your math assignment has been graded: 45/50", type: "info", timestamp: "2026-05-18T10:00:00Z", read: false, link: "/student/assignments" },
-          { id: "n3", title: "Bus Route Update", message: "Route A schedule changed for next week", type: "warning", timestamp: "2026-05-17T08:00:00Z", read: true, link: "/student/bus-tracking" }
-        ],
-        u2: [
-          { id: "n4", title: "Science Fair Reminder", message: "Don't forget to submit your project proposal", type: "info", timestamp: "2026-05-19T09:00:00Z", read: false, link: "/student/announcements" }
-        ],
-        u3: [
-          { id: "n5", title: "Fee Payment Due", message: "Term 2 fee payment is pending. Please pay by May 30.", type: "warning", timestamp: "2026-05-18T12:00:00Z", read: false, link: "/student/fees" }
-        ],
-        u5: [
-          { id: "n6", title: "New Assignment Submissions", message: "3 new submissions for Quadratic Equations Worksheet", type: "info", timestamp: "2026-05-20T10:00:00Z", read: false, link: "/teacher/grading" }
-        ]
-      },
-      questionBank: toObj([
-        { id: "q1", subjectId: "sub1", type: "mcq", difficulty: "easy", question: "What is 2+2?", options: ["3", "4", "5", "6"], answer: "4" },
-        { id: "q2", subjectId: "sub2", type: "short", difficulty: "medium", question: "State Newton's second law", answer: "F = ma" }
-      ]),
-      announcements: toObj([
-        { id: "ann1", title: "School Closed on Friday", content: "School will be closed this Friday for maintenance. All classes are cancelled. Please ensure you complete your pending assignments before Thursday.", date: "2026-05-23", priority: "high", author: "u7", authorName: "Principal Meera", pinned: true, approved: true },
-        { id: "ann2", title: "Science Fair Registration Open", content: "Register for the annual science fair by May 30. Projects can be individual or in teams of up to 3. Submit your project proposal to the science department.", date: "2026-05-20", priority: "medium", author: "u7", authorName: "Principal Meera", pinned: false, approved: true },
-        { id: "ann3", title: "Sports Day Practice Schedule", content: "Practice for the annual sports day will begin next week. All house captains please coordinate with the sports department for the schedule.", date: "2026-05-25", priority: "low", author: "u8", authorName: "Mr. Vikram", pinned: false, approved: true },
-        { id: "ann4", title: "Library Book Return Reminder", content: "All borrowed books must be returned by May 25th. Overdue books will incur a fine of Rs. 5 per day.", date: "2026-05-22", priority: "medium", author: "u11", authorName: "Dr. Bookman", pinned: true, approved: true }
-      ]),
-      otpStore: {},
-      supplyAlerts: toObj([
-        { id: "sa1", item: "Notebook", quantity: 3, priority: "high", class: "10-A", status: "active" },
-        { id: "sa2", item: "Pen (Blue)", quantity: 5, priority: "medium", class: "10-A", status: "active" },
-        { id: "sa3", item: "Geometry Box", quantity: 1, priority: "low", class: "10-B", status: "active" }
-      ]),
-      bookAlerts: toObj([
-        { id: "ba1", book: "Physics Textbook", weight: "heavy", class: "10-A", date: "2026-05-20", status: "active" }
-      ]),
-      digitalFridge: toObj([
-        { id: "df1", childId: "u1", item: "Lunch Box", status: "consumed", date: "2026-05-19" },
-        { id: "df2", childId: "u1", item: "Water Bottle", status: "full", date: "2026-05-19" }
-      ]),
-      goals: {
-        u1: [{ id: "g1", title: "Complete Math Chapter 5", deadline: "2026-05-25", status: "in-progress", progress: 60 }]
-      },
-      exams: toObj([
-        { id: "ex1", title: "Mid-Term Mathematics", subjectId: "sub1", class: "10-A", date: "2026-06-10", duration: 120, totalMarks: 100, status: "upcoming" },
-        { id: "ex2", title: "Mid-Term Physics", subjectId: "sub2", class: "10-A", date: "2026-06-12", duration: 90, totalMarks: 80, status: "upcoming" }
-      ]),
-      uniformSchedule: toObj([
-        { id: "us1", day: "Monday", uniform: "Full Uniform", description: "White shirt, navy pants, tie, blazer" },
-        { id: "us2", day: "Tuesday", uniform: "Full Uniform", description: "White shirt, navy pants, tie, blazer" },
-        { id: "us3", day: "Wednesday", uniform: "House Uniform", description: "House color t-shirt, navy pants" },
-        { id: "us4", day: "Thursday", uniform: "Full Uniform", description: "White shirt, navy pants, tie, blazer" },
-        { id: "us5", day: "Friday", uniform: "Sports Uniform", description: "School sports t-shirt, track pants" }
-      ]),
-      borrowedBooks: toObj([
-        { id: "bb1", bookTitle: "Physics Textbook Vol 1", isbn: "978-0-123456-01", studentId: "u1", studentName: "Aarav Sharma", borrowedDate: "2026-05-10", dueDate: "2026-05-24", status: "borrowed" },
-        { id: "bb2", bookTitle: "Chemistry Lab Manual", isbn: "978-0-123456-02", studentId: "u2", studentName: "Priya Patel", borrowedDate: "2026-05-12", dueDate: "2026-05-26", status: "borrowed" },
-        { id: "bb3", bookTitle: "English Literature Guide", isbn: "978-0-123456-03", studentId: "u3", studentName: "Rohan Kumar", borrowedDate: "2026-05-08", dueDate: "2026-05-22", status: "overdue" },
-        { id: "bb4", bookTitle: "Mathematics Reference Book", isbn: "978-0-123456-04", studentId: "u1", studentName: "Aarav Sharma", borrowedDate: "2026-05-15", dueDate: "2026-05-29", status: "borrowed" },
-        { id: "bb5", bookTitle: "Biology Atlas", isbn: "978-0-123456-05", studentId: "u4", studentName: "Ananya Singh", borrowedDate: "2026-05-14", dueDate: "2026-05-28", status: "borrowed" }
-      ]),
-      accolades: toObj([
-        { id: "acc1", studentId: "u1", studentName: "Aarav Sharma", title: "Math Olympiad Winner", description: "First place in regional mathematics olympiad", category: "academic", certificateUrl: "", status: "approved", submittedAt: "2026-05-01T10:00:00Z", approvedBy: "u7", approvedAt: "2026-05-02T14:00:00Z" },
-        { id: "acc2", studentId: "u2", studentName: "Priya Patel", title: "Science Fair Champion", description: "Best project in annual science fair", category: "science", certificateUrl: "", status: "approved", submittedAt: "2026-05-05T09:00:00Z", approvedBy: "u12", approvedAt: "2026-05-06T11:00:00Z" },
-        { id: "acc3", studentId: "u3", studentName: "Rohan Kumar", title: "Coding Competition Runner-up", description: "Second place in inter-school coding competition", category: "technology", certificateUrl: "", status: "pending", submittedAt: "2026-05-18T16:00:00Z" },
-        { id: "acc4", studentId: "u4", studentName: "Ananya Singh", title: "Best Debater", description: "Outstanding performance in state-level debate", category: "extracurricular", certificateUrl: "", status: "approved", submittedAt: "2026-05-10T12:00:00Z", approvedBy: "u7", approvedAt: "2026-05-11T10:00:00Z" }
-      ]),
-      studyPlans: {
-        u1: [{ id: "sp1", title: "Mathematics Mastery Plan", subject: "Math", startDate: "2026-05-20", endDate: "2026-06-10", tasks: [{ title: "Complete Chapter 5 exercises", completed: true }, { title: "Practice quadratic equations", completed: false }, { title: "Take mock test", completed: false }], createdAt: "2026-05-18T11:00:00Z" }]
-      },
-      achievements: toObj([
-        { id: "ach1", authorId: "u5", authorName: "Dr. Rajesh Gupta", role: "teacher", avatar: "https://randomuser.me/api/portraits/men/33.jpg", title: "Outstanding Performance in Math Olympiad", description: "Congratulations to Aarav Sharma for winning first place in the Regional Mathematics Olympiad! 🏆", targetStudentId: "u1", targetStudentName: "Aarav Sharma", category: "academic", timestamp: "2026-05-01T10:00:00Z", likes: ["u1", "u2", "u7", "u12"], comments: [{ authorId: "u7", authorName: "Principal Meera", content: "Well deserved! Proud of our students.", timestamp: "2026-05-01T11:00:00Z" }] },
-        { id: "ach2", authorId: "u2", authorName: "Priya Patel", role: "student", avatar: "https://randomuser.me/api/portraits/women/68.jpg", title: "Science Fair Champion", description: "Won best project in the annual science fair with my renewable energy model! 🔬", targetStudentId: "u2", targetStudentName: "Priya Patel", category: "science", timestamp: "2026-05-05T09:00:00Z", likes: ["u1", "u3", "u4", "u6"], comments: [] },
-        { id: "ach3", authorId: "u6", authorName: "Prof. Sunita Verma", role: "teacher", avatar: "https://randomuser.me/api/portraits/women/44.jpg", title: "Best Debater Award", description: "Ananya Singh delivered an outstanding performance at the state-level debate competition! 🎤", targetStudentId: "u4", targetStudentName: "Ananya Singh", category: "extracurricular", timestamp: "2026-05-10T12:00:00Z", likes: ["u1", "u2", "u3", "u7"], comments: [{ authorId: "u4", authorName: "Ananya Singh", content: "Thank you ma'am! 🙏", timestamp: "2026-05-10T13:00:00Z" }] },
-        { id: "ach4", authorId: "u1", authorName: "Aarav Sharma", role: "student", avatar: "https://randomuser.me/api/portraits/men/32.jpg", title: "Coding Competition Runner-up", description: "Second place in inter-school coding competition! Built a full-stack app in 24 hours 💻", targetStudentId: "u1", targetStudentName: "Aarav Sharma", category: "technology", timestamp: "2026-05-15T16:00:00Z", likes: ["u3", "u5"], comments: [] },
-        { id: "ach5", authorId: "u7", authorName: "Principal Meera", role: "admin", avatar: "https://randomuser.me/api/portraits/women/65.jpg", title: "Perfect Attendance Award", description: "Priya Patel achieved 100% attendance this semester! A remarkable commitment to learning. 📚", targetStudentId: "u2", targetStudentName: "Priya Patel", category: "attendance", timestamp: "2026-05-18T08:00:00Z", likes: ["u1", "u2", "u5", "u6", "u10"], comments: [] },
-        { id: "ach6", authorId: "u3", authorName: "Rohan Kumar", role: "student", avatar: "https://randomuser.me/api/portraits/men/51.jpg", title: "Sports Day Gold Medal", description: "Won gold in 100m sprint at inter-house sports day! 🏃‍♂️", targetStudentId: "u3", targetStudentName: "Rohan Kumar", category: "sports", timestamp: "2026-05-20T14:00:00Z", likes: ["u1", "u4"], comments: [] }
-      ]),
-      leaveRequests: toObj([
-        { id: "lr1", studentId: "u1", studentName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", startDate: "2026-05-26", endDate: "2026-05-27", reason: "Family function - sister's wedding", type: "personal", status: "approved", requestedAt: "2026-05-20T10:00:00Z", approvedBy: "u5", approvedAt: "2026-05-20T14:00:00Z" },
-        { id: "lr2", studentId: "u2", studentName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", startDate: "2026-06-01", endDate: "2026-06-02", reason: "Medical appointment", type: "medical", status: "pending", requestedAt: "2026-05-21T09:00:00Z" },
-        { id: "lr3", studentId: "u3", studentName: "Rohan Kumar", avatar: "https://randomuser.me/api/portraits/men/51.jpg", startDate: "2026-05-30", endDate: "2026-05-30", reason: "Science competition in another city", type: "academic", status: "approved", requestedAt: "2026-05-18T11:00:00Z", approvedBy: "u6", approvedAt: "2026-05-18T15:00:00Z" }
-      ]),
-      // Phase 1+2 seed data
-      attendancePolicies: toObj([
-        { id: "ap1", name: "Standard Absence Policy", maxAbsentDays: 20, gracePeriod: 3, requireParentNote: true, academicYear: "2025-26" },
-        { id: "ap2", name: "Exam Attendance Policy", maxAbsentDays: 0, requireMedicalCert: true, academicYear: "2025-26" }
-      ]),
-      bellSchedules: toObj([
-        { id: "bs1", name: "Regular Day", startTime: "08:00", endTime: "15:30", periods: 8, periodDuration: 40, breakStart: "10:25", breakDuration: 20, lunchStart: "12:20", lunchDuration: 40 },
-        { id: "bs2", name: "Short Day", startTime: "08:00", endTime: "13:00", periods: 6, periodDuration: 35, breakStart: "10:00", breakDuration: 15, lunchStart: "12:00", lunchDuration: 30 }
-      ]),
-      roomBookings: toObj([
-        { id: "rb1", room: "Lab 1", date: "2026-06-01", startTime: "09:00", endTime: "10:30", bookedBy: "u5", purpose: "Physics practical", status: "confirmed" },
-        { id: "rb2", room: "IT Lab", date: "2026-06-02", startTime: "11:00", endTime: "12:30", bookedBy: "u5", purpose: "CS class 10-A", status: "confirmed" }
-      ]),
-      lessonPlans: toObj([
-        { id: "lp1", title: "Quadratic Equations - Introduction", subjectId: "sub1", class: "10-A", teacherId: "u5", week: 1, objectives: ["Understand standard form", "Solve by factorization"], resources: ["Textbook Ch5", "Worksheet 1"], status: "completed" },
-        { id: "lp2", title: "Newton's Laws - Lab Session", subjectId: "sub2", class: "10-A", teacherId: "u5", week: 2, objectives: ["Verify F=ma", "Measure acceleration"], resources: ["Lab equipment", "Data sheet"], status: "active" }
-      ]),
-      exercises: toObj([
-        { id: "ex1", title: "Algebra Basics", subjectId: "sub1", class: "10-A", questions: [
-          { id: "eq1", question: "Solve 2x + 5 = 13", type: "short", answer: "x = 4" },
-          { id: "eq2", question: "Factorize x² - 9", type: "short", answer: "(x-3)(x+3)" }
-        ], maxScore: 10 },
-        { id: "ex2", title: "Physics Numericals", subjectId: "sub2", class: "10-A", questions: [
-          { id: "eq3", question: "A force of 10N accelerates a 2kg mass. Find acceleration", type: "short", answer: "5 m/s²" }
-        ], maxScore: 5 }
-      ]),
-      chartOfAccounts: toObj([
-        { id: "coa1", code: "1000", name: "Cash", type: "asset", normalBalance: "debit" },
-        { id: "coa2", code: "2000", name: "Accounts Receivable", type: "asset", normalBalance: "debit" },
-        { id: "coa3", code: "3000", name: "Tuition Revenue", type: "revenue", normalBalance: "credit" },
-        { id: "coa4", code: "4000", name: "Salary Expense", type: "expense", normalBalance: "debit" },
-        { id: "coa5", code: "5000", name: "Accounts Payable", type: "liability", normalBalance: "credit" }
-      ]),
-      budgets: toObj([
-        { id: "bd1", name: "Annual Academic Budget 2025-26", fiscalYear: "2025-26", totalAmount: 5000000, allocated: 3200000, remaining: 1800000, status: "active", items: [
-          { category: "Salaries", amount: 3000000, spent: 2500000 },
-          { category: "Lab Equipment", amount: 500000, spent: 200000 },
-          { category: "Library", amount: 300000, spent: 100000 }
-        ] }
-      ]),
-      invoices: toObj([
-        { id: "inv1", invoiceNumber: "INV-2026-001", studentId: "u3", studentName: "Rohan Kumar", items: [
-          { description: "Term 3 Tuition Fee", amount: 25000 },
-          { description: "Lab Fee", amount: 5000 },
-          { description: "Library Fee", amount: 2000 }
-        ], subtotal: 32000, tax: 0, total: 32000, status: "pending", dueDate: "2026-07-31", issuedDate: "2026-07-01", paidAmount: 0 }
-      ]),
-      payments: toObj([
-        { id: "pmt1", invoiceId: "inv1", studentId: "u1", amount: 50000, method: "online", transactionId: "txn_001", status: "completed", date: "2026-01-15", term: "Term 1" },
-        { id: "pmt2", invoiceId: "inv2", studentId: "u2", amount: 50000, method: "bank", transactionId: "txn_002", status: "completed", date: "2026-01-20", term: "Term 1" }
-      ]),
-      expenses: toObj([
-        { id: "exp1", description: "Lab equipment purchase", category: "Lab Equipment", amount: 50000, date: "2026-06-01", paidTo: "Scientific Supplies Co.", paymentMethod: "bank", approvedBy: "u7", status: "approved" },
-        { id: "exp2", description: "Classroom whiteboard replacement", category: "Supplies", amount: 12000, date: "2026-06-10", paidTo: "School Supplies Ltd.", paymentMethod: "cash", status: "pending" },
-        { id: "exp3", description: "Bus maintenance - Route A", category: "Transport", amount: 8500, date: "2026-06-12", paidTo: "Auto Service Center", paymentMethod: "bank", status: "pending" }
-      ]),
-      bookCatalogue: toObj([
-        { id: "bk1", title: "Introduction to Algorithms", author: "CLRS", isbn: "978-0-262-04630-5", category: "Computer Science", copies: 3, available: 2, shelf: "CS-01" },
-        { id: "bk2", title: "Organic Chemistry", author: "Morrison & Boyd", isbn: "978-0-13-404228-2", category: "Chemistry", copies: 2, available: 1, shelf: "CH-03" },
-        { id: "bk3", title: "University Physics", author: "Young & Freedman", isbn: "978-0-321-69686-1", category: "Physics", copies: 4, available: 3, shelf: "PH-02" },
-        { id: "bk4", title: "English Grammar in Use", author: "Raymond Murphy", isbn: "978-1-108-45765-1", category: "English", copies: 5, available: 4, shelf: "EN-01" },
-        { id: "bk5", title: "Advanced Mathematics", author: "Kreyszig", isbn: "978-0-470-45836-8", category: "Mathematics", copies: 2, available: 1, shelf: "MA-01" }
-      ]),
-      clients: toObj([
-        { id: "cl1", name: "Sunil Book Depot", contact: "+91-9876543210", email: "sunil@bookdepot.com", type: "vendor", status: "active", creditLimit: 100000 },
-        { id: "cl2", name: "EduTech Solutions", contact: "+91-8765432109", email: "info@edutech.com", type: "vendor", status: "active", creditLimit: 500000 }
-      ]),
-      leads: toObj([
-        { id: "ld1", name: "Mr. Sharma", email: "sharma@example.com", phone: "+91-9999888777", source: "referral", status: "new", notes: "Interested in Class 11 admission for his son", createdAt: "2026-05-20T10:00:00Z" }
-      ]),
-      products: toObj([
-        { id: "pr1", name: "School Uniform - Junior", sku: "UNI-JR-001", price: 1500, unit: "set", category: "uniform", stock: 50 },
-        { id: "pr2", name: "Textbook - Mathematics Grade 10", sku: "TXT-M10-001", price: 800, unit: "piece", category: "textbook", stock: 100 }
-      ]),
-      orders: toObj([
-        { id: "or1", orderNumber: "ORD-2026-001", clientId: "cl1", status: "pending", items: [{ productId: "pr2", quantity: 30, unitPrice: 800 }], total: 24000, orderDate: "2026-06-01", expectedDelivery: "2026-06-15" }
-      ]),
-      staffDirectory: toObj([
-        { id: "sd1", firstName: "Rajesh", lastName: "Gupta", department: "Science", position: "Senior Teacher", employeeId: "EMP001", joinDate: "2020-04-01", qualification: "Ph.D. Physics", userId: "u5" },
-        { id: "sd2", firstName: "Sunita", lastName: "Verma", department: "Science", position: "Professor", employeeId: "EMP002", joinDate: "2019-08-15", qualification: "Ph.D. Chemistry", userId: "u6" }
-      ]),
-      staffPositions: toObj([
-        { id: "sp1", title: "Senior Teacher", department: "Science", salaryRange: { min: 60000, max: 90000 }, requirements: ["Ph.D.", "5+ years experience"] },
-        { id: "sp2", title: "Professor", department: "Science", salaryRange: { min: 70000, max: 110000 }, requirements: ["Ph.D.", "8+ years experience"] }
-      ])
-    };
-    await setData('/', seedData);
-    console.log('[Seed] Database seeded SUCCESSFULLY!');
+    await seedDatabase();
     res.json({ success: true, message: 'Database seeded successfully' });
   } catch (error) {
     console.error('[Seed] Seed error:', error);
@@ -2076,7 +1953,7 @@ app.get('/api/books', async (_req, res) => {
 // GET /api/fees (bare)
 app.get('/api/fees', async (req, res) => {
   try {
-    const { studentId } = req.query;
+    const studentId = req.query.studentId as string | undefined;
     const usersData = await getData('users') as any;
     const usersMap: Record<string, any> = usersData || {};
     if (studentId) {
@@ -2731,12 +2608,24 @@ app.put('/api/scheduling/timetable/:className/:day/:periodIdx', async (req, res)
 });
 
 // Start server
-app.listen(process.env.PORT || PORT, () => {
+app.listen(process.env.PORT || PORT, async () => {
   const actualPort = process.env.PORT || PORT;
   console.log(`EduVault AI Backend running on port ${actualPort}`);
   console.log(`Firebase RTDB: ${process.env.FIREBASE_DATABASE_URL}`);
   console.log(`API endpoints ready at http://localhost:${PORT}/api/`);
-  console.log(`POST /api/seed to populate the database`);
+  // Auto-seed if database is empty
+  try {
+    const existing = await getData('users');
+    if (!existing || (typeof existing === 'object' && Object.keys(existing).length === 0)) {
+      console.log('[AutoSeed] No users found — auto-seeding...');
+      await seedDatabase();
+    } else {
+      console.log(`[AutoSeed] DB has ${Object.keys(existing).length} users — skipping seed`);
+    }
+  } catch (e) {
+    console.log('[AutoSeed] Check failed, seeding anyway...');
+    await seedDatabase();
+  }
 });
 
 export default app;
