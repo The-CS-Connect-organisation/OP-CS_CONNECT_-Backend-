@@ -3,37 +3,6 @@ import { getData, setData, listData, id, removeData } from '../firebase';
 
 const router = Router();
 
-// GET /api/timetable/:className
-router.get('/:className', async (req: Request, res: Response) => {
-  try {
-    const requesterId = req.headers['x-user-id'] as string;
-    if (!requesterId) {
-      return res.status(401).json({ error: 'Unauthorized - User ID required' });
-    }
-
-    const { className } = req.params;
-    const timetable = await listData('timetable');
-    const classTimetable = timetable.filter(e => e.class === className);
-    
-    const daysOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    classTimetable.sort((a, b) => {
-      const dayCompare = daysOrder.indexOf(a.day) - daysOrder.indexOf(b.day);
-      if (dayCompare !== 0) return dayCompare;
-      return a.period - b.period;
-    });
-
-    const formattedTimetable: { [key: string]: any[] } = {};
-    daysOrder.forEach(day => {
-      formattedTimetable[day] = classTimetable.filter(e => e.day === day);
-    });
-
-    res.json({ success: true, class: className, timetable: formattedTimetable });
-  } catch (err) {
-    console.error('[Timetable] Get class timetable error:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
 // GET /api/timetable/teacher/:teacherId
 router.get('/teacher/:teacherId', async (req: Request, res: Response) => {
   try {
