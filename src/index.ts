@@ -153,7 +153,7 @@ const buildSeedData = () => ({
     { id: "u5", name: "Mr. Rajesh Gupta", email: "rajesh@eduvault.ai", password: "demo1234", role: "teacher", class: "10-A", subjects: ["Math", "Physics"] },
     { id: "u6", name: "Dr. Sunita Verma", email: "sunita@eduvault.ai", password: "demo1234", role: "teacher", class: "10-B", subjects: ["Chemistry", "Biology"] },
     { id: "u7", name: "Admin User", email: "admin@eduvault.ai", password: "admin123", role: "admin", avatar: "AU" },
-    { id: "u8", name: "Mrs. Meera Kapoor", email: "meera@eduvault.ai", password: "demo1234", role: "teacher" },
+    { id: "u8", name: "Mrs. Meera Kapoor", email: "meera@eduvault.ai", password: "demo1234", role: "admin" },
     { id: "u9", name: "Raju Kumar", email: "raju@eduvault.ai", password: "demo1234", role: "driver" }
   ]),
   timetable: {
@@ -271,6 +271,31 @@ const buildSeedData = () => ({
     { id: "fr3", studentId: "u3", studentName: "Rohan Kumar", class: "10-B", type: "tuition", amount: 45000, paid: 45000, due: "2026-01-15", status: "paid" },
     { id: "fr4", studentId: "u4", studentName: "Ananya Singh", class: "10-B", type: "tuition", amount: 45000, paid: 45000, due: "2026-01-15", status: "paid" }
   ]),
+  messages: {
+    u1: [
+      { id: "m1", from: "u5", to: "u1", content: "Great work on your math assignment, Aarav!", timestamp: "2026-05-29T10:30:00Z", read: true },
+      { id: "m2", from: "u7", to: "u1", content: "Please submit your fee receipt by Friday.", timestamp: "2026-05-28T09:00:00Z", read: true },
+      { id: "m3", from: "u5", to: "u1", content: "Reminder: Physics practical tomorrow at 9 AM.", timestamp: "2026-05-27T14:00:00Z", read: false }
+    ],
+    u2: [
+      { id: "m4", from: "u6", to: "u2", content: "Excellent biology project, Priya!", timestamp: "2026-05-29T11:00:00Z", read: true }
+    ],
+    u3: [
+      { id: "m5", from: "u5", to: "u3", content: "Please complete your pending math homework.", timestamp: "2026-05-29T08:00:00Z", read: false }
+    ],
+    u4: [
+      { id: "m6", from: "u6", to: "u4", content: "Great participation in science society meeting.", timestamp: "2026-05-28T15:00:00Z", read: true }
+    ]
+  },
+  notifications: {
+    u1: [
+      { id: "n1", title: "Assignment Graded", message: "Your Math assignment has been graded.", type: "grade", read: false, createdAt: "2026-05-30T10:00:00Z" },
+      { id: "n2", title: "Exam Schedule", message: "Mid-term exams start next week.", type: "exam", read: false, createdAt: "2026-05-29T09:00:00Z" }
+    ],
+    u2: [
+      { id: "n3", title: "Club Meeting", message: "Science society meeting at 4 PM.", type: "club", read: false, createdAt: "2026-05-30T08:00:00Z" }
+    ]
+  },
   announcements: toObj([
     { id: "ann1", title: "Summer Break Notice", content: "School will remain closed for summer break from June 15 to July 10.", priority: "high", audience: ["all"], createdBy: "u7", createdAt: "2026-06-01T08:00:00Z" },
     { id: "ann2", title: "Parent-Teacher Meeting", content: "Quarterly PTM scheduled for June 25. All parents are requested to attend.", priority: "medium", audience: ["all"], createdBy: "u7", createdAt: "2026-06-05T10:00:00Z" },
@@ -2695,18 +2720,13 @@ app.listen(process.env.PORT || PORT, async () => {
   console.log(`EduVault AI Backend running on port ${actualPort}`);
   console.log(`Firebase RTDB: ${process.env.FIREBASE_DATABASE_URL}`);
   console.log(`API endpoints ready at http://localhost:${PORT}/api/`);
-  // Auto-seed if database is empty
+  // Auto-seed on every startup with fresh data
   try {
-    const existing = await getData('users');
-    if (!existing || (typeof existing === 'object' && Object.keys(existing).length === 0)) {
-      console.log('[AutoSeed] No users found — auto-seeding...');
-      await seedDatabase();
-    } else {
-      console.log(`[AutoSeed] DB has ${Object.keys(existing).length} users — skipping seed`);
-    }
-  } catch (e) {
-    console.log('[AutoSeed] Check failed, seeding anyway...');
+    console.log('[AutoSeed] Seeding database...');
     await seedDatabase();
+    console.log('[AutoSeed] Done');
+  } catch (e) {
+    console.error('[AutoSeed] Failed:', e);
   }
 });
 
