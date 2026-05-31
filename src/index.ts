@@ -433,7 +433,9 @@ app.all('/api/seed', async (_req, res) => {
         { id: "pmt2", invoiceId: "inv2", studentId: "u2", amount: 50000, method: "bank", transactionId: "txn_002", status: "completed", date: "2026-01-20", term: "Term 1" }
       ]),
       expenses: toObj([
-        { id: "exp1", description: "Lab equipment purchase", category: "Lab Equipment", amount: 50000, date: "2026-06-01", paidTo: "Scientific Supplies Co.", paymentMethod: "bank", approvedBy: "u7", status: "approved" }
+        { id: "exp1", description: "Lab equipment purchase", category: "Lab Equipment", amount: 50000, date: "2026-06-01", paidTo: "Scientific Supplies Co.", paymentMethod: "bank", approvedBy: "u7", status: "approved" },
+        { id: "exp2", description: "Classroom whiteboard replacement", category: "Supplies", amount: 12000, date: "2026-06-10", paidTo: "School Supplies Ltd.", paymentMethod: "cash", status: "pending" },
+        { id: "exp3", description: "Bus maintenance - Route A", category: "Transport", amount: 8500, date: "2026-06-12", paidTo: "Auto Service Center", paymentMethod: "bank", status: "pending" }
       ]),
       libraryCatalogue: toObj([
         { id: "bk1", title: "Introduction to Algorithms", author: "CLRS", isbn: "978-0-262-04630-5", category: "Computer Science", copies: 3, available: 2, shelf: "CS-01" },
@@ -2027,7 +2029,8 @@ app.get('/api/attendance', async (req, res) => {
       return res.json(result);
     }
     const allAttendance = await getData('attendance') as any;
-    res.json(allAttendance || {});
+    const flat = allAttendance ? Object.values(allAttendance).flat() : [];
+    res.json(flat);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch attendance' });
   }
