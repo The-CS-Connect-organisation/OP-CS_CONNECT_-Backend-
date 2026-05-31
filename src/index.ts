@@ -442,7 +442,13 @@ const buildSeedData = () => ({
 });
 
 async function seedDatabase() {
-  console.log('[Seed] Starting database seed...');
+  console.log('[Seed] Checking if database is populated...');
+  const existing = await getData('users');
+  if (existing && Object.keys(existing).length > 0) {
+    console.log(`[Seed] Database already has ${Object.keys(existing).length} users — skipping seed.`);
+    return;
+  }
+  console.log('[Seed] Starting fresh database seed...');
   const data = buildSeedData();
   const users = data.users as any;
   if (users) {
@@ -457,8 +463,28 @@ async function seedDatabase() {
   console.log('[Seed] Database seeded SUCCESSFULLY!');
 }
 
-app.all('/api/seed', async (_req, res) => {
+app.all('/api/seed', async (req, res) => {
   try {
+    const force = req.query.force === 'true';
+    if (force) {
+      console.log('[Seed] Force reseeding...');
+      const data = buildSeedData();
+      const users = data.users as any;
+      if (users) {
+        for (const key of Object.keys(users)) {
+          const pwd = users[key].password;
+          if (pwd && !pwd.startsWith('$2')) {
+            users[key].password = await bcrypt.hash(pwd, SALT_ROUNDS);
+          }
+        }
+      }
+      await setData('/', data);
+      return res.json({ success: true, message: 'Database force-seeded' });
+    }
+    const existing = await getData('users');
+    if (existing && Object.keys(existing).length > 0) {
+      return res.json({ success: true, message: 'Database already has data, use ?force=true to reseed' });
+    }
     await seedDatabase();
     res.json({ success: true, message: 'Database seeded successfully' });
   } catch (error) {
