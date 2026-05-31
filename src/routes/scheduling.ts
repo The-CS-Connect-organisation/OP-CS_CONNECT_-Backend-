@@ -351,4 +351,117 @@ router.get('/rotations/:class', async (req, res) => {
   }
 });
 
+// --- Frontend-compatible aliases ---
+
+// GET /scheduling/rooms/list → rooms list (alias for /rooms?list=true)
+router.get('/rooms/list', async (_req, res) => {
+  try {
+    const rooms = await listData('rooms');
+    res.json(rooms);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch rooms' });
+  }
+});
+
+// PUT /scheduling/rooms/:id — update room booking
+router.put('/rooms/:id', async (req, res) => {
+  try {
+    const existing = await getData(`roomBookings/${req.params.id}`);
+    if (!existing) return res.status(404).json({ error: 'Booking not found' });
+    const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() };
+    await setData(`roomBookings/${req.params.id}`, updated);
+    res.json(updated);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to update booking' });
+  }
+});
+
+// DELETE /scheduling/rooms/:id — cancel room booking
+router.delete('/rooms/:id', async (req, res) => {
+  try {
+    const existing = await getData(`roomBookings/${req.params.id}`);
+    if (!existing) return res.status(404).json({ error: 'Booking not found' });
+    existing.status = 'cancelled';
+    existing.cancelledAt = new Date().toISOString();
+    await setData(`roomBookings/${req.params.id}`, existing);
+    res.json(existing);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to cancel booking' });
+  }
+});
+
+// GET /scheduling/coverage — alias for /coverages
+router.get('/coverage', async (_req, res) => {
+  try {
+    const coverages = await listData('coverages');
+    res.json(coverages.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch coverages' });
+  }
+});
+
+// POST /scheduling/coverage — alias for /coverages
+router.post('/coverage', async (req, res) => {
+  try {
+    const coverage = { id: id('cov'), ...req.body, status: 'pending', createdAt: new Date().toISOString() };
+    await setData(`coverages/${coverage.id}`, coverage);
+    res.status(201).json(coverage);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to create coverage' });
+  }
+});
+
+// PUT /scheduling/coverage/:id — update coverage request
+router.put('/coverage/:id', async (req, res) => {
+  try {
+    const existing = await getData(`coverages/${req.params.id}`);
+    if (!existing) return res.status(404).json({ error: 'Coverage not found' });
+    const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() };
+    await setData(`coverages/${req.params.id}`, updated);
+    res.json(updated);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to update coverage' });
+  }
+});
+
+// PUT /scheduling/bell-schedules/:id
+router.put('/bell-schedules/:id', async (req, res) => {
+  try {
+    const existing = await getData(`bellSchedules/${req.params.id}`);
+    if (!existing) return res.status(404).json({ error: 'Bell schedule not found' });
+    const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() };
+    await setData(`bellSchedules/${req.params.id}`, updated);
+    res.json(updated);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to update bell schedule' });
+  }
+});
+
+// DELETE /scheduling/bell-schedules/:id
+router.delete('/bell-schedules/:id', async (req, res) => {
+  try {
+    const existing = await getData(`bellSchedules/${req.params.id}`);
+    if (!existing) return res.status(404).json({ error: 'Bell schedule not found' });
+    await setData(`bellSchedules/${req.params.id}`, null);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to delete bell schedule' });
+  }
+});
+
+// PUT /scheduling/timetable/:class/:day/:periodIdx — update single timetable cell
+router.put('/timetable/:class/:day/:periodIdx', async (req, res) => {
+  try {
+    const tt = await getData(`timetable/${req.params.class}`) || [];
+    const dayIdx = (tt as any[]).findIndex((d: any) => d.day === req.params.day);
+    if (dayIdx === -1) return res.status(404).json({ error: 'Day not found' });
+    const periodIdx = parseInt(req.params.periodIdx);
+    (tt as any[])[dayIdx].periods[periodIdx] = { ...(tt as any[])[dayIdx].periods[periodIdx], ...req.body };
+    await setData(`timetable/${req.params.class}`, tt);
+    res.json(tt);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to update timetable entry' });
+  }
+});
+
 export default router;

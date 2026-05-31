@@ -290,4 +290,106 @@ router.put('/exercises/:id/grade', async (req, res) => {
   }
 });
 
+// --- Frontend-compatible aliases ---
+
+// GET /classroom/exercises (bare, with ?subject= query)
+router.get('/exercises', async (req, res) => {
+  try {
+    let exercises = await listData('exercises');
+    const { subject } = req.query;
+    if (subject) exercises = exercises.filter((e: any) => e.subjectId === subject || e.subject === subject);
+    res.json(exercises);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch exercises' });
+  }
+});
+
+// GET /classroom/peer-review/:assignmentId
+router.get('/peer-review/:assignmentId', async (req, res) => {
+  try {
+    const reviews = await listData(`peerReviews/${req.params.assignmentId}`);
+    const { studentId } = req.query;
+    if (studentId) return res.json(reviews.filter((r: any) => r.revieweeId === studentId));
+    res.json(reviews);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch peer reviews' });
+  }
+});
+
+// POST /classroom/peer-review/:assignmentId
+router.post('/peer-review/:assignmentId', async (req, res) => {
+  try {
+    const assignment = await getData(`assignments/${req.params.assignmentId}`);
+    if (!assignment) return res.status(404).json({ error: 'Assignment not found' });
+    const { reviewerId, revieweeId, score, feedback } = req.body;
+    const review = {
+      id: id('pr'), assignmentId: req.params.assignmentId, reviewerId, revieweeId,
+      score, feedback, createdAt: new Date().toISOString(),
+    };
+    const reviews = await listData(`peerReviews/${req.params.assignmentId}`);
+    reviews.push(review);
+    await setData(`peerReviews/${req.params.assignmentId}`, Object.fromEntries(reviews.map((r: any) => [r.id, r])));
+    res.status(201).json(review);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to submit peer review' });
+  }
+});
+
+// GET /classroom/rooms — list physical rooms
+router.get('/rooms', async (_req, res) => {
+  try {
+    const rooms = await listData('rooms');
+    res.json(rooms);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch rooms' });
+  }
+});
+
+// GET /classroom/lessons/:courseId → GET /courses/:courseId/lessons
+router.get('/lessons/:courseId', async (req, res) => {
+  try {
+    const lessons = await listData('lessons');
+    res.json(lessons.filter((l: any) => l.courseId === req.params.courseId)
+      .sort((a: any, b: any) => (a.order || 0) - (b.order || 0)));
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch lessons' });
+  }
+});
+
+// POST /classroom/lessons/:courseId → POST /courses/:courseId/lessons
+router.post('/lessons/:courseId', async (req, res) => {
+  try {
+    const lesson = { id: id('lsn'), courseId: req.params.courseId, ...req.body, createdAt: new Date().toISOString() };
+    await setData(`lessons/${lesson.id}`, lesson);
+    res.status(201).json(lesson);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to create lesson' });
+  }
+});
+
+// POST /classroom/progress-notes/:studentId
+router.post('/progress-notes/:studentId', async (req, res) => {
+  try {
+    const note = { id: id('pn'), studentId: req.params.studentId, ...req.body, createdAt: new Date().toISOString() };
+    await setData(`progressNotes/${note.id}`, note);
+    res.status(201).json(note);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to create progress note' });
+  }
+});
+
+// PUT /classroom/hall-passes/:id/end → alias for /return
+router.put('/hall-passes/:id/end', async (req, res) => {
+  try {
+    const pass = await getData(`hallPasses/${req.params.id}`);
+    if (!pass) return res.status(404).json({ error: 'Pass not found' });
+    pass.status = 'returned';
+    pass.returnedAt = new Date().toISOString();
+    await setData(`hallPasses/${req.params.id}`, pass);
+    res.json(pass);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to end pass' });
+  }
+});
+
 export default router;

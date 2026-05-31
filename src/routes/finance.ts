@@ -697,4 +697,49 @@ router.get('/dashboard/summary', async (_req, res) => {
   }
 });
 
+// --- Frontend-compatible aliases ---
+
+// GET /finance/journal — list all journal entries
+router.get('/journal', async (_req, res) => {
+  try {
+    const entries = await listData('journalEntries');
+    res.json(entries.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch journal entries' });
+  }
+});
+
+// POST /finance/journal — create journal entry
+router.post('/journal', async (req, res) => {
+  try {
+    const entry = { id: id('je'), ...req.body, status: 'draft', createdAt: new Date().toISOString() };
+    await setData(`journalEntries/${entry.id}`, entry);
+    res.status(201).json(entry);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to create journal entry' });
+  }
+});
+
+// GET /finance/late-fees — list all late fees
+router.get('/late-fees', async (_req, res) => {
+  try {
+    const fees = await listData('lateFees');
+    res.json(fees);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch late fees' });
+  }
+});
+
+// POST /finance/late-fees — create late fee
+router.post('/late-fees', async (req, res) => {
+  try {
+    const existing = await listData('lateFees');
+    const fee = { id: id('lf'), ...req.body, createdAt: new Date().toISOString() };
+    await setData(`lateFees/${fee.id}`, fee);
+    res.status(201).json(fee);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to create late fee' });
+  }
+});
+
 export default router;
