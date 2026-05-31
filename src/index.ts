@@ -2855,7 +2855,12 @@ app.listen(process.env.PORT || PORT, async () => {
   console.log(`EduVault AI Backend running on port ${actualPort}`);
   console.log(`Firebase RTDB: ${process.env.FIREBASE_DATABASE_URL}`);
   console.log(`API endpoints ready at http://localhost:${PORT}/api/`);
-  // Auto-seed removed: use /api/seed endpoint explicitly if needed
+  // Auto-seed on restart for fresh database
+  try {
+    await seedDatabase();
+  } catch (e) {
+    console.warn('[Startup] Seed skipped or already populated:', (e as Error)?.message || e);
+  }
 });
 
 export default app;
