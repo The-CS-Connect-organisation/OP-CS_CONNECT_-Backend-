@@ -63,22 +63,41 @@ router.get('/timetable/:class', async (req, res) => {
 });
 
 // --- Room Booking (Phase 1) ---
-router.get('/rooms', async (_req, res) => {
+router.get('/rooms', async (req, res) => {
   try {
-    const rooms = await listData('rooms');
-    res.json(rooms);
+    // If query param for room listing, return rooms; otherwise return bookings
+    if (req.query.list === 'true') {
+      const rooms = await listData('rooms');
+      return res.json(rooms);
+    }
+    // Default: return room bookings (used by AdminScheduling.getRoomBookings)
+    const data = await getData('roomBookings');
+    res.json(data ? Object.values(data).sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()) : []);
   } catch (e) {
-    res.status(500).json({ error: 'Failed to fetch rooms' });
+    res.status(500).json({ error: 'Failed to fetch room bookings' });
   }
 });
 
 router.post('/rooms', async (req, res) => {
   try {
-    const room = { id: id('rm'), ...req.body, createdAt: new Date().toISOString() };
-    await setData(`rooms/${room.id}`, room);
-    res.status(201).json(room);
+    // Frontend AdminScheduling calls this to CREATE a booking (not a physical room)
+    const { roomId, date, startTime, endTime, bookedBy, purpose } = req.body;
+    const bookings = await listData('roomBookings');
+    const conflict = bookings.find((b: any) =>
+      b.roomId === roomId && b.date === date && b.status !== 'cancelled' &&
+      ((startTime >= b.startTime && startTime < b.endTime) ||
+       (endTime > b.startTime && endTime <= b.endTime) ||
+       (startTime <= b.startTime && endTime >= b.endTime))
+    );
+    if (conflict) return res.status(409).json({ error: 'Room already booked for this time', conflict });
+    const booking = {
+      id: id('bk'), roomId, date, startTime, endTime, bookedBy, purpose,
+      status: 'approved', createdAt: new Date().toISOString(),
+    };
+    await setData(`roomBookings/${booking.id}`, booking);
+    res.status(201).json(booking);
   } catch (e) {
-    res.status(500).json({ error: 'Failed to create room' });
+    res.status(500).json({ error: 'Failed to book room' });
   }
 });
 
@@ -214,6 +233,20 @@ router.get('/subject-choices', async (req, res) => {
   }
 });
 
+// Frontend calls GET /subject-choices/all to get all subject choices
+router.get('/subject-choices/:studentId', async (req, res) => {
+  try {
+    const choices = await listData('subjectChoices');
+    if (req.params.studentId && req.params.studentId !== 'all') {
+      res.json(choices.filter((c: any) => c.studentId === req.params.studentId));
+    } else {
+      res.json(choices);
+    }
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch choices' });
+  }
+});
+
 router.put('/subject-choices/:id/:action', async (req, res) => {
   try {
     const existing = await getData(`subjectChoices/${req.params.id}`);
@@ -236,6 +269,15 @@ router.post('/co-teaching', async (req, res) => {
     res.status(201).json(ct);
   } catch (e) {
     res.status(500).json({ error: 'Failed to create co-teaching' });
+  }
+});
+
+router.get('/co-teaching', async (_req, res) => {
+  try {
+    const records = await listData('coTeaching');
+    res.json(records);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch co-teaching' });
   }
 });
 

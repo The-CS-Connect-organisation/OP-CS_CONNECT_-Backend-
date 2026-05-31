@@ -437,7 +437,7 @@ app.all('/api/seed', async (_req, res) => {
         { id: "exp2", description: "Classroom whiteboard replacement", category: "Supplies", amount: 12000, date: "2026-06-10", paidTo: "School Supplies Ltd.", paymentMethod: "cash", status: "pending" },
         { id: "exp3", description: "Bus maintenance - Route A", category: "Transport", amount: 8500, date: "2026-06-12", paidTo: "Auto Service Center", paymentMethod: "bank", status: "pending" }
       ]),
-      libraryCatalogue: toObj([
+      bookCatalogue: toObj([
         { id: "bk1", title: "Introduction to Algorithms", author: "CLRS", isbn: "978-0-262-04630-5", category: "Computer Science", copies: 3, available: 2, shelf: "CS-01" },
         { id: "bk2", title: "Organic Chemistry", author: "Morrison & Boyd", isbn: "978-0-13-404228-2", category: "Chemistry", copies: 2, available: 1, shelf: "CH-03" },
         { id: "bk3", title: "University Physics", author: "Young & Freedman", isbn: "978-0-321-69686-1", category: "Physics", copies: 4, available: 3, shelf: "PH-02" },
@@ -2077,13 +2077,28 @@ app.get('/api/books', async (_req, res) => {
 app.get('/api/fees', async (req, res) => {
   try {
     const { studentId } = req.query;
+    const usersData = await getData('users') as any;
+    const usersMap: Record<string, any> = usersData || {};
     if (studentId) {
-      const fees = await getData(`fees/${studentId}`);
-      return res.json(fees ? Object.values(fees) : []);
+      const fees = await getData(`fees/${studentId}`) as any;
+      const records = fees ? Object.values(fees) : [];
+      const student = usersMap[studentId] || {};
+      const enriched = records.map((r: any, i: number) => ({ ...r, id: `${studentId}_${i}`, studentId, studentName: student.name || 'Unknown', class: student.class || '', type: r.type || 'tuition' }));
+      return res.json(enriched);
     }
     const allFees = await getData('fees') as any;
-    const flat = allFees ? Object.values(allFees).flat() : [];
-    res.json(flat);
+    const result: any[] = [];
+    if (allFees) {
+      for (const [sid, records] of Object.entries(allFees)) {
+        const student = usersMap[sid] || {};
+        if (Array.isArray(records)) {
+          records.forEach((r: any, i: number) => {
+            result.push({ ...r, id: `${sid}_${i}`, studentId: sid, studentName: student.name || 'Unknown', class: student.class || '', type: r.type || 'tuition' });
+          });
+        }
+      }
+    }
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch fees' });
   }
