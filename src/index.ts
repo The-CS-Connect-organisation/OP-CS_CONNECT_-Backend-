@@ -2420,6 +2420,17 @@ app.delete('/api/bus/assignments/:id', async (req, res) => {
 // These match what the frontend api.ts expects, redirecting to the correct data
 // without requiring frontend rebuilds.
 
+function id(prefix: string): string {
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+}
+
+async function listData(path: string): Promise<any[]> {
+  const data = await getData(path);
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  return Object.values(data);
+}
+
 // --- Library Aliases ---
 app.get('/api/library/catalogue', async (_req, res) => {
   try { const data = await getData('bookCatalogue'); res.json(data ? Object.values(data) : []); }
@@ -2594,7 +2605,7 @@ app.post('/api/hr/payroll', async (req, res) => {
   catch (e) { res.status(500).json({ error: 'Failed to create salary scale' }); }
 });
 app.post('/api/hr/payroll/process/:month', async (req, res) => {
-  try { const { month, year, processedBy } = req.params; const staff = await listData('users'); const employees = staff.filter((u: any) => ['teacher', 'admin', 'coordinator', 'manager', 'librarian'].includes(u.role)); const scales = await listData('salaryScales'); const payslips: any[] = []; for (const emp of employees) { const scale = scales.find((s: any) => s.position === emp.position || s.role === emp.role); const baseSalary = scale?.baseSalary || 0; const allowances = scale?.allowances || 0; const deductions = scale?.deductions || 0; const netSalary = baseSalary + allowances - deductions; const payslip = { id: id('ps'), userId: emp.id, name: emp.name, position: emp.position || emp.role, month, year, baseSalary, allowances, deductions, netSalary, status: 'draft', processedBy, processedAt: new Date().toISOString() }; await setData(`payslips/${payslip.id}`, payslip); payslips.push(payslip); } res.json({ success: true, count: payslips.length, payslips }); }
+  try { const { month } = req.params; const { year, processedBy } = req.body; const staff = await listData('users'); const employees = staff.filter((u: any) => ['teacher', 'admin', 'coordinator', 'manager', 'librarian'].includes(u.role)); const scales = await listData('salaryScales'); const payslips: any[] = []; for (const emp of employees) { const scale = scales.find((s: any) => s.position === emp.position || s.role === emp.role); const baseSalary = scale?.baseSalary || 0; const allowances = scale?.allowances || 0; const deductions = scale?.deductions || 0; const netSalary = baseSalary + allowances - deductions; const payslip = { id: id('ps'), userId: emp.id, name: emp.name, position: emp.position || emp.role, month, year: year || new Date().getFullYear().toString(), baseSalary, allowances, deductions, netSalary, status: 'draft', processedBy: processedBy || 'system', processedAt: new Date().toISOString() }; await setData(`payslips/${payslip.id}`, payslip); payslips.push(payslip); } res.json({ success: true, count: payslips.length, payslips }); }
   catch (e) { res.status(500).json({ error: 'Failed to run payroll' }); }
 });
 app.post('/api/hr/leave/:id/approve', async (req, res) => {
