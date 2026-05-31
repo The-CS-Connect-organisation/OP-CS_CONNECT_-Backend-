@@ -2207,25 +2207,42 @@ app.get('/api/analytics/class/:className', async (req, res) => {
     const totalStudents = students.length;
     let totalMarks = 0;
     let presentCount = 0;
+    let totalAttRecords = 0;
     const subjectPerformance: Record<string, number[]> = {};
+    const allGrades: { marks: number; grade: string }[] = [];
+    let topPerformer = '';
+    let topPerformerAvg = 0;
     for (const s of students as any[]) {
       const grades = await getData(`grades/${(s as any).id}`);
       const gradeList = grades ? Object.values(grades) : [];
+      let studentTotal = 0;
       for (const g of gradeList as any[]) {
         if (!subjectPerformance[g.subject]) subjectPerformance[g.subject] = [];
-        subjectPerformance[g.subject].push(g.marks || 0);
-        totalMarks += g.marks || 0;
+        const marks = g.marks || g.overall || 0;
+        subjectPerformance[g.subject].push(marks);
+        totalMarks += marks;
+        studentTotal += marks;
+        allGrades.push({ marks, grade: g.grade || 'N/A' });
+      }
+      const studentAvg = gradeList.length > 0 ? studentTotal / gradeList.length : 0;
+      if (studentAvg > topPerformerAvg) {
+        topPerformerAvg = studentAvg;
+        topPerformer = (s as any).name || '';
       }
       const att = await getData(`attendance/${(s as any).id}`);
       const attList = att ? Object.values(att) : [];
+      totalAttRecords += attList.length;
       presentCount += attList.filter((a: any) => a.status === 'present').length;
     }
-    const avgMarks = totalStudents > 0 ? Math.round(totalMarks / (totalStudents * Math.max(1, Object.keys(subjectPerformance).length))) : 0;
-    const avgAttendance = totalStudents > 0 ? Math.round(presentCount / totalStudents) : 0;
-    const subjectAverages = Object.fromEntries(
-      Object.entries(subjectPerformance).map(([sub, marks]) => [sub, Math.round(marks.reduce((a, b) => a + b, 0) / marks.length)])
-    );
-    res.json({ className: req.params.className, totalStudents, avgMarks, avgAttendance, subjectAverages, students: students.map(safeUser) });
+    const avgGrade = totalStudents > 0 ? Math.round(totalMarks / (totalStudents * Math.max(1, Object.keys(subjectPerformance).length))) : 0;
+    const attendance = totalAttRecords > 0 ? Math.round((presentCount / totalAttRecords) * 100) : 0;
+    const subjects = Object.entries(subjectPerformance).map(([name, marks]) => ({
+      name, avg: Math.round(marks.reduce((a, b) => a + b, 0) / marks.length)
+    }));
+    const gradeCounts: Record<string, number> = {};
+    allGrades.forEach(g => { gradeCounts[g.grade] = (gradeCounts[g.grade] || 0) + 1; });
+    const gradeDistribution = Object.entries(gradeCounts).map(([grade, count]) => ({ grade, count }));
+    res.json({ className: req.params.className, totalStudents, avgGrade, attendance, topPerformer, subjects, gradeDistribution });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch class analytics' });
   }
