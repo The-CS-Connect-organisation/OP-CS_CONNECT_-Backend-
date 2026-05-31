@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
 import attendanceRoutes from './routes/attendance';
 import schedulingRoutes from './routes/scheduling';
 import sisRoutes from './routes/sis';
@@ -35,18 +38,14 @@ dotenv.config();
 
 const app = express();
 
-// Manual CORS headers - MUST BE FIRST MIDDLEWARE!
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-user-id');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+const JWT_SECRET = process.env.JWT_SECRET || `eduvault-dev-${Date.now()}`;
+
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
+  credentials: process.env.CORS_ORIGIN ? true : false,
+}));
 
 // Request Logger
 app.use((req, res, next) => {
@@ -446,7 +445,17 @@ const buildSeedData = () => ({
 
 async function seedDatabase() {
   console.log('[Seed] Starting database seed...');
-  await setData('/', buildSeedData());
+  const data = buildSeedData();
+  const users = data.users as any;
+  if (users) {
+    for (const key of Object.keys(users)) {
+      const pwd = users[key].password;
+      if (pwd && !pwd.startsWith('$2')) {
+        users[key].password = await bcrypt.hash(pwd, SALT_ROUNDS);
+      }
+    }
+  }
+  await setData('/', data);
   console.log('[Seed] Database seeded SUCCESSFULLY!');
 }
 
@@ -461,53 +470,89 @@ app.all('/api/seed', async (_req, res) => {
 });
 
 // ==================== AUTH ====================
-app.post('/api/auth/login', async (req, res) => {
+const SALT_ROUNDS = 10;
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Too many attempts, try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+function signToken(user: any): string {
+  return jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+}
+
+function authMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  try {
+    const token = authHeader.slice(7);
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    (req as any).user = decoded;
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+}
+
+app.post('/api/auth/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log('[Login] Attempting login with:', { email, password });
+    console.log('[Login] Attempting login for:', email);
     const usersData = await getData('users') as any;
-    console.log('[Login] Users from Firebase:', usersData);
-    const users = usersData ? (Object.values(usersData) as any[]) : [];
-    console.log('[Login] User array:', users);
-    const user = users.find((u: any) => u.email === email && u.password === password);
-    console.log('[Login] Found user:', user);
-    if (!user) {
-      console.log('[Login] Invalid credentials!');
-      return res.status(401).json({ error: 'Invalid credentials' });
+    if (!usersData) return res.status(401).json({ error: 'Invalid credentials' });
+    const entries = Object.entries(usersData) as [string, any][];
+    const entry = entries.find(([_, u]) => u.email === email);
+    if (!entry) return res.status(401).json({ error: 'Invalid credentials' });
+    const [userKey, user] = entry;
+    let valid = false;
+    if (user.password && user.password.startsWith('$2')) {
+      valid = await bcrypt.compare(password, user.password);
+    } else {
+      valid = password === user.password;
+      if (valid) {
+        user.password = await bcrypt.hash(password, SALT_ROUNDS);
+        await setData(`users/${userKey}`, { ...user });
+      }
     }
-    console.log('[Login] Login SUCCESSFUL!');
-    res.json({ user: safeUser(user), token: `eduvault-token-${(user as any).id}-${Date.now()}` });
+    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+    res.json({ user: safeUser(user), token: signToken(user) });
   } catch (error) {
     console.error('[Login] Login error:', error);
     res.status(500).json({ error: 'Login failed' });
   }
 });
 
-app.post('/api/auth/signup', async (req, res) => {
+app.post('/api/auth/signup', authLimiter, async (req, res) => {
   try {
     const { email, password, name, role, class: className, parentEmail } = req.body;
     const usersData = await getData('users') as any;
     const users = usersData ? Object.values(usersData) : [];
     const existing = users.find((u: any) => u.email === email);
     if (existing) return res.status(400).json({ error: 'User already exists' });
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     const newUser = {
       id: `u${Date.now()}`,
       name,
       email,
-      password,
+      password: hashedPassword,
       role: role || 'student',
       class: className || '',
       avatar: name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
       createdAt: new Date().toISOString()
     };
     await setData(`users/${newUser.id}`, newUser);
-    res.status(201).json({ user: safeUser(newUser), token: `eduvault-token-${newUser.id}-${Date.now()}` });
+    res.status(201).json({ user: safeUser(newUser), token: signToken(newUser) });
   } catch (error) {
     res.status(500).json({ error: 'Signup failed' });
   }
 });
 
-app.post('/api/auth/forgot-password', async (req, res) => {
+app.post('/api/auth/forgot-password', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     const usersData = await getData('users') as any;
@@ -522,7 +567,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   }
 });
 
-app.post('/api/auth/verify-otp', async (req, res) => {
+app.post('/api/auth/verify-otp', authLimiter, async (req, res) => {
   try {
     const { email, otp } = req.body;
     const otpData = await getData(`otpStore/${email}`);
@@ -534,7 +579,7 @@ app.post('/api/auth/verify-otp', async (req, res) => {
   }
 });
 
-app.post('/api/auth/reset-password', async (req, res) => {
+app.post('/api/auth/reset-password', authLimiter, async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
     const otpData = await getData(`otpStore/${email}`);
@@ -544,7 +589,10 @@ app.post('/api/auth/reset-password', async (req, res) => {
     const users = usersData ? Object.values(usersData) : [];
     const user = users.find((u: any) => u.email === email);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    await setData(`users/${(user as any).id}/password`, newPassword);
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    const userKey = Object.keys(usersData).find((k: string) => usersData[k].email === email);
+    if (!userKey) return res.status(500).json({ error: 'Failed to find user key' });
+    await setData(`users/${userKey}`, { ...user, password: hashedPassword });
     await removeData(`otpStore/${email}`);
     res.json({ message: 'Password reset successful' });
   } catch (error) {
@@ -554,7 +602,18 @@ app.post('/api/auth/reset-password', async (req, res) => {
 
 app.get('/api/auth/me', async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] as string;
+    const authHeader = req.headers.authorization;
+    let userId: string | null = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.slice(7);
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        userId = decoded.id;
+      } catch { /* fall through to x-user-id */ }
+    }
+    if (!userId) {
+      userId = req.headers['x-user-id'] as string;
+    }
     if (!userId) return res.status(401).json({ error: 'Not authenticated' });
     const user = await getData(`users/${userId}`);
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -2737,14 +2796,7 @@ app.listen(process.env.PORT || PORT, async () => {
   console.log(`EduVault AI Backend running on port ${actualPort}`);
   console.log(`Firebase RTDB: ${process.env.FIREBASE_DATABASE_URL}`);
   console.log(`API endpoints ready at http://localhost:${PORT}/api/`);
-  // Auto-seed on every startup with fresh data
-  try {
-    console.log('[AutoSeed] Seeding database...');
-    await seedDatabase();
-    console.log('[AutoSeed] Done');
-  } catch (e) {
-    console.error('[AutoSeed] Failed:', e);
-  }
+  // Auto-seed removed: use /api/seed endpoint explicitly if needed
 });
 
 export default app;
