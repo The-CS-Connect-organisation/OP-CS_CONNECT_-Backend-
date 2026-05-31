@@ -2082,7 +2082,8 @@ app.get('/api/fees', async (req, res) => {
       return res.json(fees ? Object.values(fees) : []);
     }
     const allFees = await getData('fees') as any;
-    res.json(allFees || {});
+    const flat = allFees ? Object.values(allFees).flat() : [];
+    res.json(flat);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch fees' });
   }
