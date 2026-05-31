@@ -247,6 +247,11 @@ const buildSeedData = () => ({
     { id: "fr3", studentId: "u3", studentName: "Rohan Kumar", class: "10-B", type: "tuition", amount: 45000, paid: 45000, due: "2026-01-15", status: "paid" },
     { id: "fr4", studentId: "u4", studentName: "Ananya Singh", class: "10-B", type: "tuition", amount: 45000, paid: 45000, due: "2026-01-15", status: "paid" }
   ]),
+  announcements: toObj([
+    { id: "ann1", title: "Summer Break Notice", content: "School will remain closed for summer break from June 15 to July 10.", priority: "high", audience: ["all"], createdBy: "u7", createdAt: "2026-06-01T08:00:00Z" },
+    { id: "ann2", title: "Parent-Teacher Meeting", content: "Quarterly PTM scheduled for June 25. All parents are requested to attend.", priority: "medium", audience: ["all"], createdBy: "u7", createdAt: "2026-06-05T10:00:00Z" },
+    { id: "ann3", title: "Science Fair Winners", content: "Congratulations to all winners of the inter-school science fair!", priority: "low", audience: ["students"], createdBy: "u5", createdAt: "2026-06-10T09:00:00Z" }
+  ]),
   attendancePolicies: toObj([
     { id: "ap1", name: "Standard Absence Policy", maxAbsentDays: 20, gracePeriod: 3, requireParentNote: true, academicYear: "2025-26" },
     { id: "ap2", name: "Exam Attendance Policy", maxAbsentDays: 0, requireMedicalCert: true, academicYear: "2025-26" }
