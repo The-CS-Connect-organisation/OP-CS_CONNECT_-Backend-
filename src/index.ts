@@ -400,13 +400,25 @@ const buildSeedData = () => ({
     ], subtotal: 32000, tax: 0, total: 32000, status: "pending", dueDate: "2026-07-31", issuedDate: "2026-07-01", paidAmount: 0 }
   ]),
   payments: toObj([
-    { id: "pmt1", invoiceId: "inv1", studentId: "u1", amount: 50000, method: "online", transactionId: "txn_001", status: "completed", date: "2026-01-15", term: "Term 1" },
-    { id: "pmt2", invoiceId: "inv2", studentId: "u2", amount: 50000, method: "bank", transactionId: "txn_002", status: "completed", date: "2026-01-20", term: "Term 1" }
+    { id: "pmt1", invoiceId: "inv1", studentId: "u1", studentName: "Aarav Sharma", amount: 50000, method: "online", transactionId: "txn_001", status: "completed", date: "2026-01-15", term: "Term 1" },
+    { id: "pmt2", invoiceId: "inv2", studentId: "u2", studentName: "Priya Patel", amount: 50000, method: "bank", transactionId: "txn_002", status: "completed", date: "2026-01-20", term: "Term 1" },
+    { id: "pmt3", invoiceId: "inv1", studentId: "u3", studentName: "Rohan Kumar", amount: 45000, method: "online", transactionId: "txn_003", status: "completed", date: "2026-02-10", term: "Term 1" },
+    { id: "pmt4", invoiceId: "inv2", studentId: "u4", studentName: "Ananya Singh", amount: 45000, method: "bank", transactionId: "txn_004", status: "completed", date: "2026-02-15", term: "Term 1" },
+    { id: "pmt5", studentId: "u3", studentName: "Rohan Kumar", amount: 12000, method: "online", transactionId: "txn_005", status: "completed", date: "2026-04-05", term: "Transport Fee", description: "Transport fee Term 2" },
+    { id: "pmt6", studentId: "u1", studentName: "Aarav Sharma", amount: 5000, method: "cash", transactionId: "txn_006", status: "completed", date: "2026-04-10", term: "Lab Fee", description: "Lab fee Term 2" },
+    { id: "pmt7", studentId: "u4", studentName: "Ananya Singh", amount: 8000, method: "online", transactionId: "txn_007", status: "completed", date: "2026-04-12", term: "Lab Fee", description: "Lab fee Term 2" },
+    { id: "pmt8", studentId: "u1", studentName: "Aarav Sharma", amount: 5000, method: "online", transactionId: "txn_008", status: "completed", date: "2026-04-15", term: "Sports Fee", description: "Sports fee Term 2" },
+    { id: "pmt9", studentId: "u2", studentName: "Priya Patel", amount: 10000, method: "bank", transactionId: "txn_009", status: "completed", date: "2026-04-20", term: "Lab Fee", description: "Lab fee Term 2" }
   ]),
   expenses: toObj([
     { id: "exp1", description: "Lab equipment purchase", category: "Lab Equipment", amount: 50000, date: "2026-06-01", paidTo: "Scientific Supplies Co.", paymentMethod: "bank", approvedBy: "u7", status: "approved" },
     { id: "exp2", description: "Classroom whiteboard replacement", category: "Supplies", amount: 12000, date: "2026-06-10", paidTo: "School Supplies Ltd.", paymentMethod: "cash", status: "pending" },
-    { id: "exp3", description: "Bus maintenance - Route A", category: "Transport", amount: 8500, date: "2026-06-12", paidTo: "Auto Service Center", paymentMethod: "bank", status: "pending" }
+    { id: "exp3", description: "Bus maintenance - Route A", category: "Transport", amount: 8500, date: "2026-06-12", paidTo: "Auto Service Center", paymentMethod: "bank", status: "pending" },
+    { id: "exp4", description: "Teacher salaries - May", category: "Salary", amount: 120000, date: "2026-05-31", paidTo: "Staff Payroll", paymentMethod: "bank", approvedBy: "u7", status: "approved" },
+    { id: "exp5", description: "Electricity bill", category: "Utilities", amount: 25000, date: "2026-05-20", paidTo: "Power Corp", paymentMethod: "bank", approvedBy: "u7", status: "approved" },
+    { id: "exp6", description: "Internet & IT services", category: "IT", amount: 15000, date: "2026-05-15", paidTo: "ISP Ltd", paymentMethod: "online", approvedBy: "u7", status: "approved" },
+    { id: "exp7", description: "Classroom furniture", category: "Supplies", amount: 35000, date: "2026-04-25", paidTo: "Furniture Mart", paymentMethod: "bank", approvedBy: "u7", status: "approved" },
+    { id: "exp8", description: "Library books purchase", category: "Library", amount: 18000, date: "2026-04-10", paidTo: "Book Distributors", paymentMethod: "online", approvedBy: "u7", status: "approved" }
   ]),
   bookCatalogue: toObj([
     { id: "bk1", title: "Introduction to Algorithms", author: "CLRS", isbn: "978-0-262-04630-5", category: "Computer Science", copies: 3, available: 2, shelf: "CS-01" },
@@ -440,6 +452,12 @@ const buildSeedData = () => ({
   staffPositions: toObj([
     { id: "sp1", title: "Senior Teacher", department: "Science", salaryRange: { min: 60000, max: 90000 }, requirements: ["Ph.D.", "5+ years experience"] },
     { id: "sp2", title: "Professor", department: "Science", salaryRange: { min: 70000, max: 110000 }, requirements: ["Ph.D.", "8+ years experience"] }
+  ]),
+  payslips: toObj([
+    { id: "ps1", employeeId: "u5", employeeName: "Mr. Rajesh Gupta", amount: 75000, month: "May", year: 2026, date: "2026-05-31", status: "paid" },
+    { id: "ps2", employeeId: "u6", employeeName: "Dr. Sunita Verma", amount: 80000, month: "May", year: 2026, date: "2026-05-31", status: "paid" },
+    { id: "ps3", employeeId: "u7", employeeName: "Admin User", amount: 65000, month: "May", year: 2026, date: "2026-05-31", status: "paid" },
+    { id: "ps4", employeeId: "u8", employeeName: "Mrs. Meera Kapoor", amount: 55000, month: "May", year: 2026, date: "2026-05-31", status: "paid" }
   ])
 });
 
@@ -955,13 +973,29 @@ app.post('/api/assignments/:id/grade', async (req, res) => {
 
 // ==================== TIMETABLE ====================
 app.get('/api/timetable/:class', async (req, res) => {
-  try {
-    const timetable = await getData(`timetable/${req.params.class}`);
-    res.json(timetable || []);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch timetable' });
-  }
-});
+    try {
+      const raw = await getData(`timetable/${req.params.class}`);
+      if (!raw) return res.json([]);
+      const arr = Array.isArray(raw) ? raw : [];
+      const isFlat = arr.length > 0 && ('subject' in arr[0] || 'teacher' in arr[0]);
+      const entries = isFlat
+        ? arr
+        : arr.flatMap((dayEntry: any) =>
+            (dayEntry.periods || []).map((p: any, i: number) => ({
+              id: `${req.params.class}-${dayEntry.day}-${i}`,
+              class: req.params.class,
+              day: dayEntry.day,
+              time: p.time || `${String(8 + i).padStart(2, '0')}:00`,
+              subject: p.subject || '',
+              teacher: p.teacher || '',
+              room: p.room || '',
+            }))
+          );
+      res.json(entries);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch timetable' });
+    }
+  });
 
 app.post('/api/timetable', async (req, res) => {
   try {
@@ -2231,8 +2265,18 @@ app.get('/api/parent/timetable/:childId', async (req, res) => {
   try {
     const child = await getData(`users/${req.params.childId}`);
     const className = child?.class || '10-A';
-    const timetable = await getData(`timetable/${className}`);
-    res.json(timetable || []);
+    const raw = await getData(`timetable/${className}`);
+    const arr = Array.isArray(raw) ? raw : [];
+    const isFlat = arr.length > 0 && ('subject' in arr[0]);
+    const flattened = isFlat ? arr : arr.flatMap((d: any) =>
+      (d.periods || []).map((p: any, i: number) => ({
+        id: `${className}-${d.day}-${i}`,
+        class: className, day: d.day,
+        time: p.time || `${String(8 + i).padStart(2, '0')}:00`,
+        subject: p.subject || '', teacher: p.teacher || '', room: p.room || '',
+      }))
+    );
+    res.json(flattened);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch child timetable' });
   }
@@ -2430,7 +2474,44 @@ app.get('/api/analytics/manager/finance', async (_req, res) => {
         }
       }
     }
-    res.json({ totalCollected, totalOutstanding, collectionRate: totalCollected + totalOutstanding > 0 ? Math.round((totalCollected / (totalCollected + totalOutstanding)) * 100) : 0 });
+    const paymentsData = await getData('payments') as any;
+    const paymentsArr: any[] = paymentsData ? Object.values(paymentsData) : [];
+    const revenue = paymentsArr.reduce((s: number, p: any) => s + (p.amount || 0), 0);
+
+    const expensesData = await getData('expenses') as any;
+    const expensesArr: any[] = expensesData ? Object.values(expensesData) : [];
+    const expenses = expensesArr.reduce((s: number, e: any) => s + (e.amount || 0), 0);
+
+    const payslipsData = await getData('payslips') as any;
+    const payslipsArr: any[] = payslipsData ? Object.values(payslipsData) : [];
+    const payroll = payslipsArr.reduce((s: number, p: any) => s + (p.amount || 0), 0);
+
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const monthlyMap: Record<string, { revenue: number; expenses: number }> = {};
+    for (const p of paymentsArr) {
+      if (p.date) {
+        const m = monthNames[new Date(p.date).getMonth()] || 'Unknown';
+        if (!monthlyMap[m]) monthlyMap[m] = { revenue: 0, expenses: 0 };
+        monthlyMap[m].revenue += p.amount || 0;
+      }
+    }
+    for (const e of expensesArr) {
+      if (e.date) {
+        const m = monthNames[new Date(e.date).getMonth()] || 'Unknown';
+        if (!monthlyMap[m]) monthlyMap[m] = { revenue: 0, expenses: 0 };
+        monthlyMap[m].expenses += e.amount || 0;
+      }
+    }
+    const monthlyTrend = Object.entries(monthlyMap).map(([month, v]) => ({ month, ...v }));
+
+    res.json({
+      revenue,
+      expenses,
+      profit: revenue - expenses,
+      feeCollection: { collected: totalCollected, pending: totalOutstanding },
+      payroll,
+      monthlyTrend,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch manager finance' });
   }
