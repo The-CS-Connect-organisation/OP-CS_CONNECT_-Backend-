@@ -228,4 +228,143 @@ router.get('/analytics/class/:class', async (req, res) => {
   }
 });
 
+// --- Frontend-compatible aliases ---
+
+// GET /exams/results/:examId → GET /:examId/results
+router.get('/results/:examId', async (req, res) => {
+  try {
+    const exam = await getData(`exams/${req.params.examId}`);
+    if (!exam) return res.status(404).json({ error: 'Exam not found' });
+    const results = await getData(`examResults/${req.params.examId}`);
+    if (!results) return res.json([]);
+    const resultList = Object.entries(results as any).map(([studentId, data]) => ({ studentId, ...(data as any) }));
+    const users = await listData('users');
+    const enhanced = resultList.map((r: any) => {
+      const student = users.find((u: any) => u.id === r.studentId);
+      return { ...r, studentName: student?.name || 'Unknown', avatar: student?.avatar || '' };
+    });
+    res.json({ exam, results: enhanced, status: exam.resultStatus });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch results' });
+  }
+});
+
+// POST /exams/results/:examId → POST /:examId/results/enter
+router.post('/results/:examId', async (req, res) => {
+  try {
+    const exam = await getData(`exams/${req.params.examId}`);
+    if (!exam) return res.status(404).json({ error: 'Exam not found' });
+    const { entries } = req.body;
+    if (!entries) return res.status(400).json({ error: 'entries required' });
+    for (const e of entries) {
+      await setData(`examResults/${req.params.examId}/${e.studentId}`, {
+        studentId: e.studentId, marks: e.marks, grade: e.grade || '',
+        remarks: e.remarks || '', enteredBy: e.enteredBy,
+        enteredAt: new Date().toISOString(), status: 'entered',
+      });
+    }
+    const users = await listData('users');
+    const classStudents = users.filter((u: any) => u.role === 'student' && u.class === exam.class);
+    const results = await getData(`examResults/${req.params.examId}`);
+    const resultCount = results ? Object.keys(results).length : 0;
+    await setData(`exams/${req.params.examId}/resultStatus`, resultCount >= classStudents.length ? 'complete' : 'partial');
+    res.json({ success: true, count: entries.length });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to enter results' });
+  }
+});
+
+// POST /exams/results/:examId/publish → POST /:examId/results/publish
+router.post('/results/:examId/publish', async (req, res) => {
+  try {
+    await setData(`exams/${req.params.examId}/resultStatus`, 'published');
+    await setData(`exams/${req.params.examId}/publishedAt`, new Date().toISOString());
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to publish results' });
+  }
+});
+
+// POST /exams/grace/:examId → POST /:examId/grace-marks
+router.post('/grace/:examId', async (req, res) => {
+  try {
+    const { entries } = req.body;
+    if (!entries) return res.status(400).json({ error: 'entries required' });
+    for (const e of entries) {
+      const existing = await getData(`examResults/${req.params.examId}/${e.studentId}`);
+      if (existing) {
+        existing.graceMarks = (existing.graceMarks || 0) + (e.graceMarks || 0);
+        existing.marks = (existing.marks || 0) + (e.graceMarks || 0);
+        existing.updatedAt = new Date().toISOString();
+        await setData(`examResults/${req.params.examId}/${e.studentId}`, existing);
+      }
+    }
+    res.json({ success: true, count: entries.length });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to apply grace marks' });
+  }
+});
+
+// GET /exams/online/:id → get single online exam
+router.get('/online/:id', async (req, res) => {
+  try {
+    const exam = await getData(`onlineExams/${req.params.id}`);
+    if (!exam) return res.status(404).json({ error: 'Online exam not found' });
+    res.json(exam);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch online exam' });
+  }
+});
+
+// POST /exams/online/:examId/submit → start attempt by exam ID
+router.post('/online/:examId/submit', async (req, res) => {
+  try {
+    const exam = await getData(`onlineExams/${req.params.examId}`);
+    if (!exam) return res.status(404).json({ error: 'Exam not found' });
+    const attempt = {
+      id: id('oa'), examId: req.params.examId, studentId: req.body.studentId,
+      startedAt: new Date().toISOString(), status: 'in-progress', answers: {},
+    };
+    await setData(`onlineExamAttempts/${attempt.id}`, attempt);
+    res.status(201).json({ attempt, exam });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to start exam' });
+  }
+});
+
+// POST /exams/online/:examId/grade/:studentId
+router.post('/online/:examId/grade/:studentId', async (req, res) => {
+  try {
+    const attempts = await listData('onlineExamAttempts');
+    const attempt = attempts.find((a: any) => a.examId === req.params.examId && a.studentId === req.params.studentId);
+    if (!attempt) return res.status(404).json({ error: 'Attempt not found' });
+    attempt.status = 'graded';
+    attempt.gradedAt = new Date().toISOString();
+    await setData(`onlineExamAttempts/${attempt.id}`, attempt);
+    res.json(attempt);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to grade exam' });
+  }
+});
+
+// GET /exams/analytics/:examId → single exam analytics
+router.get('/analytics/:examId', async (req, res) => {
+  try {
+    const exam = await getData(`exams/${req.params.examId}`);
+    if (!exam) return res.status(404).json({ error: 'Exam not found' });
+    const results = await getData(`examResults/${req.params.examId}`);
+    if (!results) return res.json({ examId: req.params.examId, examTitle: exam.title, totalStudents: 0, average: 0, highest: 0, lowest: 0 });
+    const marks = Object.values(results as any).map((r: any) => r.marks);
+    res.json({
+      examId: req.params.examId, examTitle: exam.title,
+      totalStudents: marks.length,
+      average: marks.length ? Math.round((marks.reduce((a: number, b: number) => a + b, 0) / marks.length) * 100) / 100 : 0,
+      highest: marks.length ? Math.max(...marks) : 0,
+      lowest: marks.length ? Math.min(...marks) : 0,
+    });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch analytics' });
+  }
+});
+
 export default router;

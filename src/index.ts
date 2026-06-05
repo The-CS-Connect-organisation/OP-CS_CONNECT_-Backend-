@@ -1,8 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+<<<<<<< HEAD
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
+=======
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
+>>>>>>> ad8a409cbe2074e7e1fe9424ae294a17a7190dbf
 import attendanceRoutes from './routes/attendance';
 import schedulingRoutes from './routes/scheduling';
 import sisRoutes from './routes/sis';
@@ -14,6 +20,7 @@ import libraryRoutes from './routes/library';
 import commsRoutes from './routes/comms';
 import erpRoutes from './routes/erp';
 import studentsRoutes from './routes/students';
+import calendarRoutes from './routes/calendar';
 // Phase 3 Route Modules
 import counsellingRoutes from './routes/counselling';
 import healthRoutes from './routes/health';
@@ -30,8 +37,11 @@ import alumniRoutes from './routes/alumni';
 import platformRoutes from './routes/platform';
 import circularRoutes from './routes/circulars';
 import announcementRoutes from './routes/announcements';
+<<<<<<< HEAD
 import authRoutes from './routes/auth';
 import calendarRoutes from './routes/calendar';
+=======
+>>>>>>> ad8a409cbe2074e7e1fe9424ae294a17a7190dbf
 
 dotenv.config();
 
@@ -71,18 +81,14 @@ io.on('connection', (socket) => {
   });
 });
 
-// Manual CORS headers - MUST BE FIRST MIDDLEWARE!
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-user-id');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+const JWT_SECRET = process.env.JWT_SECRET || `eduvault-dev-${Date.now()}`;
+
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
+  credentials: process.env.CORS_ORIGIN ? true : false,
+}));
 
 // Request Logger
 app.use((req, res, next) => {
@@ -144,6 +150,9 @@ app.use('/api/comms', commsRoutes);
 app.use('/api/erp', erpRoutes);
 app.use('/api/students', studentsRoutes);
 
+// Calendar
+app.use('/api/calendar', calendarRoutes);
+
 // Phase 3 Route Modules
 app.use('/api/counselling', counsellingRoutes);
 app.use('/api/health', healthRoutes);
@@ -161,8 +170,11 @@ app.use('/api/alumni', alumniRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/circulars', circularRoutes);
 app.use('/api/announcements', announcementRoutes);
+<<<<<<< HEAD
 app.use('/api/auth', authRoutes);
 app.use('/api/calendar', calendarRoutes);
+=======
+>>>>>>> ad8a409cbe2074e7e1fe9424ae294a17a7190dbf
 // Helper: safe user (remove password)
 function safeUser(u: any) {
   if (!u) return null;
@@ -176,330 +188,353 @@ app.get('/api/health', (_req, res) => {
 });
 
 // ==================== SEED DATA ====================
-app.all('/api/seed', async (_req, res) => {
-  try {
-    console.log('[Seed] Starting database seed...');
-    const seedData = {
-      users: [
-        { id: "u1", name: "Aarav Sharma", email: "aarav@eduvault.ai", password: "demo1234", role: "student", class: "10-A", subjects: ["Math", "Physics", "Chemistry", "English", "CS"], gpa: 3.8, attendance: 92, feesPaid: true, routeId: "r1", avatar: "AS", avatarUrl: "https://randomuser.me/api/portraits/men/32.jpg" },
-        { id: "u2", name: "Priya Patel", email: "priya@eduvault.ai", password: "demo1234", role: "student", class: "10-A", subjects: ["Math", "Physics", "Chemistry", "English", "Biology"], gpa: 3.9, attendance: 96, feesPaid: true, routeId: "r1", avatar: "PP", avatarUrl: "https://randomuser.me/api/portraits/women/68.jpg" },
-        { id: "u3", name: "Rohan Kumar", email: "rohan@eduvault.ai", password: "demo1234", role: "student", class: "10-B", subjects: ["Math", "Physics", "Chemistry", "English", "CS"], gpa: 3.5, attendance: 85, feesPaid: false, routeId: "r2", avatar: "RK", avatarUrl: "https://randomuser.me/api/portraits/men/51.jpg" },
-        { id: "u4", name: "Ananya Singh", email: "ananya@eduvault.ai", password: "demo1234", role: "student", class: "10-B", subjects: ["Math", "Physics", "Chemistry", "English", "Biology"], gpa: 3.7, attendance: 89, feesPaid: true, routeId: "r2", avatar: "AS", avatarUrl: "https://randomuser.me/api/portraits/women/53.jpg" },
-        { id: "u5", name: "Dr. Rajesh Gupta", email: "rajesh@eduvault.ai", password: "demo1234", role: "teacher", subjects: ["Math", "Physics", "CS"], classes: ["10-A", "10-B"], avatar: "RG", avatarUrl: "https://randomuser.me/api/portraits/men/33.jpg" },
-        { id: "u6", name: "Prof. Sunita Verma", email: "sunita@eduvault.ai", password: "demo1234", role: "teacher", subjects: ["Chemistry", "Biology", "English"], classes: ["10-A", "10-B"], avatar: "SV", avatarUrl: "https://randomuser.me/api/portraits/women/44.jpg" },
-        { id: "u7", name: "Principal Meera", email: "meera@eduvault.ai", password: "demo1234", role: "admin", schoolId: "sch1", avatar: "PM", avatarUrl: "https://randomuser.me/api/portraits/women/65.jpg" },
-        { id: "u8", name: "Mr. Vikram", email: "vikram@eduvault.ai", password: "demo1234", role: "coordinator", schoolId: "sch1", avatar: "MV", avatarUrl: "https://randomuser.me/api/portraits/men/22.jpg" },
-        { id: "u9", name: "Raju Kumar", email: "raju@eduvault.ai", password: "demo1234", role: "driver", routeId: "r1", avatar: "RK", avatarUrl: "https://randomuser.me/api/portraits/men/75.jpg" },
-        { id: "u10", name: "Mrs. Sharma", email: "parent@eduvault.ai", password: "demo1234", role: "parent", children: ["u1"], avatar: "MS", avatarUrl: "https://randomuser.me/api/portraits/women/33.jpg" },
-        { id: "u11", name: "Dr. Bookman", email: "librarian@eduvault.ai", password: "demo1234", role: "librarian", avatar: "DB", avatarUrl: "https://randomuser.me/api/portraits/men/86.jpg" },
-        { id: "u12", name: "Mr. Arjun Manager", email: "manager@eduvault.ai", password: "demo1234", role: "manager", schoolId: "sch1", avatar: "AM", avatarUrl: "https://randomuser.me/api/portraits/men/61.jpg" }
-      ],
-      schools: [{ id: "sch1", name: "Cornerstone International School", address: "123 Education Lane, New Delhi", phone: "+91-11-23456789", email: "info@cornerstone.edu", principal: "Principal Meera", established: 2005, affiliation: "CBSE", grades: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"] }],
-      subjects: [
-        { id: "sub1", name: "Mathematics", code: "MATH101", teacher: "Dr. Rajesh Gupta", classes: ["10-A", "10-B"] },
-        { id: "sub2", name: "Physics", code: "PHY101", teacher: "Dr. Rajesh Gupta", classes: ["10-A", "10-B"] },
-        { id: "sub3", name: "Chemistry", code: "CHEM101", teacher: "Prof. Sunita Verma", classes: ["10-A", "10-B"] },
-        { id: "sub4", name: "English", code: "ENG101", teacher: "Prof. Sunita Verma", classes: ["10-A", "10-B"] },
-        { id: "sub5", name: "Computer Science", code: "CS101", teacher: "Dr. Rajesh Gupta", classes: ["10-A"] },
-        { id: "sub6", name: "Biology", code: "BIO101", teacher: "Prof. Sunita Verma", classes: ["10-B"] }
-      ],
-      assignments: [
-        { id: "a1", title: "Quadratic Equations Worksheet", subjectId: "sub1", subject: "Mathematics", class: "10-A", dueDate: "2026-05-25", status: "active", description: "Solve all problems from Chapter 5", maxMarks: 50, submissions: [{ studentId: "u1", content: "Completed all problems", scoredMarks: 45, feedback: "Excellent work!", submittedAt: "2026-05-20T10:00:00Z" }, { studentId: "u2", content: "Done", scoredMarks: 48, feedback: "Perfect!", submittedAt: "2026-05-21T09:00:00Z" }] },
-        { id: "a2", title: "Newton's Laws Lab Report", subjectId: "sub2", subject: "Physics", class: "10-A", dueDate: "2026-05-28", status: "active", description: "Write a lab report on Newton's three laws", maxMarks: 40, submissions: [] },
-        { id: "a3", title: "Organic Chemistry Notes", subjectId: "sub3", subject: "Chemistry", class: "10-B", dueDate: "2026-05-22", status: "active", description: "Summarize chapter on organic compounds", maxMarks: 30, submissions: [{ studentId: "u3", content: "Submitted notes", scoredMarks: 25, feedback: "Good effort", submittedAt: "2026-05-19T14:00:00Z" }] },
-        { id: "a4", title: "Essay: Climate Change", subjectId: "sub4", subject: "English", class: "10-A", dueDate: "2026-06-01", status: "active", description: "Write a 1000-word essay on climate change", maxMarks: 50, submissions: [] },
-        { id: "a5", title: "Data Structures Assignment", subjectId: "sub5", subject: "Computer Science", class: "10-A", dueDate: "2026-06-05", status: "active", description: "Implement linked list and binary tree", maxMarks: 60, submissions: [] },
-        { id: "a6", title: "Periodic Table Quiz", subjectId: "sub3", subject: "Chemistry", class: "10-A", dueDate: "2026-05-15", status: "completed", description: "Complete the periodic table quiz", maxMarks: 25, submissions: [{ studentId: "u1", content: "Completed", scoredMarks: 23, feedback: "Great job!", submittedAt: "2026-05-14T11:00:00Z" }, { studentId: "u2", content: "Done", scoredMarks: 25, feedback: "Perfect score!", submittedAt: "2026-05-14T10:00:00Z" }] },
-        { id: "a7", title: "Shakespeare Analysis", subjectId: "sub4", subject: "English", class: "10-B", dueDate: "2026-05-10", status: "completed", description: "Analyze Hamlet's soliloquy", maxMarks: 40, submissions: [{ studentId: "u3", content: "Analysis submitted", scoredMarks: 35, feedback: "Well written", submittedAt: "2026-05-09T16:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 38, feedback: "Excellent analysis", submittedAt: "2026-05-09T14:00:00Z" }] },
-        { id: "a8", title: "Trigonometry Problems", subjectId: "sub1", subject: "Mathematics", class: "10-B", dueDate: "2026-05-08", status: "completed", description: "Solve trigonometric identities", maxMarks: 50, submissions: [{ studentId: "u3", content: "Completed", scoredMarks: 40, feedback: "Good work", submittedAt: "2026-05-07T12:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 46, feedback: "Excellent", submittedAt: "2026-05-07T11:00:00Z" }] }
-      ],
-      grades: {
-        u1: [{ subject: "Math", grade: "A", marks: 92 }, { subject: "Physics", grade: "A-", marks: 88 }, { subject: "Chemistry", grade: "B+", marks: 82 }, { subject: "English", grade: "A", marks: 90 }, { subject: "CS", grade: "A+", marks: 96 }],
-        u2: [{ subject: "Math", grade: "A+", marks: 95 }, { subject: "Physics", grade: "A", marks: 91 }, { subject: "Chemistry", grade: "A", marks: 89 }, { subject: "English", grade: "A+", marks: 94 }, { subject: "Biology", grade: "A", marks: 90 }],
-        u3: [{ subject: "Math", grade: "B+", marks: 78 }, { subject: "Physics", grade: "B", marks: 72 }, { subject: "Chemistry", grade: "A-", marks: 85 }, { subject: "English", grade: "B+", marks: 79 }, { subject: "CS", grade: "A-", marks: 86 }],
-        u4: [{ subject: "Math", grade: "A-", marks: 87 }, { subject: "Physics", grade: "B+", marks: 80 }, { subject: "Chemistry", grade: "A", marks: 88 }, { subject: "English", grade: "A", marks: 91 }, { subject: "Biology", grade: "A+", marks: 93 }]
-      },
-      attendance: {
-        u1: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "absent" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }],
-        u2: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "present" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }],
-        u3: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "absent" }, { date: "2026-05-03", status: "absent" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "late" }],
-        u4: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "late" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }]
-      },
-      fees: {
-        u1: [
-          { term: "Term 1", amount: 50000, paid: 50000, date: "2026-01-15", status: "paid", dueDate: "2026-01-31" },
-          { term: "Term 2", amount: 50000, paid: 50000, date: "2026-04-10", status: "paid", dueDate: "2026-04-30" },
-          { term: "Term 3", amount: 50000, paid: 50000, date: "2026-07-05", status: "paid", dueDate: "2026-07-31" }
-        ],
-        u2: [
-          { term: "Term 1", amount: 50000, paid: 50000, date: "2026-01-20", status: "paid", dueDate: "2026-01-31" },
-          { term: "Term 2", amount: 50000, paid: 50000, date: "2026-04-12", status: "paid", dueDate: "2026-04-30" },
-          { term: "Term 3", amount: 50000, paid: 50000, date: "2026-07-08", status: "paid", dueDate: "2026-07-31" }
-        ],
-        u3: [
-          { term: "Term 1", amount: 50000, paid: 50000, date: "2026-01-18", status: "paid", dueDate: "2026-01-31" },
-          { term: "Term 2", amount: 50000, paid: 50000, date: "2026-04-15", status: "paid", dueDate: "2026-04-30" },
-          { term: "Term 3", amount: 50000, paid: 25000, date: "2026-07-10", status: "partial", dueDate: "2026-07-31" }
-        ],
-        u4: [
-          { term: "Term 1", amount: 50000, paid: 50000, date: "2026-01-22", status: "paid", dueDate: "2026-01-31" },
-          { term: "Term 2", amount: 50000, paid: 50000, date: "2026-04-08", status: "paid", dueDate: "2026-04-30" },
-          { term: "Term 3", amount: 50000, paid: 50000, date: "2026-07-02", status: "paid", dueDate: "2026-07-31" }
-        ]
-      },
-      timetable: {
-        "10-A": [
-          { day: "Monday", periods: [{ time: "8:00-8:45", subject: "Math" }, { time: "8:45-9:30", subject: "Physics" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "CS" }] },
-          { day: "Tuesday", periods: [{ time: "8:00-8:45", subject: "English" }, { time: "8:45-9:30", subject: "Math" }, { time: "9:45-10:30", subject: "Physics" }, { time: "10:30-11:15", subject: "Chemistry" }, { time: "11:30-12:15", subject: "CS" }] },
-          { day: "Wednesday", periods: [{ time: "8:00-8:45", subject: "Chemistry" }, { time: "8:45-9:30", subject: "English" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "CS" }, { time: "11:30-12:15", subject: "Physics" }] },
-          { day: "Thursday", periods: [{ time: "8:00-8:45", subject: "Physics" }, { time: "8:45-9:30", subject: "CS" }, { time: "9:45-10:30", subject: "English" }, { time: "10:30-11:15", subject: "Math" }, { time: "11:30-12:15", subject: "Chemistry" }] },
-          { day: "Friday", periods: [{ time: "8:00-8:45", subject: "CS" }, { time: "8:45-9:30", subject: "Chemistry" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "Physics" }, { time: "11:30-12:15", subject: "English" }] }
-        ],
-        "10-B": [
-          { day: "Monday", periods: [{ time: "8:00-8:45", subject: "Math" }, { time: "8:45-9:30", subject: "Chemistry" }, { time: "9:45-10:30", subject: "English" }, { time: "10:30-11:15", subject: "Physics" }, { time: "11:30-12:15", subject: "Biology" }] },
-          { day: "Tuesday", periods: [{ time: "8:00-8:45", subject: "Biology" }, { time: "8:45-9:30", subject: "Math" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "Physics" }] },
-          { day: "Wednesday", periods: [{ time: "8:00-8:45", subject: "English" }, { time: "8:45-9:30", subject: "Physics" }, { time: "9:45-10:30", subject: "Biology" }, { time: "10:30-11:15", subject: "Math" }, { time: "11:30-12:15", subject: "Chemistry" }] },
-          { day: "Thursday", periods: [{ time: "8:00-8:45", subject: "Chemistry" }, { time: "8:45-9:30", subject: "Biology" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "Physics" }] },
-          { day: "Friday", periods: [{ time: "8:00-8:45", subject: "Physics" }, { time: "8:45-9:30", subject: "English" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "Biology" }, { time: "11:30-12:15", subject: "Math" }] }
-        ]
-      },
-      routes: [
-        { id: "r1", name: "Route A - North Campus", driver: "Raju Kumar", driverId: "u9", bus: "KA-01-1234", stops: ["Main Gate", "North Block", "Library", "Sports Complex"], students: ["u1", "u2"] },
-        { id: "r2", name: "Route B - South Campus", driver: "Raju Kumar", driverId: "u9", bus: "KA-01-5678", stops: ["South Gate", "Auditorium", "Lab Block", "Cafeteria"], students: ["u3", "u4"] }
-      ],
-      events: [
-        { id: "e1", title: "Annual Sports Day", date: "2026-06-15", type: "sports", description: "Inter-house athletics competition" },
-        { id: "e2", title: "Science Fair", date: "2026-06-22", type: "academic", description: "Student science project exhibition" },
-        { id: "e3", title: "Parent-Teacher Meeting", date: "2026-05-30", type: "meeting", description: "Quarterly PTM for all classes" },
-        { id: "e4", title: "Farewell Ceremony", date: "2026-05-20", type: "ceremony", description: "Farewell for graduating batch" }
-      ],
-      clubs: [
-        {
-          id: "c1", name: "Coding Club", description: "Learn programming, build projects, compete in hackathons", members: ["u1", "u3"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Technology", meetingDay: "Wednesday", meetingTime: "3:30 PM", posts: [
-            { id: "p1", authorId: "u1", authorName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", content: "Great hackathon session today! 🚀", timestamp: "2026-05-19T15:00:00Z", likes: ["u3", "u5"] },
-            { id: "p2", authorId: "u3", authorName: "Rohan Kumar", avatar: "https://randomuser.me/api/portraits/men/51.jpg", content: "Just finished my first React app!", timestamp: "2026-05-18T14:00:00Z", likes: ["u1"] }
-          ]
-        },
-        {
-          id: "c2", name: "Science Society", description: "Explore scientific concepts through experiments and research", members: ["u2", "u4"], lead: "u2", leadName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", category: "Academic", meetingDay: "Thursday", meetingTime: "4:00 PM", posts: [
-            { id: "p3", authorId: "u2", authorName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", content: "Science fair prep going well! 🧪", timestamp: "2026-05-19T16:00:00Z", likes: ["u4", "u6"] }
-          ]
-        },
-        {
-          id: "c3", name: "Drama Club", description: "Acting, stagecraft, and theatrical productions", members: ["u1", "u2", "u4"], lead: "u4", leadName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", category: "Arts", meetingDay: "Friday", meetingTime: "3:00 PM", posts: [
-            { id: "p4", authorId: "u4", authorName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", content: "Auditions for the spring play next week! 🎭", timestamp: "2026-05-20T10:00:00Z", likes: ["u1", "u2"] }
-          ]
-        },
-        { id: "c4", name: "Music Ensemble", description: "Band, choir, and individual music performance", members: ["u1", "u2", "u3", "u4"], lead: "u2", leadName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", category: "Arts", meetingDay: "Tuesday", meetingTime: "3:30 PM", posts: [] },
-        { id: "c5", name: "Sports Club", description: "Athletics, team sports, and fitness activities", members: ["u1", "u3"], lead: "u3", leadName: "Rohan Kumar", avatar: "https://randomuser.me/api/portraits/men/51.jpg", category: "Sports", meetingDay: "Monday", meetingTime: "4:00 PM", posts: [] },
-        { id: "c6", name: "Debate Society", description: "Public speaking, argumentation, and competitive debate", members: ["u2", "u4"], lead: "u4", leadName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", category: "Academic", meetingDay: "Wednesday", meetingTime: "4:30 PM", posts: [] },
-        { id: "c7", name: "Art Studio", description: "Painting, sculpture, and digital art creation", members: ["u1", "u2", "u4"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Arts", meetingDay: "Thursday", meetingTime: "3:00 PM", posts: [] },
-        { id: "c8", name: "Robotics Club", description: "Build and program robots for competitions", members: ["u1", "u3"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Technology", meetingDay: "Friday", meetingTime: "4:00 PM", posts: [] }
-      ],
-      messages: {
-        u1: [
-          { id: "msg1", from: "u5", to: "u1", content: "Great work on the math assignment!", timestamp: "2026-05-18T10:00:00Z", read: true },
-          { id: "msg2", from: "u2", to: "u1", content: "Hey, want to study together for the physics exam?", timestamp: "2026-05-19T14:00:00Z", read: false }
-        ],
-        u2: [
-          { id: "msg2", from: "u2", to: "u1", content: "Hey, want to study together for the physics exam?", timestamp: "2026-05-19T14:00:00Z", read: false },
-          { id: "msg3", from: "u6", to: "u2", content: "Your biology project proposal looks excellent!", timestamp: "2026-05-19T16:00:00Z", read: true }
-        ],
-        u3: [
-          { id: "msg4", from: "u5", to: "u3", content: "Please submit your pending physics lab report by Friday.", timestamp: "2026-05-19T09:00:00Z", read: false }
-        ],
-        u4: [
-          { id: "msg5", from: "u6", to: "u4", content: "Your debate performance was outstanding!", timestamp: "2026-05-18T15:00:00Z", read: true }
-        ],
-        u5: [
-          { id: "msg1", from: "u5", to: "u1", content: "Great work on the math assignment!", timestamp: "2026-05-18T10:00:00Z", read: true },
-          { id: "msg4", from: "u5", to: "u3", content: "Please submit your pending physics lab report by Friday.", timestamp: "2026-05-19T09:00:00Z", read: false }
-        ],
-        u6: [
-          { id: "msg3", from: "u6", to: "u2", content: "Your biology project proposal looks excellent!", timestamp: "2026-05-19T16:00:00Z", read: true },
-          { id: "msg5", from: "u6", to: "u4", content: "Your debate performance was outstanding!", timestamp: "2026-05-18T15:00:00Z", read: true }
-        ],
-        u7: [
-          { id: "msg6", from: "u12", to: "u7", content: "Please review the new fee structure proposal.", timestamp: "2026-05-20T08:00:00Z", read: false }
-        ],
-        u10: [
-          { id: "msg7", from: "u5", to: "u10", content: "Aarav is doing great in math this semester!", timestamp: "2026-05-19T11:00:00Z", read: true }
-        ],
-        u11: [
-          { id: "msg8", from: "u1", to: "u11", content: "Can I extend the due date for Physics Textbook?", timestamp: "2026-05-20T10:00:00Z", read: false }
-        ],
-        u12: [
-          { id: "msg6", from: "u12", to: "u7", content: "Please review the new fee structure proposal.", timestamp: "2026-05-20T08:00:00Z", read: false }
-        ]
-      },
-      notifications: {
-        u1: [
-          { id: "n1", title: "AI Study Plan Generated", message: "Your personalized Mathematics study plan is ready! Click to view.", type: "success", timestamp: "2026-05-18T11:00:00Z", read: false, link: "/student/study-planner" },
-          { id: "n2", title: "Assignment Graded", message: "Your math assignment has been graded: 45/50", type: "info", timestamp: "2026-05-18T10:00:00Z", read: false, link: "/student/assignments" },
-          { id: "n3", title: "Bus Route Update", message: "Route A schedule changed for next week", type: "warning", timestamp: "2026-05-17T08:00:00Z", read: true, link: "/student/bus-tracking" }
-        ],
-        u2: [
-          { id: "n4", title: "Science Fair Reminder", message: "Don't forget to submit your project proposal", type: "info", timestamp: "2026-05-19T09:00:00Z", read: false, link: "/student/announcements" }
-        ],
-        u3: [
-          { id: "n5", title: "Fee Payment Due", message: "Term 2 fee payment is pending. Please pay by May 30.", type: "warning", timestamp: "2026-05-18T12:00:00Z", read: false, link: "/student/fees" }
-        ],
-        u5: [
-          { id: "n6", title: "New Assignment Submissions", message: "3 new submissions for Quadratic Equations Worksheet", type: "info", timestamp: "2026-05-20T10:00:00Z", read: false, link: "/teacher/grading" }
-        ]
-      },
-      questionBank: [
-        { id: "q1", subjectId: "sub1", type: "mcq", difficulty: "easy", question: "What is 2+2?", options: ["3", "4", "5", "6"], answer: "4" },
-        { id: "q2", subjectId: "sub2", type: "short", difficulty: "medium", question: "State Newton's second law", answer: "F = ma" }
-      ],
-      announcements: [
-        { id: "ann1", title: "School Closed on Friday", content: "School will be closed this Friday for maintenance. All classes are cancelled. Please ensure you complete your pending assignments before Thursday.", date: "2026-05-23", priority: "high", author: "u7", authorName: "Principal Meera", pinned: true, approved: true },
-        { id: "ann2", title: "Science Fair Registration Open", content: "Register for the annual science fair by May 30. Projects can be individual or in teams of up to 3. Submit your project proposal to the science department.", date: "2026-05-20", priority: "medium", author: "u7", authorName: "Principal Meera", pinned: false, approved: true },
-        { id: "ann3", title: "Sports Day Practice Schedule", content: "Practice for the annual sports day will begin next week. All house captains please coordinate with the sports department for the schedule.", date: "2026-05-25", priority: "low", author: "u8", authorName: "Mr. Vikram", pinned: false, approved: true },
-        { id: "ann4", title: "Library Book Return Reminder", content: "All borrowed books must be returned by May 25th. Overdue books will incur a fine of Rs. 5 per day.", date: "2026-05-22", priority: "medium", author: "u11", authorName: "Dr. Bookman", pinned: true, approved: true }
-      ],
-      otpStore: {},
-      supplyAlerts: [
-        { id: "sa1", item: "Notebook", quantity: 3, priority: "high", class: "10-A", status: "active" },
-        { id: "sa2", item: "Pen (Blue)", quantity: 5, priority: "medium", class: "10-A", status: "active" },
-        { id: "sa3", item: "Geometry Box", quantity: 1, priority: "low", class: "10-B", status: "active" }
-      ],
-      bookAlerts: [
-        { id: "ba1", book: "Physics Textbook", weight: "heavy", class: "10-A", date: "2026-05-20", status: "active" }
-      ],
-      digitalFridge: [
-        { id: "df1", childId: "u1", item: "Lunch Box", status: "consumed", date: "2026-05-19" },
-        { id: "df2", childId: "u1", item: "Water Bottle", status: "full", date: "2026-05-19" }
-      ],
-      goals: {
-        u1: [{ id: "g1", title: "Complete Math Chapter 5", deadline: "2026-05-25", status: "in-progress", progress: 60 }]
-      },
-      exams: [
-        { id: "ex1", title: "Mid-Term Mathematics", subjectId: "sub1", class: "10-A", date: "2026-06-10", duration: 120, totalMarks: 100, status: "upcoming" },
-        { id: "ex2", title: "Mid-Term Physics", subjectId: "sub2", class: "10-A", date: "2026-06-12", duration: 90, totalMarks: 80, status: "upcoming" }
-      ],
-      uniformSchedule: [
-        { id: "us1", day: "Monday", uniform: "Full Uniform", description: "White shirt, navy pants, tie, blazer" },
-        { id: "us2", day: "Tuesday", uniform: "Full Uniform", description: "White shirt, navy pants, tie, blazer" },
-        { id: "us3", day: "Wednesday", uniform: "House Uniform", description: "House color t-shirt, navy pants" },
-        { id: "us4", day: "Thursday", uniform: "Full Uniform", description: "White shirt, navy pants, tie, blazer" },
-        { id: "us5", day: "Friday", uniform: "Sports Uniform", description: "School sports t-shirt, track pants" }
-      ],
-      borrowedBooks: [
-        { id: "bb1", bookTitle: "Physics Textbook Vol 1", isbn: "978-0-123456-01", studentId: "u1", studentName: "Aarav Sharma", borrowedDate: "2026-05-10", dueDate: "2026-05-24", status: "borrowed" },
-        { id: "bb2", bookTitle: "Chemistry Lab Manual", isbn: "978-0-123456-02", studentId: "u2", studentName: "Priya Patel", borrowedDate: "2026-05-12", dueDate: "2026-05-26", status: "borrowed" },
-        { id: "bb3", bookTitle: "English Literature Guide", isbn: "978-0-123456-03", studentId: "u3", studentName: "Rohan Kumar", borrowedDate: "2026-05-08", dueDate: "2026-05-22", status: "overdue" },
-        { id: "bb4", bookTitle: "Mathematics Reference Book", isbn: "978-0-123456-04", studentId: "u1", studentName: "Aarav Sharma", borrowedDate: "2026-05-15", dueDate: "2026-05-29", status: "borrowed" },
-        { id: "bb5", bookTitle: "Biology Atlas", isbn: "978-0-123456-05", studentId: "u4", studentName: "Ananya Singh", borrowedDate: "2026-05-14", dueDate: "2026-05-28", status: "borrowed" }
-      ],
-      accolades: [
-        { id: "acc1", studentId: "u1", studentName: "Aarav Sharma", title: "Math Olympiad Winner", description: "First place in regional mathematics olympiad", category: "academic", certificateUrl: "", status: "approved", submittedAt: "2026-05-01T10:00:00Z", approvedBy: "u7", approvedAt: "2026-05-02T14:00:00Z" },
-        { id: "acc2", studentId: "u2", studentName: "Priya Patel", title: "Science Fair Champion", description: "Best project in annual science fair", category: "science", certificateUrl: "", status: "approved", submittedAt: "2026-05-05T09:00:00Z", approvedBy: "u12", approvedAt: "2026-05-06T11:00:00Z" },
-        { id: "acc3", studentId: "u3", studentName: "Rohan Kumar", title: "Coding Competition Runner-up", description: "Second place in inter-school coding competition", category: "technology", certificateUrl: "", status: "pending", submittedAt: "2026-05-18T16:00:00Z" },
-        { id: "acc4", studentId: "u4", studentName: "Ananya Singh", title: "Best Debater", description: "Outstanding performance in state-level debate", category: "extracurricular", certificateUrl: "", status: "approved", submittedAt: "2026-05-10T12:00:00Z", approvedBy: "u7", approvedAt: "2026-05-11T10:00:00Z" }
-      ],
-      studyPlans: {
-        u1: [{ id: "sp1", title: "Mathematics Mastery Plan", subject: "Math", startDate: "2026-05-20", endDate: "2026-06-10", tasks: [{ title: "Complete Chapter 5 exercises", completed: true }, { title: "Practice quadratic equations", completed: false }, { title: "Take mock test", completed: false }], createdAt: "2026-05-18T11:00:00Z" }]
-      },
-      achievements: [
-        { id: "ach1", authorId: "u5", authorName: "Dr. Rajesh Gupta", role: "teacher", avatar: "https://randomuser.me/api/portraits/men/33.jpg", title: "Outstanding Performance in Math Olympiad", description: "Congratulations to Aarav Sharma for winning first place in the Regional Mathematics Olympiad! 🏆", targetStudentId: "u1", targetStudentName: "Aarav Sharma", category: "academic", timestamp: "2026-05-01T10:00:00Z", likes: ["u1", "u2", "u7", "u12"], comments: [{ authorId: "u7", authorName: "Principal Meera", content: "Well deserved! Proud of our students.", timestamp: "2026-05-01T11:00:00Z" }] },
-        { id: "ach2", authorId: "u2", authorName: "Priya Patel", role: "student", avatar: "https://randomuser.me/api/portraits/women/68.jpg", title: "Science Fair Champion", description: "Won best project in the annual science fair with my renewable energy model! 🔬", targetStudentId: "u2", targetStudentName: "Priya Patel", category: "science", timestamp: "2026-05-05T09:00:00Z", likes: ["u1", "u3", "u4", "u6"], comments: [] },
-        { id: "ach3", authorId: "u6", authorName: "Prof. Sunita Verma", role: "teacher", avatar: "https://randomuser.me/api/portraits/women/44.jpg", title: "Best Debater Award", description: "Ananya Singh delivered an outstanding performance at the state-level debate competition! 🎤", targetStudentId: "u4", targetStudentName: "Ananya Singh", category: "extracurricular", timestamp: "2026-05-10T12:00:00Z", likes: ["u1", "u2", "u3", "u7"], comments: [{ authorId: "u4", authorName: "Ananya Singh", content: "Thank you ma'am! 🙏", timestamp: "2026-05-10T13:00:00Z" }] },
-        { id: "ach4", authorId: "u1", authorName: "Aarav Sharma", role: "student", avatar: "https://randomuser.me/api/portraits/men/32.jpg", title: "Coding Competition Runner-up", description: "Second place in inter-school coding competition! Built a full-stack app in 24 hours 💻", targetStudentId: "u1", targetStudentName: "Aarav Sharma", category: "technology", timestamp: "2026-05-15T16:00:00Z", likes: ["u3", "u5"], comments: [] },
-        { id: "ach5", authorId: "u7", authorName: "Principal Meera", role: "admin", avatar: "https://randomuser.me/api/portraits/women/65.jpg", title: "Perfect Attendance Award", description: "Priya Patel achieved 100% attendance this semester! A remarkable commitment to learning. 📚", targetStudentId: "u2", targetStudentName: "Priya Patel", category: "attendance", timestamp: "2026-05-18T08:00:00Z", likes: ["u1", "u2", "u5", "u6", "u10"], comments: [] },
-        { id: "ach6", authorId: "u3", authorName: "Rohan Kumar", role: "student", avatar: "https://randomuser.me/api/portraits/men/51.jpg", title: "Sports Day Gold Medal", description: "Won gold in 100m sprint at inter-house sports day! 🏃‍♂️", targetStudentId: "u3", targetStudentName: "Rohan Kumar", category: "sports", timestamp: "2026-05-20T14:00:00Z", likes: ["u1", "u4"], comments: [] }
-      ],
-      leaveRequests: [
-        { id: "lr1", studentId: "u1", studentName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", startDate: "2026-05-26", endDate: "2026-05-27", reason: "Family function - sister's wedding", type: "personal", status: "approved", requestedAt: "2026-05-20T10:00:00Z", approvedBy: "u5", approvedAt: "2026-05-20T14:00:00Z" },
-        { id: "lr2", studentId: "u2", studentName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", startDate: "2026-06-01", endDate: "2026-06-02", reason: "Medical appointment", type: "medical", status: "pending", requestedAt: "2026-05-21T09:00:00Z" },
-        { id: "lr3", studentId: "u3", studentName: "Rohan Kumar", avatar: "https://randomuser.me/api/portraits/men/51.jpg", startDate: "2026-05-30", endDate: "2026-05-30", reason: "Science competition in another city", type: "academic", status: "approved", requestedAt: "2026-05-18T11:00:00Z", approvedBy: "u6", approvedAt: "2026-05-18T15:00:00Z" }
-      ],
-      // Phase 1+2 seed data
-      attendancePolicies: [
-        { id: "ap1", name: "Standard Absence Policy", maxAbsentDays: 20, gracePeriod: 3, requireParentNote: true, academicYear: "2025-26" },
-        { id: "ap2", name: "Exam Attendance Policy", maxAbsentDays: 0, requireMedicalCert: true, academicYear: "2025-26" }
-      ],
-      bellSchedules: [
-        { id: "bs1", name: "Regular Day", startTime: "08:00", endTime: "15:30", periods: 8, periodDuration: 40, breakStart: "10:25", breakDuration: 20, lunchStart: "12:20", lunchDuration: 40 },
-        { id: "bs2", name: "Short Day", startTime: "08:00", endTime: "13:00", periods: 6, periodDuration: 35, breakStart: "10:00", breakDuration: 15, lunchStart: "12:00", lunchDuration: 30 }
-      ],
-      roomBookings: [
-        { id: "rb1", room: "Lab 1", date: "2026-06-01", startTime: "09:00", endTime: "10:30", bookedBy: "u5", purpose: "Physics practical", status: "confirmed" },
-        { id: "rb2", room: "IT Lab", date: "2026-06-02", startTime: "11:00", endTime: "12:30", bookedBy: "u5", purpose: "CS class 10-A", status: "confirmed" }
-      ],
-      lessonPlans: [
-        { id: "lp1", title: "Quadratic Equations - Introduction", subjectId: "sub1", class: "10-A", teacherId: "u5", week: 1, objectives: ["Understand standard form", "Solve by factorization"], resources: ["Textbook Ch5", "Worksheet 1"], status: "completed" },
-        { id: "lp2", title: "Newton's Laws - Lab Session", subjectId: "sub2", class: "10-A", teacherId: "u5", week: 2, objectives: ["Verify F=ma", "Measure acceleration"], resources: ["Lab equipment", "Data sheet"], status: "active" }
-      ],
-      exercises: [
-        { id: "ex1", title: "Algebra Basics", subjectId: "sub1", class: "10-A", questions: [
-          { id: "eq1", question: "Solve 2x + 5 = 13", type: "short", answer: "x = 4" },
-          { id: "eq2", question: "Factorize x² - 9", type: "short", answer: "(x-3)(x+3)" }
-        ], maxScore: 10 },
-        { id: "ex2", title: "Physics Numericals", subjectId: "sub2", class: "10-A", questions: [
-          { id: "eq3", question: "A force of 10N accelerates a 2kg mass. Find acceleration", type: "short", answer: "5 m/s²" }
-        ], maxScore: 5 }
-      ],
-      chartOfAccounts: [
-        { id: "coa1", code: "1000", name: "Cash", type: "asset", normalBalance: "debit" },
-        { id: "coa2", code: "2000", name: "Accounts Receivable", type: "asset", normalBalance: "debit" },
-        { id: "coa3", code: "3000", name: "Tuition Revenue", type: "revenue", normalBalance: "credit" },
-        { id: "coa4", code: "4000", name: "Salary Expense", type: "expense", normalBalance: "debit" },
-        { id: "coa5", code: "5000", name: "Accounts Payable", type: "liability", normalBalance: "credit" }
-      ],
-      budgets: [
-        { id: "bd1", name: "Annual Academic Budget 2025-26", fiscalYear: "2025-26", totalAmount: 5000000, allocated: 3200000, remaining: 1800000, status: "active", items: [
-          { category: "Salaries", amount: 3000000, spent: 2500000 },
-          { category: "Lab Equipment", amount: 500000, spent: 200000 },
-          { category: "Library", amount: 300000, spent: 100000 }
-        ] }
-      ],
-      invoices: [
-        { id: "inv1", invoiceNumber: "INV-2026-001", studentId: "u3", studentName: "Rohan Kumar", items: [
-          { description: "Term 3 Tuition Fee", amount: 25000 },
-          { description: "Lab Fee", amount: 5000 },
-          { description: "Library Fee", amount: 2000 }
-        ], subtotal: 32000, tax: 0, total: 32000, status: "pending", dueDate: "2026-07-31", issuedDate: "2026-07-01", paidAmount: 0 }
-      ],
-      payments: [
-        { id: "pmt1", invoiceId: "inv1", studentId: "u1", amount: 50000, method: "online", transactionId: "txn_001", status: "completed", date: "2026-01-15", term: "Term 1" },
-        { id: "pmt2", invoiceId: "inv2", studentId: "u2", amount: 50000, method: "bank", transactionId: "txn_002", status: "completed", date: "2026-01-20", term: "Term 1" }
-      ],
-      expenses: [
-        { id: "exp1", description: "Lab equipment purchase", category: "Lab Equipment", amount: 50000, date: "2026-06-01", paidTo: "Scientific Supplies Co.", paymentMethod: "bank", approvedBy: "u7", status: "approved" }
-      ],
-      libraryCatalogue: [
-        { id: "bk1", title: "Introduction to Algorithms", author: "CLRS", isbn: "978-0-262-04630-5", category: "Computer Science", copies: 3, available: 2, shelf: "CS-01" },
-        { id: "bk2", title: "Organic Chemistry", author: "Morrison & Boyd", isbn: "978-0-13-404228-2", category: "Chemistry", copies: 2, available: 1, shelf: "CH-03" },
-        { id: "bk3", title: "University Physics", author: "Young & Freedman", isbn: "978-0-321-69686-1", category: "Physics", copies: 4, available: 3, shelf: "PH-02" },
-        { id: "bk4", title: "English Grammar in Use", author: "Raymond Murphy", isbn: "978-1-108-45765-1", category: "English", copies: 5, available: 4, shelf: "EN-01" },
-        { id: "bk5", title: "Advanced Mathematics", author: "Kreyszig", isbn: "978-0-470-45836-8", category: "Mathematics", copies: 2, available: 1, shelf: "MA-01" }
-      ],
-      clients: [
-        { id: "cl1", name: "Sunil Book Depot", contact: "+91-9876543210", email: "sunil@bookdepot.com", type: "vendor", status: "active", creditLimit: 100000 },
-        { id: "cl2", name: "EduTech Solutions", contact: "+91-8765432109", email: "info@edutech.com", type: "vendor", status: "active", creditLimit: 500000 }
-      ],
-      leads: [
-        { id: "ld1", name: "Mr. Sharma", email: "sharma@example.com", phone: "+91-9999888777", source: "referral", status: "new", notes: "Interested in Class 11 admission for his son", createdAt: "2026-05-20T10:00:00Z" }
-      ],
-      products: [
-        { id: "pr1", name: "School Uniform - Junior", sku: "UNI-JR-001", price: 1500, unit: "set", category: "uniform", stock: 50 },
-        { id: "pr2", name: "Textbook - Mathematics Grade 10", sku: "TXT-M10-001", price: 800, unit: "piece", category: "textbook", stock: 100 }
-      ],
-      orders: [
-        { id: "or1", orderNumber: "ORD-2026-001", clientId: "cl1", status: "pending", items: [{ productId: "pr2", quantity: 30, unitPrice: 800 }], total: 24000, orderDate: "2026-06-01", expectedDelivery: "2026-06-15" }
-      ],
-      staffDirectory: [
-        { id: "sd1", firstName: "Rajesh", lastName: "Gupta", department: "Science", position: "Senior Teacher", employeeId: "EMP001", joinDate: "2020-04-01", qualification: "Ph.D. Physics", userId: "u5" },
-        { id: "sd2", firstName: "Sunita", lastName: "Verma", department: "Science", position: "Professor", employeeId: "EMP002", joinDate: "2019-08-15", qualification: "Ph.D. Chemistry", userId: "u6" }
-      ],
-      staffPositions: [
-        { id: "sp1", title: "Senior Teacher", department: "Science", salaryRange: { min: 60000, max: 90000 }, requirements: ["Ph.D.", "5+ years experience"] },
-        { id: "sp2", title: "Professor", department: "Science", salaryRange: { min: 70000, max: 110000 }, requirements: ["Ph.D.", "8+ years experience"] }
+// Seed data
+const toObj = (arr: any[]) => Object.fromEntries(arr.map((item: any) => [item.id, item]));
+const buildSeedData = () => ({
+  users: toObj([
+    { id: "u1", name: "Aarav Sharma", email: "aarav@eduvault.ai", password: "demo1234", role: "student", class: "10-A", subjects: ["Math", "Physics", "Chemistry", "English", "CS"], gpa: 3.8, attendance: 92, feesPaid: true, routeId: "r1", avatar: "AS", avatarUrl: "https://randomuser.me/api/portraits/men/32.jpg", phone: "+91-9876543210", address: "42 Knowledge Park, New Delhi", dateOfBirth: "2008-06-15", admissionNo: "ADM-2024-001", rollNo: "1001", bloodGroup: "O+", aadharNo: "1234-5678-9012", penNo: "PEN-001", apaarId: "APAAR-001", religion: "Hindu", nationality: "Indian", schoolHouse: "Blue House", houseLocation: "Delhi NCR", fatherName: "Mr. Raj Sharma", fatherPhone: "+91-9876543211", motherName: "Mrs. Kavita Sharma", motherPhone: "+91-9876543212" },
+    { id: "u2", name: "Priya Patel", email: "priya@eduvault.ai", password: "demo1234", role: "student", class: "10-A", subjects: ["Math", "Physics", "Chemistry", "English", "Biology"], gpa: 3.9, attendance: 96, feesPaid: true, routeId: "r1", avatar: "PP", avatarUrl: "https://randomuser.me/api/portraits/women/68.jpg", phone: "+91-9876543220", address: "15 Garden Colony, New Delhi", dateOfBirth: "2008-03-22", admissionNo: "ADM-2024-002", rollNo: "1002", bloodGroup: "A+", aadharNo: "2345-6789-0123", penNo: "PEN-002", apaarId: "APAAR-002", religion: "Hindu", nationality: "Indian", schoolHouse: "Green House", houseLocation: "Delhi NCR", fatherName: "Mr. Amit Patel", fatherPhone: "+91-9876543221", motherName: "Mrs. Neha Patel", motherPhone: "+91-9876543222" },
+    { id: "u3", name: "Rohan Kumar", email: "rohan@eduvault.ai", password: "demo1234", role: "student", class: "10-B", subjects: ["Math", "Physics", "Chemistry", "English", "CS"], gpa: 3.5, attendance: 85, feesPaid: false, routeId: "r2", avatar: "RK", avatarUrl: "https://randomuser.me/api/portraits/men/51.jpg", phone: "+91-9876543230", address: "8 Sunshine Apartments, New Delhi", dateOfBirth: "2008-11-08", admissionNo: "ADM-2024-003", rollNo: "1003", bloodGroup: "B+", aadharNo: "3456-7890-1234", penNo: "PEN-003", apaarId: "APAAR-003", religion: "Hindu", nationality: "Indian", schoolHouse: "Red House", houseLocation: "Delhi NCR", fatherName: "Mr. Suresh Kumar", fatherPhone: "+91-9876543231", motherName: "Mrs. Poonam Kumar", motherPhone: "+91-9876543232" },
+    { id: "u4", name: "Ananya Singh", email: "ananya@eduvault.ai", password: "demo1234", role: "student", class: "10-B", subjects: ["Math", "Physics", "Chemistry", "English", "Biology"], gpa: 3.7, attendance: 89, feesPaid: true, routeId: "r2", avatar: "AS", avatarUrl: "https://randomuser.me/api/portraits/women/53.jpg", phone: "+91-9876543240", address: "27 Royal Enclave, New Delhi", dateOfBirth: "2008-07-19", admissionNo: "ADM-2024-004", rollNo: "1004", bloodGroup: "AB+", aadharNo: "4567-8901-2345", penNo: "PEN-004", apaarId: "APAAR-004", religion: "Hindu", nationality: "Indian", schoolHouse: "Green House", houseLocation: "Delhi NCR", fatherName: "Mr. Vikram Singh", fatherPhone: "+91-9876543241", motherName: "Mrs. Anita Singh", motherPhone: "+91-9876543242" },
+    { id: "u5", name: "Mr. Rajesh Gupta", email: "rajesh@eduvault.ai", password: "demo1234", role: "teacher", class: "10-A", subjects: ["Math", "Physics"] },
+    { id: "u6", name: "Dr. Sunita Verma", email: "sunita@eduvault.ai", password: "demo1234", role: "teacher", class: "10-B", subjects: ["Chemistry", "Biology"] },
+    { id: "u7", name: "Admin User", email: "admin@eduvault.ai", password: "admin123", role: "admin", avatar: "AU" },
+    { id: "u8", name: "Mrs. Meera Kapoor", email: "meera@eduvault.ai", password: "demo1234", role: "admin" },
+    { id: "u9", name: "Raju Kumar", email: "raju@eduvault.ai", password: "demo1234", role: "driver" }
+  ]),
+  timetable: {
+    "10-A": [
+      { day: "Monday", periods: [{ time: "8:00-8:45", subject: "Math" }, { time: "8:45-9:30", subject: "Physics" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "CS" }] },
+      { day: "Tuesday", periods: [{ time: "8:00-8:45", subject: "English" }, { time: "8:45-9:30", subject: "Math" }, { time: "9:45-10:30", subject: "Physics" }, { time: "10:30-11:15", subject: "Chemistry" }, { time: "11:30-12:15", subject: "CS" }] },
+      { day: "Wednesday", periods: [{ time: "8:00-8:45", subject: "Chemistry" }, { time: "8:45-9:30", subject: "English" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "CS" }, { time: "11:30-12:15", subject: "Physics" }] },
+      { day: "Thursday", periods: [{ time: "8:00-8:45", subject: "Physics" }, { time: "8:45-9:30", subject: "CS" }, { time: "9:45-10:30", subject: "English" }, { time: "10:30-11:15", subject: "Math" }, { time: "11:30-12:15", subject: "Chemistry" }] },
+      { day: "Friday", periods: [{ time: "8:00-8:45", subject: "CS" }, { time: "8:45-9:30", subject: "Chemistry" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "Physics" }, { time: "11:30-12:15", subject: "English" }] }
+    ],
+    "10-B": [
+      { day: "Monday", periods: [{ time: "8:00-8:45", subject: "Math" }, { time: "8:45-9:30", subject: "Chemistry" }, { time: "9:45-10:30", subject: "English" }, { time: "10:30-11:15", subject: "Physics" }, { time: "11:30-12:15", subject: "Biology" }] },
+      { day: "Tuesday", periods: [{ time: "8:00-8:45", subject: "Biology" }, { time: "8:45-9:30", subject: "Math" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "Physics" }] },
+      { day: "Wednesday", periods: [{ time: "8:00-8:45", subject: "English" }, { time: "8:45-9:30", subject: "Physics" }, { time: "9:45-10:30", subject: "Biology" }, { time: "10:30-11:15", subject: "Math" }, { time: "11:30-12:15", subject: "Chemistry" }] },
+      { day: "Thursday", periods: [{ time: "8:00-8:45", subject: "Chemistry" }, { time: "8:45-9:30", subject: "Biology" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "Physics" }] },
+      { day: "Friday", periods: [{ time: "8:00-8:45", subject: "Physics" }, { time: "8:45-9:30", subject: "English" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "Biology" }, { time: "11:30-12:15", subject: "Math" }] }
+    ]
+  },
+  routes: toObj([
+    { id: "r1", name: "Route A - North Campus", driver: "Raju Kumar", driverId: "u9", bus: "KA-01-1234", stops: ["Main Gate", "North Block", "Library", "Sports Complex"], students: ["u1", "u2"] },
+    { id: "r2", name: "Route B - South Campus", driver: "Raju Kumar", driverId: "u9", bus: "KA-01-5678", stops: ["South Gate", "Auditorium", "Lab Block", "Cafeteria"], students: ["u3", "u4"] }
+  ]),
+  events: toObj([
+    { id: "e1", title: "Annual Sports Day", date: "2026-06-15", type: "sports", description: "Inter-house athletics competition" },
+    { id: "e2", title: "Science Fair", date: "2026-06-22", type: "academic", description: "Student science project exhibition" },
+    { id: "e3", title: "Parent-Teacher Meeting", date: "2026-05-30", type: "meeting", description: "Quarterly PTM for all classes" },
+    { id: "e4", title: "Farewell Ceremony", date: "2026-05-20", type: "ceremony", description: "Farewell for graduating batch" }
+  ]),
+  clubs: toObj([
+    {
+      id: "c1", name: "Coding Club", description: "Learn programming, build projects, compete in hackathons", members: ["u1", "u3"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Technology", meetingDay: "Wednesday", meetingTime: "3:30 PM", posts: [
+        { id: "p1", authorId: "u1", authorName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", content: "Great hackathon session today! 🚀", timestamp: "2026-05-19T15:00:00Z", likes: ["u3", "u5"] },
+        { id: "p2", authorId: "u3", authorName: "Rohan Kumar", avatar: "https://randomuser.me/api/portraits/men/51.jpg", content: "Just finished my first React app!", timestamp: "2026-05-18T14:00:00Z", likes: ["u1"] }
       ]
-    };
-    await setData('/', seedData);
-    console.log('[Seed] Database seeded SUCCESSFULLY!');
+    },
+    {
+      id: "c2", name: "Science Society", description: "Explore scientific concepts through experiments and research", members: ["u2", "u4"], lead: "u2", leadName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", category: "Academic", meetingDay: "Thursday", meetingTime: "4:00 PM", posts: [
+        { id: "p3", authorId: "u2", authorName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", content: "Science fair prep going well! 🧪", timestamp: "2026-05-19T16:00:00Z", likes: ["u4", "u6"] }
+      ]
+    },
+    {
+      id: "c3", name: "Drama Club", description: "Acting, stagecraft, and theatrical productions", members: ["u1", "u2", "u4"], lead: "u4", leadName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", category: "Arts", meetingDay: "Friday", meetingTime: "3:00 PM", posts: [
+        { id: "p4", authorId: "u4", authorName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", content: "Auditions for the spring play next week! 🎭", timestamp: "2026-05-20T10:00:00Z", likes: ["u1", "u2"] }
+      ]
+    },
+    { id: "c4", name: "Music Ensemble", description: "Band, choir, and individual music performance", members: ["u1", "u2", "u3", "u4"], lead: "u2", leadName: "Priya Patel", avatar: "https://randomuser.me/api/portraits/women/68.jpg", category: "Arts", meetingDay: "Tuesday", meetingTime: "3:30 PM", posts: [] },
+    { id: "c5", name: "Sports Club", description: "Athletics, team sports, and fitness activities", members: ["u1", "u3"], lead: "u3", leadName: "Rohan Kumar", avatar: "https://randomuser.me/api/portraits/men/51.jpg", category: "Sports", meetingDay: "Monday", meetingTime: "4:00 PM", posts: [] },
+    { id: "c6", name: "Debate Society", description: "Public speaking, argumentation, and competitive debate", members: ["u2", "u4"], lead: "u4", leadName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", category: "Academic", meetingDay: "Wednesday", meetingTime: "4:30 PM", posts: [] },
+    { id: "c7", name: "Art Studio", description: "Painting, sculpture, and digital art creation", members: ["u1", "u2", "u4"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Arts", meetingDay: "Thursday", meetingTime: "3:00 PM", posts: [] },
+    { id: "c8", name: "Robotics Club", description: "Build and program robots for competitions", members: ["u1", "u3"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Technology", meetingDay: "Friday", meetingTime: "4:00 PM", posts: [] }
+  ]),
+  assignments: toObj([
+    { id: "a1", title: "Quadratic Equations", subjectId: "sub1", subject: "Mathematics", class: "10-A", dueDate: "2026-05-05", status: "active", description: "Solve 20 quadratic equations", maxMarks: 50, submissions: [] },
+    { id: "a2", title: "Newton's Laws Essay", subjectId: "sub2", subject: "Physics", class: "10-A", dueDate: "2026-05-10", status: "active", description: "Write an essay on Newton's three laws", maxMarks: 30, submissions: [] },
+    { id: "a3", title: "Organic Chemistry Basics", subjectId: "sub3", subject: "Chemistry", class: "10-A", dueDate: "2026-05-12", status: "active", description: "Complete the worksheet", maxMarks: 40, submissions: [] },
+    { id: "a4", title: "Essay: Climate Change", subjectId: "sub4", subject: "English", class: "10-A", dueDate: "2026-05-15", status: "active", description: "Write a 500-word essay", maxMarks: 25, submissions: [] },
+    { id: "a5", title: "HTML Basics Project", subjectId: "sub5", subject: "CS", class: "10-A", dueDate: "2026-05-08", status: "active", description: "Create a personal webpage", maxMarks: 50, submissions: [] },
+    { id: "a6", title: "Quadratic Equations", subjectId: "sub1", subject: "Mathematics", class: "10-B", dueDate: "2026-05-05", status: "active", description: "Solve 20 quadratic equations", maxMarks: 50, submissions: [] },
+    { id: "a7", title: "Shakespeare Analysis", subjectId: "sub4", subject: "English", class: "10-B", dueDate: "2026-05-10", status: "completed", description: "Analyze Hamlet's soliloquy", maxMarks: 40, submissions: [{ studentId: "u3", content: "Analysis submitted", scoredMarks: 35, feedback: "Well written", submittedAt: "2026-05-09T16:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 38, feedback: "Excellent analysis", submittedAt: "2026-05-09T14:00:00Z" }] },
+    { id: "a8", title: "Trigonometry Problems", subjectId: "sub1", subject: "Mathematics", class: "10-B", dueDate: "2026-05-08", status: "completed", description: "Solve trigonometric identities", maxMarks: 50, submissions: [{ studentId: "u3", content: "Completed", scoredMarks: 40, feedback: "Good work", submittedAt: "2026-05-07T12:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 46, feedback: "Excellent", submittedAt: "2026-05-07T11:00:00Z" }] }
+  ]),
+  grades: {
+    u1: [
+      { subject: "Math", overall: 92, marks: 92, midTerm: 45, finalTerm: 47, grade: "A", trend: "up" },
+      { subject: "Physics", overall: 88, marks: 88, midTerm: 42, finalTerm: 46, grade: "A-", trend: "up" },
+      { subject: "Chemistry", overall: 82, marks: 82, midTerm: 40, finalTerm: 42, grade: "B+", trend: "down" },
+      { subject: "English", overall: 90, marks: 90, midTerm: 44, finalTerm: 46, grade: "A", trend: "up" },
+      { subject: "CS", overall: 96, marks: 96, midTerm: 48, finalTerm: 48, grade: "A+", trend: "up" }
+    ],
+    u2: [
+      { subject: "Math", overall: 95, marks: 95, midTerm: 47, finalTerm: 48, grade: "A+", trend: "up" },
+      { subject: "Physics", overall: 91, marks: 91, midTerm: 45, finalTerm: 46, grade: "A", trend: "up" },
+      { subject: "Chemistry", overall: 89, marks: 89, midTerm: 44, finalTerm: 45, grade: "A", trend: "up" },
+      { subject: "English", overall: 94, marks: 94, midTerm: 47, finalTerm: 47, grade: "A+", trend: "up" },
+      { subject: "Biology", overall: 90, marks: 90, midTerm: 45, finalTerm: 45, grade: "A", trend: "down" }
+    ],
+    u3: [
+      { subject: "Math", overall: 78, marks: 78, midTerm: 38, finalTerm: 40, grade: "B+", trend: "down" },
+      { subject: "Physics", overall: 72, marks: 72, midTerm: 35, finalTerm: 37, grade: "B", trend: "down" },
+      { subject: "Chemistry", overall: 85, marks: 85, midTerm: 42, finalTerm: 43, grade: "A-", trend: "up" },
+      { subject: "English", overall: 79, marks: 79, midTerm: 39, finalTerm: 40, grade: "B+", trend: "up" },
+      { subject: "CS", overall: 86, marks: 86, midTerm: 43, finalTerm: 43, grade: "A-", trend: "up" }
+    ],
+    u4: [
+      { subject: "Math", overall: 87, marks: 87, midTerm: 43, finalTerm: 44, grade: "A-", trend: "down" },
+      { subject: "Physics", overall: 80, marks: 80, midTerm: 40, finalTerm: 40, grade: "B+", trend: "up" },
+      { subject: "Chemistry", overall: 88, marks: 88, midTerm: 44, finalTerm: 44, grade: "A", trend: "up" },
+      { subject: "English", overall: 91, marks: 91, midTerm: 45, finalTerm: 46, grade: "A", trend: "up" },
+      { subject: "Biology", overall: 93, marks: 93, midTerm: 46, finalTerm: 47, grade: "A+", trend: "up" }
+    ]
+  },
+  attendance: {
+    u1: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "absent" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }],
+    u2: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "present" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }],
+    u3: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "absent" }, { date: "2026-05-03", status: "absent" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "late" }],
+    u4: [{ date: "2026-05-01", status: "present" }, { date: "2026-05-02", status: "present" }, { date: "2026-05-03", status: "late" }, { date: "2026-05-04", status: "present" }, { date: "2026-05-05", status: "present" }]
+  },
+  subjects: toObj([
+    { id: "sub1", name: "Mathematics", code: "MTH10", credits: 5, classes: ["10-A", "10-B"] },
+    { id: "sub2", name: "Physics", code: "PHY10", credits: 4, classes: ["10-A", "10-B"] },
+    { id: "sub3", name: "Chemistry", code: "CHM10", credits: 4, classes: ["10-A"] },
+    { id: "sub4", name: "English", code: "ENG10", credits: 3, classes: ["10-A", "10-B"] },
+    { id: "sub5", name: "Computer Science", code: "CSC10", credits: 4, classes: ["10-A"] },
+    { id: "sub6", name: "Biology", code: "BIO10", credits: 4, classes: ["10-B"] }
+  ]),
+  fees: {
+    u1: [{ type: "tuition", amount: 50000, paid: 50000, due: "2026-01-15", status: "paid" }, { type: "lab", amount: 10000, paid: 5000, due: "2026-03-15", status: "partial" }, { type: "sports", amount: 5000, paid: 5000, due: "2026-04-01", status: "paid" }],
+    u2: [{ type: "tuition", amount: 50000, paid: 50000, due: "2026-01-15", status: "paid" }, { type: "lab", amount: 10000, paid: 10000, due: "2026-03-15", status: "paid" }, { type: "library", amount: 3000, paid: 0, due: "2026-05-01", status: "unpaid" }],
+    u3: [{ type: "tuition", amount: 45000, paid: 45000, due: "2026-01-15", status: "paid" }, { type: "lab", amount: 8000, paid: 0, due: "2026-03-15", status: "unpaid" }, { type: "transport", amount: 12000, paid: 12000, due: "2026-04-01", status: "paid" }],
+    u4: [{ type: "tuition", amount: 45000, paid: 45000, due: "2026-01-15", status: "paid" }, { type: "lab", amount: 8000, paid: 8000, due: "2026-03-15", status: "paid" }]
+  },
+  feeRecords: toObj([
+    { id: "fr1", studentId: "u1", studentName: "Aarav Sharma", class: "10-A", type: "tuition", amount: 50000, paid: 50000, due: "2026-01-15", status: "paid" },
+    { id: "fr2", studentId: "u2", studentName: "Priya Patel", class: "10-A", type: "tuition", amount: 50000, paid: 50000, due: "2026-01-15", status: "paid" },
+    { id: "fr3", studentId: "u3", studentName: "Rohan Kumar", class: "10-B", type: "tuition", amount: 45000, paid: 45000, due: "2026-01-15", status: "paid" },
+    { id: "fr4", studentId: "u4", studentName: "Ananya Singh", class: "10-B", type: "tuition", amount: 45000, paid: 45000, due: "2026-01-15", status: "paid" }
+  ]),
+  messages: {
+    u1: [
+      { id: "m1", from: "u5", to: "u1", content: "Great work on your math assignment, Aarav!", timestamp: "2026-05-29T10:30:00Z", read: true },
+      { id: "m2", from: "u7", to: "u1", content: "Please submit your fee receipt by Friday.", timestamp: "2026-05-28T09:00:00Z", read: true },
+      { id: "m3", from: "u5", to: "u1", content: "Reminder: Physics practical tomorrow at 9 AM.", timestamp: "2026-05-27T14:00:00Z", read: false }
+    ],
+    u2: [
+      { id: "m4", from: "u6", to: "u2", content: "Excellent biology project, Priya!", timestamp: "2026-05-29T11:00:00Z", read: true }
+    ],
+    u3: [
+      { id: "m5", from: "u5", to: "u3", content: "Please complete your pending math homework.", timestamp: "2026-05-29T08:00:00Z", read: false }
+    ],
+    u4: [
+      { id: "m6", from: "u6", to: "u4", content: "Great participation in science society meeting.", timestamp: "2026-05-28T15:00:00Z", read: true }
+    ]
+  },
+  notifications: {
+    u1: [
+      { id: "n1", title: "Assignment Graded", message: "Your Math assignment has been graded.", type: "grade", read: false, createdAt: "2026-05-30T10:00:00Z" },
+      { id: "n2", title: "Exam Schedule", message: "Mid-term exams start next week.", type: "exam", read: false, createdAt: "2026-05-29T09:00:00Z" }
+    ],
+    u2: [
+      { id: "n3", title: "Club Meeting", message: "Science society meeting at 4 PM.", type: "club", read: false, createdAt: "2026-05-30T08:00:00Z" }
+    ]
+  },
+  announcements: toObj([
+    { id: "ann1", title: "Summer Break Notice", content: "School will remain closed for summer break from June 15 to July 10.", priority: "high", audience: ["all"], createdBy: "u7", createdAt: "2026-06-01T08:00:00Z" },
+    { id: "ann2", title: "Parent-Teacher Meeting", content: "Quarterly PTM scheduled for June 25. All parents are requested to attend.", priority: "medium", audience: ["all"], createdBy: "u7", createdAt: "2026-06-05T10:00:00Z" },
+    { id: "ann3", title: "Science Fair Winners", content: "Congratulations to all winners of the inter-school science fair!", priority: "low", audience: ["students"], createdBy: "u5", createdAt: "2026-06-10T09:00:00Z" }
+  ]),
+  attendancePolicies: toObj([
+    { id: "ap1", name: "Standard Absence Policy", maxAbsentDays: 20, gracePeriod: 3, requireParentNote: true, academicYear: "2025-26" },
+    { id: "ap2", name: "Exam Attendance Policy", maxAbsentDays: 0, requireMedicalCert: true, academicYear: "2025-26" }
+  ]),
+  bellSchedules: toObj([
+    { id: "bs1", name: "Regular Day", startTime: "08:00", endTime: "15:30", periods: 8, periodDuration: 40, breakStart: "10:25", breakDuration: 20, lunchStart: "12:20", lunchDuration: 40 },
+    { id: "bs2", name: "Short Day", startTime: "08:00", endTime: "13:00", periods: 6, periodDuration: 35, breakStart: "10:00", breakDuration: 15, lunchStart: "12:00", lunchDuration: 30 }
+  ]),
+  roomBookings: toObj([
+    { id: "rb1", room: "Lab 1", date: "2026-06-01", startTime: "09:00", endTime: "10:30", bookedBy: "u5", purpose: "Physics practical", status: "confirmed" },
+    { id: "rb2", room: "IT Lab", date: "2026-06-02", startTime: "11:00", endTime: "12:30", bookedBy: "u5", purpose: "CS class 10-A", status: "confirmed" }
+  ]),
+  lessonPlans: toObj([
+    { id: "lp1", title: "Quadratic Equations - Introduction", subjectId: "sub1", class: "10-A", teacherId: "u5", week: 1, objectives: ["Understand standard form", "Solve by factorization"], resources: ["Textbook Ch5", "Worksheet 1"], status: "completed" },
+    { id: "lp2", title: "Newton's Laws - Lab Session", subjectId: "sub2", class: "10-A", teacherId: "u5", week: 2, objectives: ["Verify F=ma", "Measure acceleration"], resources: ["Lab equipment", "Data sheet"], status: "active" }
+  ]),
+  exercises: toObj([
+    { id: "ex1", title: "Algebra Basics", subjectId: "sub1", class: "10-A", questions: [
+      { id: "eq1", question: "Solve 2x + 5 = 13", type: "short", answer: "x = 4" },
+      { id: "eq2", question: "Factorize x² - 9", type: "short", answer: "(x-3)(x+3)" }
+    ], maxScore: 10 },
+    { id: "ex2", title: "Physics Numericals", subjectId: "sub2", class: "10-A", questions: [
+      { id: "eq3", question: "A force of 10N accelerates a 2kg mass. Find acceleration", type: "short", answer: "5 m/s²" }
+    ], maxScore: 5 }
+  ]),
+  exams: toObj([
+    { id: "exam1", title: "Mid Term Mathematics", subjectId: "sub1", class: "10-A", date: "2026-05-20", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Mathematics - Algebra and Geometry" },
+    { id: "exam2", title: "Mid Term Physics", subjectId: "sub2", class: "10-A", date: "2026-05-22", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Physics - Mechanics" },
+    { id: "exam3", title: "Mid Term English", subjectId: "sub4", class: "10-A", date: "2026-05-24", totalMarks: 80, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for English - Grammar and Literature" },
+    { id: "exam4", title: "Mid Term Chemistry", subjectId: "sub3", class: "10-A", date: "2026-05-21", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Chemistry" },
+    { id: "exam5", title: "Mid Term CS", subjectId: "sub5", class: "10-A", date: "2026-05-23", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Computer Science" },
+    { id: "exam6", title: "Mid Term Mathematics", subjectId: "sub1", class: "10-B", date: "2026-05-20", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Mathematics" },
+    { id: "exam7", title: "Mid Term Physics", subjectId: "sub2", class: "10-B", date: "2026-05-22", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Physics" },
+    { id: "exam8", title: "Mid Term English", subjectId: "sub4", class: "10-B", date: "2026-05-24", totalMarks: 80, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for English" },
+    { id: "exam9", title: "Mid Term Biology", subjectId: "sub6", class: "10-B", date: "2026-05-23", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Biology" },
+    { id: "exam10", title: "Mid Term Chemistry", subjectId: "sub3", class: "10-B", date: "2026-05-21", totalMarks: 100, type: "midterm", status: "completed", resultStatus: "published", description: "Mid term examination for Chemistry" }
+  ]),
+  examResults: {
+    exam1: {
+      u1: { studentId: "u1", marks: 92, grade: "A", remarks: "Excellent work", enteredBy: "u5", enteredAt: "2026-05-21T10:00:00Z", status: "published" },
+      u2: { studentId: "u2", marks: 95, grade: "A+", remarks: "Outstanding", enteredBy: "u5", enteredAt: "2026-05-21T10:00:00Z", status: "published" }
+    },
+    exam2: {
+      u1: { studentId: "u1", marks: 88, grade: "A-", remarks: "Good", enteredBy: "u5", enteredAt: "2026-05-23T10:00:00Z", status: "published" },
+      u2: { studentId: "u2", marks: 91, grade: "A", remarks: "Very good", enteredBy: "u5", enteredAt: "2026-05-23T10:00:00Z", status: "published" }
+    },
+    exam3: {
+      u1: { studentId: "u1", marks: 72, grade: "A", remarks: "Good grammar", enteredBy: "u5", enteredAt: "2026-05-25T10:00:00Z", status: "published" },
+      u2: { studentId: "u2", marks: 75, grade: "A+", remarks: "Excellent", enteredBy: "u5", enteredAt: "2026-05-25T10:00:00Z", status: "published" }
+    },
+    exam4: {
+      u1: { studentId: "u1", marks: 82, grade: "B+", remarks: "Needs improvement in organic", enteredBy: "u5", enteredAt: "2026-05-22T10:00:00Z", status: "published" },
+      u2: { studentId: "u2", marks: 89, grade: "A", remarks: "Good", enteredBy: "u5", enteredAt: "2026-05-22T10:00:00Z", status: "published" }
+    },
+    exam5: {
+      u1: { studentId: "u1", marks: 96, grade: "A+", remarks: "Excellent programmer", enteredBy: "u5", enteredAt: "2026-05-24T10:00:00Z", status: "published" }
+    },
+    exam6: {
+      u3: { studentId: "u3", marks: 78, grade: "B+", remarks: "Fair", enteredBy: "u5", enteredAt: "2026-05-21T10:00:00Z", status: "published" },
+      u4: { studentId: "u4", marks: 87, grade: "A-", remarks: "Good", enteredBy: "u5", enteredAt: "2026-05-21T10:00:00Z", status: "published" }
+    },
+    exam7: {
+      u3: { studentId: "u3", marks: 72, grade: "B", remarks: "Needs practice", enteredBy: "u5", enteredAt: "2026-05-23T10:00:00Z", status: "published" },
+      u4: { studentId: "u4", marks: 80, grade: "B+", remarks: "Good", enteredBy: "u5", enteredAt: "2026-05-23T10:00:00Z", status: "published" }
+    },
+    exam8: {
+      u3: { studentId: "u3", marks: 63, grade: "B+", remarks: "Good essay", enteredBy: "u5", enteredAt: "2026-05-25T10:00:00Z", status: "published" },
+      u4: { studentId: "u4", marks: 73, grade: "A", remarks: "Excellent analysis", enteredBy: "u5", enteredAt: "2026-05-25T10:00:00Z", status: "published" }
+    },
+    exam9: {
+      u3: { studentId: "u3", marks: 86, grade: "A-", remarks: "Good", enteredBy: "u5", enteredAt: "2026-05-24T10:00:00Z", status: "published" },
+      u4: { studentId: "u4", marks: 93, grade: "A+", remarks: "Outstanding", enteredBy: "u5", enteredAt: "2026-05-24T10:00:00Z", status: "published" }
+    },
+    exam10: {
+      u3: { studentId: "u3", marks: 85, grade: "A-", remarks: "Good", enteredBy: "u5", enteredAt: "2026-05-22T10:00:00Z", status: "published" },
+      u4: { studentId: "u4", marks: 88, grade: "A", remarks: "Very good", enteredBy: "u5", enteredAt: "2026-05-22T10:00:00Z", status: "published" }
+    }
+  },
+  chartOfAccounts: toObj([
+    { id: "coa1", code: "1000", name: "Cash", type: "asset", normalBalance: "debit" },
+    { id: "coa2", code: "2000", name: "Accounts Receivable", type: "asset", normalBalance: "debit" },
+    { id: "coa3", code: "3000", name: "Tuition Revenue", type: "revenue", normalBalance: "credit" },
+    { id: "coa4", code: "4000", name: "Salary Expense", type: "expense", normalBalance: "debit" },
+    { id: "coa5", code: "5000", name: "Accounts Payable", type: "liability", normalBalance: "credit" }
+  ]),
+  budgets: toObj([
+    { id: "bd1", name: "Annual Academic Budget 2025-26", fiscalYear: "2025-26", totalAmount: 5000000, allocated: 3200000, remaining: 1800000, status: "active", items: [
+      { category: "Salaries", amount: 3000000, spent: 2500000 },
+      { category: "Lab Equipment", amount: 500000, spent: 200000 },
+      { category: "Library", amount: 300000, spent: 100000 }
+    ] }
+  ]),
+  invoices: toObj([
+    { id: "inv1", invoiceNumber: "INV-2026-001", studentId: "u3", studentName: "Rohan Kumar", items: [
+      { description: "Term 3 Tuition Fee", amount: 25000 },
+      { description: "Lab Fee", amount: 5000 },
+      { description: "Library Fee", amount: 2000 }
+    ], subtotal: 32000, tax: 0, total: 32000, status: "pending", dueDate: "2026-07-31", issuedDate: "2026-07-01", paidAmount: 0 }
+  ]),
+  payments: toObj([
+    { id: "pmt1", invoiceId: "inv1", studentId: "u1", amount: 50000, method: "online", transactionId: "txn_001", status: "completed", date: "2026-01-15", term: "Term 1" },
+    { id: "pmt2", invoiceId: "inv2", studentId: "u2", amount: 50000, method: "bank", transactionId: "txn_002", status: "completed", date: "2026-01-20", term: "Term 1" }
+  ]),
+  expenses: toObj([
+    { id: "exp1", description: "Lab equipment purchase", category: "Lab Equipment", amount: 50000, date: "2026-06-01", paidTo: "Scientific Supplies Co.", paymentMethod: "bank", approvedBy: "u7", status: "approved" },
+    { id: "exp2", description: "Classroom whiteboard replacement", category: "Supplies", amount: 12000, date: "2026-06-10", paidTo: "School Supplies Ltd.", paymentMethod: "cash", status: "pending" },
+    { id: "exp3", description: "Bus maintenance - Route A", category: "Transport", amount: 8500, date: "2026-06-12", paidTo: "Auto Service Center", paymentMethod: "bank", status: "pending" }
+  ]),
+  bookCatalogue: toObj([
+    { id: "bk1", title: "Introduction to Algorithms", author: "CLRS", isbn: "978-0-262-04630-5", category: "Computer Science", copies: 3, available: 2, shelf: "CS-01" },
+    { id: "bk2", title: "Organic Chemistry", author: "Morrison & Boyd", isbn: "978-0-13-404228-2", category: "Chemistry", copies: 2, available: 1, shelf: "CH-03" },
+    { id: "bk3", title: "University Physics", author: "Young & Freedman", isbn: "978-0-321-69686-1", category: "Physics", copies: 4, available: 3, shelf: "PH-02" }
+  ]),
+  disciplineRecords: toObj([]),
+  healthRecords: toObj([]),
+  counsellingRecords: toObj([]),
+  activityRecords: toObj([]),
+  portfolioRecords: toObj([]),
+  enrolmentRecords: toObj([]),
+  libraryRecords: toObj([]),
+  cautionDeposits: toObj([]),
+  diplomaManagement: toObj([]),
+  studentServices: toObj([]),
+  leads: toObj([
+    { id: "ld1", name: "Mr. Sharma", email: "sharma@example.com", phone: "+91-9999888777", source: "referral", status: "new", notes: "Interested in Class 11 admission for his son", createdAt: "2026-05-20T10:00:00Z" }
+  ]),
+  products: toObj([
+    { id: "pr1", name: "School Uniform - Junior", sku: "UNI-JR-001", price: 1500, unit: "set", category: "uniform", stock: 50 },
+    { id: "pr2", name: "Textbook - Mathematics Grade 10", sku: "TXT-M10-001", price: 800, unit: "piece", category: "textbook", stock: 100 }
+  ]),
+  orders: toObj([
+    { id: "or1", orderNumber: "ORD-2026-001", clientId: "cl1", status: "pending", items: [{ productId: "pr2", quantity: 30, unitPrice: 800 }], total: 24000, orderDate: "2026-06-01", expectedDelivery: "2026-06-15" }
+  ]),
+  staffDirectory: toObj([
+    { id: "sd1", firstName: "Rajesh", lastName: "Gupta", department: "Science", position: "Senior Teacher", employeeId: "EMP001", joinDate: "2020-04-01", qualification: "Ph.D. Physics", userId: "u5" },
+    { id: "sd2", firstName: "Sunita", lastName: "Verma", department: "Science", position: "Professor", employeeId: "EMP002", joinDate: "2019-08-15", qualification: "Ph.D. Chemistry", userId: "u6" }
+  ]),
+  staffPositions: toObj([
+    { id: "sp1", title: "Senior Teacher", department: "Science", salaryRange: { min: 60000, max: 90000 }, requirements: ["Ph.D.", "5+ years experience"] },
+    { id: "sp2", title: "Professor", department: "Science", salaryRange: { min: 70000, max: 110000 }, requirements: ["Ph.D.", "8+ years experience"] }
+  ])
+});
+
+async function seedDatabase() {
+  console.log('[Seed] Checking if database is populated...');
+  const existing = await getData('users');
+  if (existing && Object.keys(existing).length > 0) {
+    console.log(`[Seed] Database already has ${Object.keys(existing).length} users — skipping seed.`);
+    return;
+  }
+  console.log('[Seed] Starting fresh database seed...');
+  const data = buildSeedData();
+  const users = data.users as any;
+  if (users) {
+    for (const key of Object.keys(users)) {
+      const pwd = users[key].password;
+      if (pwd && !pwd.startsWith('$2')) {
+        users[key].password = await bcrypt.hash(pwd, SALT_ROUNDS);
+      }
+    }
+  }
+  await setData('/', data);
+  console.log('[Seed] Database seeded SUCCESSFULLY!');
+}
+
+app.all('/api/seed', async (req, res) => {
+  try {
+    const force = req.query.force === 'true';
+    if (force) {
+      console.log('[Seed] Force reseeding...');
+      const data = buildSeedData();
+      const users = data.users as any;
+      if (users) {
+        for (const key of Object.keys(users)) {
+          const pwd = users[key].password;
+          if (pwd && !pwd.startsWith('$2')) {
+            users[key].password = await bcrypt.hash(pwd, SALT_ROUNDS);
+          }
+        }
+      }
+      await setData('/', data);
+      return res.json({ success: true, message: 'Database force-seeded' });
+    }
+    const existing = await getData('users');
+    if (existing && Object.keys(existing).length > 0) {
+      return res.json({ success: true, message: 'Database already has data, use ?force=true to reseed' });
+    }
+    await seedDatabase();
     res.json({ success: true, message: 'Database seeded successfully' });
   } catch (error) {
     console.error('[Seed] Seed error:', error);
@@ -508,53 +543,89 @@ app.all('/api/seed', async (_req, res) => {
 });
 
 // ==================== AUTH ====================
-app.post('/api/auth/login', async (req, res) => {
+const SALT_ROUNDS = 10;
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Too many attempts, try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+function signToken(user: any): string {
+  return jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+}
+
+function authMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  try {
+    const token = authHeader.slice(7);
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    (req as any).user = decoded;
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+}
+
+app.post('/api/auth/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log('[Login] Attempting login with:', { email, password });
+    console.log('[Login] Attempting login for:', email);
     const usersData = await getData('users') as any;
-    console.log('[Login] Users from Firebase:', usersData);
-    const users = usersData ? (Object.values(usersData) as any[]) : [];
-    console.log('[Login] User array:', users);
-    const user = users.find((u: any) => u.email === email && u.password === password);
-    console.log('[Login] Found user:', user);
-    if (!user) {
-      console.log('[Login] Invalid credentials!');
-      return res.status(401).json({ error: 'Invalid credentials' });
+    if (!usersData) return res.status(401).json({ error: 'Invalid credentials' });
+    const entries = Object.entries(usersData) as [string, any][];
+    const entry = entries.find(([_, u]) => u.email === email);
+    if (!entry) return res.status(401).json({ error: 'Invalid credentials' });
+    const [userKey, user] = entry;
+    let valid = false;
+    if (user.password && user.password.startsWith('$2')) {
+      valid = await bcrypt.compare(password, user.password);
+    } else {
+      valid = password === user.password;
+      if (valid) {
+        user.password = await bcrypt.hash(password, SALT_ROUNDS);
+        await setData(`users/${userKey}`, { ...user });
+      }
     }
-    console.log('[Login] Login SUCCESSFUL!');
-    res.json({ user: safeUser(user), token: `eduvault-token-${(user as any).id}-${Date.now()}` });
+    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+    res.json({ user: safeUser(user), token: signToken(user) });
   } catch (error) {
     console.error('[Login] Login error:', error);
     res.status(500).json({ error: 'Login failed' });
   }
 });
 
-app.post('/api/auth/signup', async (req, res) => {
+app.post('/api/auth/signup', authLimiter, async (req, res) => {
   try {
     const { email, password, name, role, class: className, parentEmail } = req.body;
     const usersData = await getData('users') as any;
     const users = usersData ? Object.values(usersData) : [];
     const existing = users.find((u: any) => u.email === email);
     if (existing) return res.status(400).json({ error: 'User already exists' });
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     const newUser = {
       id: `u${Date.now()}`,
       name,
       email,
-      password,
+      password: hashedPassword,
       role: role || 'student',
       class: className || '',
       avatar: name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
       createdAt: new Date().toISOString()
     };
     await setData(`users/${newUser.id}`, newUser);
-    res.status(201).json({ user: safeUser(newUser), token: `eduvault-token-${newUser.id}-${Date.now()}` });
+    res.status(201).json({ user: safeUser(newUser), token: signToken(newUser) });
   } catch (error) {
     res.status(500).json({ error: 'Signup failed' });
   }
 });
 
-app.post('/api/auth/forgot-password', async (req, res) => {
+app.post('/api/auth/forgot-password', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     const usersData = await getData('users') as any;
@@ -569,7 +640,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   }
 });
 
-app.post('/api/auth/verify-otp', async (req, res) => {
+app.post('/api/auth/verify-otp', authLimiter, async (req, res) => {
   try {
     const { email, otp } = req.body;
     const otpData = await getData(`otpStore/${email}`);
@@ -581,7 +652,7 @@ app.post('/api/auth/verify-otp', async (req, res) => {
   }
 });
 
-app.post('/api/auth/reset-password', async (req, res) => {
+app.post('/api/auth/reset-password', authLimiter, async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
     const otpData = await getData(`otpStore/${email}`);
@@ -591,7 +662,10 @@ app.post('/api/auth/reset-password', async (req, res) => {
     const users = usersData ? Object.values(usersData) : [];
     const user = users.find((u: any) => u.email === email);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    await setData(`users/${(user as any).id}/password`, newPassword);
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    const userKey = Object.keys(usersData).find((k: string) => usersData[k].email === email);
+    if (!userKey) return res.status(500).json({ error: 'Failed to find user key' });
+    await setData(`users/${userKey}`, { ...user, password: hashedPassword });
     await removeData(`otpStore/${email}`);
     res.json({ message: 'Password reset successful' });
   } catch (error) {
@@ -601,7 +675,18 @@ app.post('/api/auth/reset-password', async (req, res) => {
 
 app.get('/api/auth/me', async (req, res) => {
   try {
-    const userId = req.headers['x-user-id'] as string;
+    const authHeader = req.headers.authorization;
+    let userId: string | null = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.slice(7);
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        userId = decoded.id;
+      } catch { /* fall through to x-user-id */ }
+    }
+    if (!userId) {
+      userId = req.headers['x-user-id'] as string;
+    }
     if (!userId) return res.status(401).json({ error: 'Not authenticated' });
     const user = await getData(`users/${userId}`);
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -944,8 +1029,24 @@ app.post('/api/assignments/:id/grade', async (req, res) => {
 // ==================== TIMETABLE ====================
 app.get('/api/timetable/:class', async (req, res) => {
   try {
-    const timetable = await getData(`timetable/${req.params.class}`);
-    res.json(timetable || []);
+    const raw = await getData(`timetable/${req.params.class}`);
+    if (!raw) return res.json([]);
+    const arr = Array.isArray(raw) ? raw : [];
+    const isFlat = arr.length > 0 && ('subject' in arr[0]);
+    const entries = isFlat
+      ? arr
+      : arr.flatMap((dayEntry: any) =>
+          (dayEntry.periods || []).map((p: any, i: number) => ({
+            id: `${req.params.class}-${dayEntry.day}-${i}`,
+            class: req.params.class,
+            day: dayEntry.day,
+            time: p.time || `${String(8 + i).padStart(2, '0')}:00`,
+            subject: p.subject || '',
+            teacher: p.teacher || '',
+            room: p.room || '',
+          }))
+        );
+    res.json(entries);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch timetable' });
   }
@@ -2060,7 +2161,8 @@ app.get('/api/attendance', async (req, res) => {
       return res.json(result);
     }
     const allAttendance = await getData('attendance') as any;
-    res.json(allAttendance || {});
+    const flat = allAttendance ? Object.values(allAttendance).flat() : [];
+    res.json(flat);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch attendance' });
   }
@@ -2106,13 +2208,29 @@ app.get('/api/books', async (_req, res) => {
 // GET /api/fees (bare)
 app.get('/api/fees', async (req, res) => {
   try {
-    const { studentId } = req.query;
+    const studentId = req.query.studentId as string | undefined;
+    const usersData = await getData('users') as any;
+    const usersMap: Record<string, any> = usersData || {};
     if (studentId) {
-      const fees = await getData(`fees/${studentId}`);
-      return res.json(fees ? Object.values(fees) : []);
+      const fees = await getData(`fees/${studentId}`) as any;
+      const records = fees ? Object.values(fees) : [];
+      const student = usersMap[studentId] || {};
+      const enriched = records.map((r: any, i: number) => ({ ...r, id: `${studentId}_${i}`, studentId, studentName: student.name || 'Unknown', class: student.class || '', type: r.type || 'tuition' }));
+      return res.json(enriched);
     }
     const allFees = await getData('fees') as any;
-    res.json(allFees || {});
+    const result: any[] = [];
+    if (allFees) {
+      for (const [sid, records] of Object.entries(allFees)) {
+        const student = usersMap[sid] || {};
+        if (Array.isArray(records)) {
+          records.forEach((r: any, i: number) => {
+            result.push({ ...r, id: `${sid}_${i}`, studentId: sid, studentName: student.name || 'Unknown', class: student.class || '', type: r.type || 'tuition' });
+          });
+        }
+      }
+    }
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch fees' });
   }
@@ -2202,8 +2320,18 @@ app.get('/api/parent/timetable/:childId', async (req, res) => {
   try {
     const child = await getData(`users/${req.params.childId}`);
     const className = child?.class || '10-A';
-    const timetable = await getData(`timetable/${className}`);
-    res.json(timetable || []);
+    const raw = await getData(`timetable/${className}`);
+    const arr = Array.isArray(raw) ? raw : [];
+    const isFlat = arr.length > 0 && ('subject' in arr[0]);
+    const flattened = isFlat ? arr : arr.flatMap((d: any) =>
+      (d.periods || []).map((p: any, i: number) => ({
+        id: `${className}-${d.day}-${i}`,
+        class: className, day: d.day,
+        time: p.time || `${String(8 + i).padStart(2, '0')}:00`,
+        subject: p.subject || '', teacher: p.teacher || '', room: p.room || '',
+      }))
+    );
+    res.json(flattened);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch child timetable' });
   }
@@ -2237,25 +2365,42 @@ app.get('/api/analytics/class/:className', async (req, res) => {
     const totalStudents = students.length;
     let totalMarks = 0;
     let presentCount = 0;
+    let totalAttRecords = 0;
     const subjectPerformance: Record<string, number[]> = {};
+    const allGrades: { marks: number; grade: string }[] = [];
+    let topPerformer = '';
+    let topPerformerAvg = 0;
     for (const s of students as any[]) {
       const grades = await getData(`grades/${(s as any).id}`);
       const gradeList = grades ? Object.values(grades) : [];
+      let studentTotal = 0;
       for (const g of gradeList as any[]) {
         if (!subjectPerformance[g.subject]) subjectPerformance[g.subject] = [];
-        subjectPerformance[g.subject].push(g.marks || 0);
-        totalMarks += g.marks || 0;
+        const marks = g.marks || g.overall || 0;
+        subjectPerformance[g.subject].push(marks);
+        totalMarks += marks;
+        studentTotal += marks;
+        allGrades.push({ marks, grade: g.grade || 'N/A' });
+      }
+      const studentAvg = gradeList.length > 0 ? studentTotal / gradeList.length : 0;
+      if (studentAvg > topPerformerAvg) {
+        topPerformerAvg = studentAvg;
+        topPerformer = (s as any).name || '';
       }
       const att = await getData(`attendance/${(s as any).id}`);
       const attList = att ? Object.values(att) : [];
+      totalAttRecords += attList.length;
       presentCount += attList.filter((a: any) => a.status === 'present').length;
     }
-    const avgMarks = totalStudents > 0 ? Math.round(totalMarks / (totalStudents * Math.max(1, Object.keys(subjectPerformance).length))) : 0;
-    const avgAttendance = totalStudents > 0 ? Math.round(presentCount / totalStudents) : 0;
-    const subjectAverages = Object.fromEntries(
-      Object.entries(subjectPerformance).map(([sub, marks]) => [sub, Math.round(marks.reduce((a, b) => a + b, 0) / marks.length)])
-    );
-    res.json({ className: req.params.className, totalStudents, avgMarks, avgAttendance, subjectAverages, students: students.map(safeUser) });
+    const avgGrade = totalStudents > 0 ? Math.round(totalMarks / (totalStudents * Math.max(1, Object.keys(subjectPerformance).length))) : 0;
+    const attendance = totalAttRecords > 0 ? Math.round((presentCount / totalAttRecords) * 100) : 0;
+    const subjects = Object.entries(subjectPerformance).map(([name, marks]) => ({
+      name, avg: Math.round(marks.reduce((a, b) => a + b, 0) / marks.length)
+    }));
+    const gradeCounts: Record<string, number> = {};
+    allGrades.forEach(g => { gradeCounts[g.grade] = (gradeCounts[g.grade] || 0) + 1; });
+    const gradeDistribution = Object.entries(gradeCounts).map(([grade, count]) => ({ grade, count }));
+    res.json({ className: req.params.className, totalStudents, avgGrade, attendance, topPerformer, subjects, gradeDistribution });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch class analytics' });
   }
@@ -2384,7 +2529,40 @@ app.get('/api/analytics/manager/finance', async (_req, res) => {
         }
       }
     }
-    res.json({ totalCollected, totalOutstanding, collectionRate: totalCollected + totalOutstanding > 0 ? Math.round((totalCollected / (totalCollected + totalOutstanding)) * 100) : 0 });
+
+    const expensesData = await getData('expenses') as any;
+    const expensesArr: any[] = expensesData ? Object.values(expensesData) : [];
+    const expenses = expensesArr.reduce((s: number, e: any) => s + (e.amount || 0), 0);
+
+    const payslipsData = await getData('payslips') as any;
+    const payslipsArr: any[] = payslipsData ? Object.values(payslipsData) : [];
+    const payroll = payslipsArr.reduce((s: number, p: any) => s + (p.amount || 0), 0);
+
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const monthlyMap: Record<string, { revenue: number; expenses: number }> = {};
+    for (const e of expensesArr) {
+      if (e.date) {
+        const m = monthNames[new Date(e.date).getMonth()] || 'Unknown';
+        if (!monthlyMap[m]) monthlyMap[m] = { revenue: 0, expenses: 0 };
+        monthlyMap[m].expenses += e.amount || 0;
+      }
+    }
+    monthlyMap['Jan'] = { revenue: 0, expenses: 0 };
+    for (const studentFees of Object.values(feesData || {}) as any[]) {
+      for (const f of Object.values(studentFees) as any[]) {
+        if (f.paid) monthlyMap['Jan'].revenue += f.paid;
+      }
+    }
+    const monthlyTrend = Object.entries(monthlyMap).map(([month, v]) => ({ month, ...v }));
+
+    res.json({
+      revenue: totalCollected,
+      expenses,
+      profit: totalCollected - expenses,
+      feeCollection: { collected: totalCollected, pending: totalOutstanding },
+      payroll,
+      monthlyTrend,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch manager finance' });
   }
@@ -2449,13 +2627,317 @@ app.delete('/api/bus/assignments/:id', async (req, res) => {
   }
 });
 
+// ==================== FRONTEND-COMPATIBLE ROUTE ALIASES ====================
+// These match what the frontend api.ts expects, redirecting to the correct data
+// without requiring frontend rebuilds.
+
+function id(prefix: string): string {
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+}
+
+async function listData(path: string): Promise<any[]> {
+  const data = await getData(path);
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  return Object.values(data);
+}
+
+// --- Library Aliases ---
+app.get('/api/library/catalogue', async (_req, res) => {
+  try { const data = await getData('bookCatalogue'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch catalogue' }); }
+});
+app.post('/api/library/catalogue', async (req, res) => {
+  try { const item = { id: id('bk'), ...req.body, addedAt: new Date().toISOString() }; await setData(`bookCatalogue/${item.id}`, item); res.status(201).json(item); }
+  catch (e) { res.status(500).json({ error: 'Failed to add book' }); }
+});
+app.put('/api/library/catalogue/:id', async (req, res) => {
+  try { const existing = await getData(`bookCatalogue/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData(`bookCatalogue/${req.params.id}`, updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update book' }); }
+});
+app.delete('/api/library/catalogue/:id', async (req, res) => {
+  try { await removeData(`bookCatalogue/${req.params.id}`); res.json({ success: true }); }
+  catch (e) { res.status(500).json({ error: 'Failed to delete book' }); }
+});
+app.get('/api/library/holds', async (_req, res) => {
+  try { const data = await getData('bookHolds'); const all: any[] = []; if (data) { for (const v of Object.values(data) as any) { const holds = Object.values(v) as any[]; all.push(...holds); } } res.json(all.filter((h: any) => h.status === 'active')); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch holds' }); }
+});
+app.post('/api/library/holds', async (req, res) => {
+  try { const { bookId, studentId, studentName } = req.body; const book = await getData(`bookCatalogue/${bookId}`); if (!book) return res.status(404).json({ error: 'Book not found' }); const holds = await getData(`bookHolds/${bookId}`); const holdList = holds ? Object.values(holds) : []; if (holdList.some((h: any) => h.studentId === studentId && h.status === 'active')) return res.status(409).json({ error: 'Already have a hold' }); const hold = { id: id('bh'), bookId, studentId, studentName, bookTitle: book.title, status: 'active', placedAt: new Date().toISOString(), position: holdList.filter((h: any) => h.status === 'active').length + 1 }; await setData(`bookHolds/${bookId}/${hold.id}`, hold); await setData(`studentHolds/${studentId}/${hold.id}`, hold); res.status(201).json(hold); }
+  catch (e) { res.status(500).json({ error: 'Failed to place hold' }); }
+});
+app.get('/api/library/holds/:bookId', async (req, res) => {
+  try { const holds = await listData(`bookHolds/${req.params.bookId}`); res.json(holds.filter((h: any) => h.status === 'active').sort((a: any, b: any) => a.position - b.position)); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch holds' }); }
+});
+app.post('/api/library/holds/:id/fulfill', async (req, res) => {
+  try { const allData = await getData('bookHolds') as any; if (!allData) return res.status(404).json({ error: 'Hold not found' }); let found: any = null; let foundBookId = ''; for (const [bookId, holds] of Object.entries(allData) as any) { const hold = holds[req.params.id]; if (hold) { found = hold; foundBookId = bookId; break; } } if (!found) return res.status(404).json({ error: 'Hold not found' }); found.status = 'fulfilled'; found.fulfilledAt = new Date().toISOString(); await setData(`bookHolds/${foundBookId}/${req.params.id}`, found); const studentHold = await getData(`studentHolds/${found.studentId}/${req.params.id}`); if (studentHold) { studentHold.status = 'fulfilled'; await setData(`studentHolds/${found.studentId}/${req.params.id}`, studentHold); } const borrow = { id: id('bb'), bookId: foundBookId, bookTitle: found.bookTitle, studentId: found.studentId, studentName: found.studentName, borrowedDate: new Date().toISOString().split('T')[0], dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], status: 'borrowed' }; await setData(`borrowedBooks/${borrow.id}`, borrow); res.json({ hold: found, borrow }); }
+  catch (e) { res.status(500).json({ error: 'Failed to fulfill hold' }); }
+});
+app.get('/api/library/fines', async (_req, res) => {
+  try { const data = await getData('bookFines'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch fines' }); }
+});
+app.post('/api/library/fines', async (req, res) => {
+  try { const fine = { id: id('bf'), ...req.body, status: 'unpaid', calculatedAt: new Date().toISOString() }; await setData(`bookFines/${fine.id}`, fine); res.status(201).json(fine); }
+  catch (e) { res.status(500).json({ error: 'Failed to create fine' }); }
+});
+app.post('/api/library/fines/:id/pay', async (req, res) => {
+  try { const fine = await getData(`bookFines/${req.params.id}`); if (!fine) return res.status(404).json({ error: 'Fine not found' }); fine.status = 'paid'; fine.paidAt = new Date().toISOString(); fine.paidBy = req.body.paidBy; await setData(`bookFines/${req.params.id}`, fine); res.json(fine); }
+  catch (e) { res.status(500).json({ error: 'Failed to pay fine' }); }
+});
+app.get('/api/library/class-sets', async (_req, res) => {
+  try { const data = await getData('classSets'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch class sets' }); }
+});
+app.post('/api/library/class-sets', async (req, res) => {
+  try { const set = { id: id('cs'), ...req.body, createdAt: new Date().toISOString() }; await setData(`classSets/${set.id}`, set); res.status(201).json(set); }
+  catch (e) { res.status(500).json({ error: 'Failed to create class set' }); }
+});
+app.get('/api/library/reading-logs/:studentId', async (req, res) => {
+  try { const data = await getData('readingLogs'); const logs = data ? Object.values(data) : []; res.json(logs.filter((l: any) => l.studentId === req.params.studentId)); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch logs' }); }
+});
+app.post('/api/library/reading-logs', async (req, res) => {
+  try { const log = { id: id('rl'), ...req.body, loggedAt: new Date().toISOString() }; await setData(`readingLogs/${log.id}`, log); res.status(201).json(log); }
+  catch (e) { res.status(500).json({ error: 'Failed to log reading' }); }
+});
+app.get('/api/library/programmes', async (_req, res) => {
+  try { const data = await getData('readingProgrammes'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch programmes' }); }
+});
+app.post('/api/library/programmes', async (req, res) => {
+  try { const prog = { id: id('rp'), ...req.body, createdAt: new Date().toISOString() }; await setData(`readingProgrammes/${prog.id}`, prog); res.status(201).json(prog); }
+  catch (e) { res.status(500).json({ error: 'Failed to create programme' }); }
+});
+app.get('/api/library/reviews/:bookId', async (req, res) => {
+  try { const data = await getData('bookReviews'); const reviews = data ? Object.values(data) : []; res.json(reviews.filter((r: any) => r.bookId === req.params.bookId)); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch reviews' }); }
+});
+app.post('/api/library/reviews', async (req, res) => {
+  try { const review = { id: id('br'), ...req.body, createdAt: new Date().toISOString() }; await setData(`bookReviews/${review.id}`, review); res.status(201).json(review); }
+  catch (e) { res.status(500).json({ error: 'Failed to submit review' }); }
+});
+app.get('/api/library/ill', async (_req, res) => {
+  try { const data = await getData('interlibraryLoans'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch ILLs' }); }
+});
+app.post('/api/library/ill', async (req, res) => {
+  try { const loan = { id: id('ill'), ...req.body, status: 'requested', createdAt: new Date().toISOString() }; await setData(`interlibraryLoans/${loan.id}`, loan); res.status(201).json(loan); }
+  catch (e) { res.status(500).json({ error: 'Failed to create ILL' }); }
+});
+
+// --- Comms Aliases ---
+app.get('/api/comms/push', async (_req, res) => {
+  try { const data = await getData('notifications'); const all: any[] = []; if (data) { for (const v of Object.values(data) as any) { const items = Object.values(v) as any[]; all.push(...items); } } res.json(all.sort((a, b) => new Date(b.sentAt || b.timestamp).getTime() - new Date(a.sentAt || a.timestamp).getTime())); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch notifications' }); }
+});
+app.post('/api/comms/push', async (req, res) => {
+  try { const { userId, title, body, data: extData } = req.body; const n = { id: id('pn'), userId, title, body, data: extData || {}, sentAt: new Date().toISOString(), read: false }; await setData(`notifications/${userId}/${n.id}`, n); res.status(201).json(n); }
+  catch (e) { res.status(500).json({ error: 'Failed to send notification' }); }
+});
+app.get('/api/comms/emergency', async (_req, res) => {
+  try { const data = await getData('emergencyAlerts'); res.json(data ? Object.values(data).sort((a: any, b: any) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch alerts' }); }
+});
+app.post('/api/comms/emergency', async (req, res) => {
+  try { const alert = { id: id('ea'), ...req.body, status: 'active', sentAt: new Date().toISOString(), acknowledged: [] }; await setData(`emergencyAlerts/${alert.id}`, alert); const usersData = await getData('users') as any; if (usersData) { for (const user of Object.values(usersData) as any[]) { const n = { id: id('en'), title: '🚨 EMERGENCY: ' + (alert.title || 'Alert'), body: alert.message, type: 'emergency', sentAt: new Date().toISOString(), read: false, emergencyAlertId: alert.id }; await setData(`notifications/${user.id}/${n.id}`, n); } } res.status(201).json(alert); }
+  catch (e) { res.status(500).json({ error: 'Failed to send alert' }); }
+});
+app.get('/api/comms/moderation', async (req, res) => {
+  try { const data = await getData('moderationReports'); let reports = data ? Object.values(data) : []; const { status } = req.query; if (status) reports = reports.filter((r: any) => r.status === status); res.json(reports.sort((a: any, b: any) => new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime())); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch reports' }); }
+});
+app.put('/api/comms/moderation/:id', async (req, res) => {
+  try { const report = await getData(`moderationReports/${req.params.id}`); if (!report) return res.status(404).json({ error: 'Report not found' }); report.status = req.body.action === 'remove' ? 'removed' : 'dismissed'; report.reviewedBy = req.body.moderatedBy; report.reviewedAt = new Date().toISOString(); report.action = req.body.action; await setData(`moderationReports/${req.params.id}`, report); res.json(report); }
+  catch (e) { res.status(500).json({ error: 'Failed to review report' }); }
+});
+app.get('/api/comms/email', async (req, res) => {
+  try { const data = await getData('emailLog'); let emails = data ? Object.values(data) : []; const { status } = req.query; if (status) emails = emails.filter((e: any) => e.status === status); res.json(emails.sort((a: any, b: any) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch email log' }); }
+});
+app.post('/api/comms/email', async (req, res) => {
+  try { const { to, subject, body } = req.body; const email = { id: id('em'), to, subject, body, status: 'sent', sentAt: new Date().toISOString() }; await setData(`emailLog/${email.id}`, email); res.status(201).json(email); }
+  catch (e) { res.status(500).json({ error: 'Failed to send email' }); }
+});
+
+// --- HR Aliases ---
+app.post('/api/hr/staff', async (req, res) => {
+  try { const staff = { id: `u${Date.now()}`, ...req.body, createdAt: new Date().toISOString() }; await setData(`users/${staff.id}`, staff); res.status(201).json(staff); }
+  catch (e) { res.status(500).json({ error: 'Failed to create staff' }); }
+});
+app.put('/api/hr/staff/:id', async (req, res) => {
+  try { const existing = await getData(`users/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData(`users/${req.params.id}`, updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update staff' }); }
+});
+app.get('/api/hr/certifications/:staffId', async (req, res) => {
+  try { const data = await getData('certifications'); let certs = data ? Object.values(data) : []; certs = certs.filter((c: any) => c.userId === req.params.staffId); res.json(certs); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch certifications' }); }
+});
+app.post('/api/hr/certifications/:staffId', async (req, res) => {
+  try { const cert = { id: id('cert'), ...req.body, userId: req.params.staffId, createdAt: new Date().toISOString() }; await setData(`certifications/${cert.id}`, cert); res.status(201).json(cert); }
+  catch (e) { res.status(500).json({ error: 'Failed to add certification' }); }
+});
+app.get('/api/hr/appraisals/:staffId', async (req, res) => {
+  try { const data = await getData('appraisals'); let appraisals = data ? Object.values(data) : []; appraisals = appraisals.filter((a: any) => a.userId === req.params.staffId); res.json(appraisals); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch appraisals' }); }
+});
+app.post('/api/hr/appraisals/:staffId', async (req, res) => {
+  try { const appraisal = { id: id('appr'), ...req.body, userId: req.params.staffId, status: 'pending', createdAt: new Date().toISOString() }; await setData(`appraisals/${appraisal.id}`, appraisal); res.status(201).json(appraisal); }
+  catch (e) { res.status(500).json({ error: 'Failed to create appraisal' }); }
+});
+app.get('/api/hr/recruitment', async (_req, res) => {
+  try { const data = await getData('recruitmentJobs'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch jobs' }); }
+});
+app.post('/api/hr/recruitment', async (req, res) => {
+  try { const job = { id: id('job'), ...req.body, status: 'open', createdAt: new Date().toISOString() }; await setData(`recruitmentJobs/${job.id}`, job); res.status(201).json(job); }
+  catch (e) { res.status(500).json({ error: 'Failed to create job' }); }
+});
+app.put('/api/hr/recruitment/:id', async (req, res) => {
+  try { const app = await getData(`recruitmentApplications/${req.params.id}`); if (!app) return res.status(404).json({ error: 'Not found' }); app.status = req.body.status; app.updatedAt = new Date().toISOString(); await setData(`recruitmentApplications/${req.params.id}`, app); res.json(app); }
+  catch (e) { res.status(500).json({ error: 'Failed to update recruitment' }); }
+});
+app.get('/api/hr/onboarding', async (_req, res) => {
+  try { const data = await getData('onboardingTasks'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch tasks' }); }
+});
+app.post('/api/hr/onboarding', async (req, res) => {
+  try { const task = { id: id('obt'), ...req.body, completed: false, createdAt: new Date().toISOString() }; await setData(`onboardingTasks/${task.id}`, task); res.status(201).json(task); }
+  catch (e) { res.status(500).json({ error: 'Failed to create task' }); }
+});
+app.get('/api/hr/payroll', async (req, res) => {
+  try { const data = await getData('payslips'); let slips = data ? Object.values(data) : []; const { month } = req.query; if (month) slips = slips.filter((s: any) => s.period === month || s.month === month); res.json(slips); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch payslips' }); }
+});
+app.post('/api/hr/payroll', async (req, res) => {
+  try { const scale = { id: id('psc'), ...req.body, createdAt: new Date().toISOString() }; await setData(`salaryScales/${scale.id}`, scale); res.status(201).json(scale); }
+  catch (e) { res.status(500).json({ error: 'Failed to create salary scale' }); }
+});
+app.post('/api/hr/payroll/process/:month', async (req, res) => {
+  try { const { month } = req.params; const { year, processedBy } = req.body; const staff = await listData('users'); const employees = staff.filter((u: any) => ['teacher', 'admin', 'coordinator', 'manager', 'librarian'].includes(u.role)); const scales = await listData('salaryScales'); const payslips: any[] = []; for (const emp of employees) { const scale = scales.find((s: any) => s.position === emp.position || s.role === emp.role); const baseSalary = scale?.baseSalary || 0; const allowances = scale?.allowances || 0; const deductions = scale?.deductions || 0; const netSalary = baseSalary + allowances - deductions; const payslip = { id: id('ps'), userId: emp.id, name: emp.name, position: emp.position || emp.role, month, year: year || new Date().getFullYear().toString(), baseSalary, allowances, deductions, netSalary, status: 'draft', processedBy: processedBy || 'system', processedAt: new Date().toISOString() }; await setData(`payslips/${payslip.id}`, payslip); payslips.push(payslip); } res.json({ success: true, count: payslips.length, payslips }); }
+  catch (e) { res.status(500).json({ error: 'Failed to run payroll' }); }
+});
+app.post('/api/hr/leave/:id/approve', async (req, res) => {
+  try { const leave = await getData(`staffLeaves/${req.params.id}`); if (!leave) return res.status(404).json({ error: 'Leave not found' }); leave.status = 'approved'; leave.approvedBy = req.body.approvedBy; leave.approvedAt = new Date().toISOString(); await setData(`staffLeaves/${req.params.id}`, leave); const balances = await getData(`leaveBalances/${leave.userId}`) || {}; balances[leave.type || 'annual'] = (balances[leave.type || 'annual'] || 0) - (leave.days || 1); await setData(`leaveBalances/${leave.userId}`, balances); res.json(leave); }
+  catch (e) { res.status(500).json({ error: 'Failed to approve leave' }); }
+});
+
+// --- Finance Aliases ---
+app.put('/api/finance/budgets/:id', async (req, res) => {
+  try { const existing = await getData(`budgets/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData(`budgets/${req.params.id}`, updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update budget' }); }
+});
+app.post('/api/finance/expenses/:id/approve', async (req, res) => {
+  try { const expense = await getData(`expenses/${req.params.id}`); if (!expense) return res.status(404).json({ error: 'Not found' }); expense.status = 'approved'; expense.approvedBy = req.body.approvedBy; expense.approvedAt = new Date().toISOString(); await setData(`expenses/${req.params.id}`, expense); res.json(expense); }
+  catch (e) { res.status(500).json({ error: 'Failed to approve expense' }); }
+});
+app.put('/api/finance/expenses/:id', async (req, res) => {
+  try { const existing = await getData(`expenses/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData(`expenses/${req.params.id}`, updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update expense' }); }
+});
+app.get('/api/finance/procurement', async (_req, res) => {
+  try { const reqs = await listData('procurementRequisitions'); const pos = await listData('purchaseOrders'); res.json({ requisitions: reqs, purchaseOrders: pos }); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch procurement' }); }
+});
+app.post('/api/finance/procurement', async (req, res) => {
+  try { const { type } = req.body; if (type === 'purchase-order') { const po = { id: id('po'), ...req.body, createdAt: new Date().toISOString() }; await setData(`purchaseOrders/${po.id}`, po); return res.status(201).json(po); } const reqData = { id: id('prq'), ...req.body, status: 'pending', createdAt: new Date().toISOString() }; await setData(`procurementRequisitions/${reqData.id}`, reqData); res.status(201).json(reqData); }
+  catch (e) { res.status(500).json({ error: 'Failed to create procurement' }); }
+});
+app.get('/api/finance/recurring', async (_req, res) => {
+  try { const data = await getData('recurringInvoices'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch recurring invoices' }); }
+});
+app.post('/api/finance/recurring', async (req, res) => {
+  try { const ri = { id: id('ri'), ...req.body, status: 'active', createdAt: new Date().toISOString() }; await setData(`recurringInvoices/${ri.id}`, ri); res.status(201).json(ri); }
+  catch (e) { res.status(500).json({ error: 'Failed to create recurring invoice' }); }
+});
+app.get('/api/finance/fee-automation', async (_req, res) => {
+  try { const data = await getData('feeAutomationRules'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch fee automation' }); }
+});
+app.post('/api/finance/fee-automation', async (req, res) => {
+  try { const rule = { id: id('far'), ...req.body, createdAt: new Date().toISOString() }; await setData(`feeAutomationRules/${rule.id}`, rule); res.status(201).json(rule); }
+  catch (e) { res.status(500).json({ error: 'Failed to create fee automation rule' }); }
+});
+app.post('/api/finance/financial-aid/:id/approve', async (req, res) => {
+  try { const aid = await getData(`financialAid/${req.params.id}`); if (!aid) return res.status(404).json({ error: 'Not found' }); aid.status = 'approved'; aid.approvedBy = req.body.approvedBy; aid.approvedAt = new Date().toISOString(); await setData(`financialAid/${req.params.id}`, aid); res.json(aid); }
+  catch (e) { res.status(500).json({ error: 'Failed to approve aid' }); }
+});
+app.delete('/api/finance/invoices/:id', async (req, res) => {
+  try { await removeData(`invoices/${req.params.id}`); res.json({ success: true }); }
+  catch (e) { res.status(500).json({ error: 'Failed to delete invoice' }); }
+});
+app.post('/api/finance/invoices/:id/pay', async (req, res) => {
+  try { const invoice = await getData(`invoices/${req.params.id}`); if (!invoice) return res.status(404).json({ error: 'Invoice not found' }); const { amount, paymentMode, createdBy } = req.body; const payment = { id: id('pay'), paymentNumber: `PAY-${Date.now()}`, invoiceId: req.params.id, clientName: invoice.clientName, amount, paymentMode: paymentMode || 'cash', createdBy, createdAt: new Date().toISOString() }; await setData(`payments/${payment.id}`, payment); const allPayments = await listData('payments'); const invoicePayments = allPayments.filter((p: any) => p.invoiceId === req.params.id); const totalPaid = invoicePayments.reduce((s: number, p: any) => s + p.amount, 0); invoice.paymentStatus = totalPaid >= invoice.total ? 'paid' : 'partial'; invoice.lastPaymentAt = new Date().toISOString(); await setData(`invoices/${req.params.id}`, invoice); res.status(201).json(payment); }
+  catch (e) { res.status(500).json({ error: 'Failed to record payment' }); }
+});
+
+// --- ERP Aliases ---
+app.get('/api/erp/company', async (_req, res) => {
+  try { const settings = await getData('companySettings'); res.json(settings || {}); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch settings' }); }
+});
+app.put('/api/erp/company', async (req, res) => {
+  try { const existing = await getData('companySettings') || {}; const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData('companySettings', updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update settings' }); }
+});
+app.put('/api/erp/products/:id', async (req, res) => {
+  try { const existing = await getData(`products/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData(`products/${req.params.id}`, updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update product' }); }
+});
+
+// --- Scheduling Aliases ---
+app.get('/api/scheduling/rooms/list', async (_req, res) => {
+  try { const data = await getData('rooms'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to list rooms' }); }
+});
+app.put('/api/scheduling/rooms/:id', async (req, res) => {
+  try { const existing = await getData(`roomBookings/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData(`roomBookings/${req.params.id}`, updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update room' }); }
+});
+app.delete('/api/scheduling/rooms/:id', async (req, res) => {
+  try { const existing = await getData(`roomBookings/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); existing.status = 'cancelled'; existing.cancelledAt = new Date().toISOString(); await setData(`roomBookings/${req.params.id}`, existing); res.json(existing); }
+  catch (e) { res.status(500).json({ error: 'Failed to cancel booking' }); }
+});
+app.get('/api/scheduling/coverage', async (_req, res) => {
+  try { const data = await getData('coverages'); res.json(data ? Object.values(data).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch coverages' }); }
+});
+app.post('/api/scheduling/coverage', async (req, res) => {
+  try { const coverage = { id: id('cov'), ...req.body, status: 'pending', createdAt: new Date().toISOString() }; await setData(`coverages/${coverage.id}`, coverage); res.status(201).json(coverage); }
+  catch (e) { res.status(500).json({ error: 'Failed to create coverage' }); }
+});
+app.put('/api/scheduling/coverage/:id', async (req, res) => {
+  try { const existing = await getData(`coverages/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData(`coverages/${req.params.id}`, updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update coverage' }); }
+});
+app.delete('/api/scheduling/bell-schedules/:id', async (req, res) => {
+  try { await removeData(`bellSchedules/${req.params.id}`); res.json({ success: true }); }
+  catch (e) { res.status(500).json({ error: 'Failed to delete bell schedule' }); }
+});
+app.put('/api/scheduling/timetable/:className/:day/:periodIdx', async (req, res) => {
+  try { const timetable = await getData(`timetable/${req.params.className}`) as any[]; if (!timetable) return res.status(404).json({ error: 'Timetable not found' }); const dayEntry = timetable.find((d: any) => d.day === req.params.day); if (!dayEntry) return res.status(404).json({ error: 'Day not found' }); const idx = parseInt(req.params.periodIdx); if (idx < 0 || idx >= dayEntry.periods.length) return res.status(404).json({ error: 'Period not found' }); dayEntry.periods[idx] = { ...dayEntry.periods[idx], ...req.body }; await setData(`timetable/${req.params.className}`, timetable); res.json({ success: true, timetable }); }
+  catch (e) { res.status(500).json({ error: 'Failed to update entry' }); }
+});
+
 // Start server
+<<<<<<< HEAD
 server.listen(process.env.PORT || PORT, () => {
+=======
+app.listen(process.env.PORT || PORT, async () => {
+>>>>>>> ad8a409cbe2074e7e1fe9424ae294a17a7190dbf
   const actualPort = process.env.PORT || PORT;
   console.log(`EduVault AI Backend running on port ${actualPort}`);
   console.log(`Firebase RTDB URL: ${process.env.FIREBASE_DATABASE_URL || 'https://schoolsync-op-csconnect-default-rtdb.asia-southeast1.firebasedatabase.app'}`);
   console.log(`API endpoints ready at http://localhost:${PORT}/api/`);
-  console.log(`POST /api/seed to populate the database`);
+  // Auto-seed on restart for fresh database
+  try {
+    await seedDatabase();
+  } catch (e) {
+    console.warn('[Startup] Seed skipped or already populated:', (e as Error)?.message || e);
+  }
 });
 
 export default app;
