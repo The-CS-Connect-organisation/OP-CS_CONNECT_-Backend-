@@ -22,11 +22,8 @@
     "express-rate-limit": "^8.5.2",
     "firebase-admin": "^13.10.0",
     "html-pdf": "^1.5.0",
-<<<<<<< HEAD
-    "socket.io": "^4.8.3",
-=======
     "jsonwebtoken": "^9.0.3",
->>>>>>> ad8a409cbe2074e7e1fe9424ae294a17a7190dbf
+    "socket.io": "^4.8.3",
     "typescript": "^5.5.4",
     "uuid": "^14.0.0"
   },

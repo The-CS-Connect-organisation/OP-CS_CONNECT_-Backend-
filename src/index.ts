@@ -1,14 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-<<<<<<< HEAD
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-=======
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
->>>>>>> ad8a409cbe2074e7e1fe9424ae294a17a7190dbf
 import attendanceRoutes from './routes/attendance';
 import schedulingRoutes from './routes/scheduling';
 import sisRoutes from './routes/sis';
@@ -37,11 +34,7 @@ import alumniRoutes from './routes/alumni';
 import platformRoutes from './routes/platform';
 import circularRoutes from './routes/circulars';
 import announcementRoutes from './routes/announcements';
-<<<<<<< HEAD
 import authRoutes from './routes/auth';
-import calendarRoutes from './routes/calendar';
-=======
->>>>>>> ad8a409cbe2074e7e1fe9424ae294a17a7190dbf
 
 dotenv.config();
 
@@ -170,11 +163,8 @@ app.use('/api/alumni', alumniRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/circulars', circularRoutes);
 app.use('/api/announcements', announcementRoutes);
-<<<<<<< HEAD
 app.use('/api/auth', authRoutes);
 app.use('/api/calendar', calendarRoutes);
-=======
->>>>>>> ad8a409cbe2074e7e1fe9424ae294a17a7190dbf
 // Helper: safe user (remove password)
 function safeUser(u: any) {
   if (!u) return null;
@@ -2923,11 +2913,7 @@ app.put('/api/scheduling/timetable/:className/:day/:periodIdx', async (req, res)
 });
 
 // Start server
-<<<<<<< HEAD
-server.listen(process.env.PORT || PORT, () => {
-=======
-app.listen(process.env.PORT || PORT, async () => {
->>>>>>> ad8a409cbe2074e7e1fe9424ae294a17a7190dbf
+server.listen(process.env.PORT || PORT, async () => {
   const actualPort = process.env.PORT || PORT;
   console.log(`EduVault AI Backend running on port ${actualPort}`);
   console.log(`Firebase RTDB URL: ${process.env.FIREBASE_DATABASE_URL || 'https://schoolsync-op-csconnect-default-rtdb.asia-southeast1.firebasedatabase.app'}`);
