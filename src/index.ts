@@ -46,6 +46,27 @@ const io = new SocketIOServer(server, {
 // Active bus GPS locations (busId -> { lat, lng, timestamp })
 const busLocations = new Map<string, { lat: number; lng: number; timestamp: number }>();
 
+// Route IDs whose driver is on leave today — their GPS broadcasts are ignored
+// so a bus isn't tracked when its driver isn't working. Kept in memory for the
+// hot socket path and rebuilt from Firebase via refreshTrackingDisabled().
+const busTrackingDisabled = new Set<string>();
+
+// Rebuild the on-leave route set from the driver `onLeave` flag in the database.
+async function refreshTrackingDisabled(): Promise<void> {
+  try {
+    const [routesData, usersData] = await Promise.all([getData('routes'), getData('users')]);
+    const users = (usersData || {}) as Record<string, any>;
+    const routes = routesData ? Object.values(routesData) as any[] : [];
+    busTrackingDisabled.clear();
+    for (const route of routes) {
+      const driver = route?.driverId ? users[route.driverId] : null;
+      if (driver?.onLeave) busTrackingDisabled.add(route.id);
+    }
+  } catch (err) {
+    console.error('[Bus] refreshTrackingDisabled error:', err);
+  }
+}
+
 // Seed a demo location for bus "r1" (assigned to driver Raju)
 busLocations.set('r1', { lat: 17.3850, lng: 78.4867, timestamp: Date.now() });
 
@@ -54,6 +75,9 @@ io.on('connection', (socket) => {
 
   // Driver sends GPS update
   socket.on('driver:location', (data: { busId: string; lat: number; lng: number }) => {
+    // Ignore broadcasts for routes whose driver is on leave — no tracking when
+    // the driver isn't working, even if a stale tab keeps emitting.
+    if (busTrackingDisabled.has(data.busId)) return;
     const location = { lat: data.lat, lng: data.lng, timestamp: Date.now() };
     busLocations.set(data.busId, location);
     // Broadcast to all students watching this bus
@@ -62,6 +86,10 @@ io.on('connection', (socket) => {
 
   // Student requests current location for a bus
   socket.on('bus:subscribe', (busId: string) => {
+    // Tell the subscriber the current service status so the UI can show
+    // "no service today" without polling.
+    socket.emit(`bus:status:${busId}`, { onLeave: busTrackingDisabled.has(busId) });
+    if (busTrackingDisabled.has(busId)) return;
     const loc = busLocations.get(busId);
     if (loc) {
       socket.emit(`bus:location:${busId}`, loc);
@@ -1067,8 +1095,15 @@ app.get('/api/schools', async (req, res) => {
 // ==================== ROUTES (Transport) ====================
 app.get('/api/routes', async (req, res) => {
   try {
-    const routes = await getData('routes');
-    res.json(routes ? Object.values(routes) : []);
+    const [routesData, usersData] = await Promise.all([getData('routes'), getData('users')]);
+    const users = (usersData || {}) as Record<string, any>;
+    const routes = routesData ? Object.values(routesData) as any[] : [];
+    // Attach the driver's on-leave status so riders can see "no service today".
+    const enriched = routes.map((r: any) => ({
+      ...r,
+      onLeave: !!(r?.driverId && users[r.driverId]?.onLeave),
+    }));
+    res.json(enriched);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch routes' });
   }
@@ -2590,10 +2625,49 @@ app.get('/api/analytics/coordinator', async (_req, res) => {
 // ==================== BUS ASSIGNMENTS ====================
 app.get('/api/bus/assignments', async (_req, res) => {
   try {
-    const routes = await getData('routes');
-    res.json(routes ? Object.values(routes) : []);
+    const [routesData, usersData] = await Promise.all([getData('routes'), getData('users')]);
+    const users = (usersData || {}) as Record<string, any>;
+    const routes = routesData ? Object.values(routesData) as any[] : [];
+    const enriched = routes.map((r: any) => ({
+      ...r,
+      onLeave: !!(r?.driverId && users[r.driverId]?.onLeave),
+    }));
+    res.json(enriched);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch bus assignments' });
+  }
+});
+
+// Toggle a driver's on-leave status. While on leave, all routes driven by this
+// driver stop being tracked (GPS broadcasts are ignored) and any current
+// location is cleared so riders don't see a stale bus.
+app.put('/api/bus/drivers/:driverId/leave', async (req, res) => {
+  try {
+    const { driverId } = req.params;
+    const onLeave = !!req.body?.onLeave;
+    const driver = await getData(`users/${driverId}`);
+    if (!driver) return res.status(404).json({ error: 'Driver not found' });
+
+    await setData(`users/${driverId}`, { ...driver, onLeave });
+
+    // Update the in-memory tracking set and notify any subscribers per route.
+    const routesData = await getData('routes');
+    const routes = routesData ? Object.values(routesData) as any[] : [];
+    for (const route of routes) {
+      if (route?.driverId !== driverId) continue;
+      if (onLeave) {
+        busTrackingDisabled.add(route.id);
+        busLocations.delete(route.id);
+      } else {
+        busTrackingDisabled.delete(route.id);
+      }
+      io.emit(`bus:status:${route.id}`, { onLeave });
+    }
+
+    res.json({ success: true, driverId, onLeave });
+  } catch (error) {
+    console.error('[Bus] Set driver leave error:', error);
+    res.status(500).json({ error: 'Failed to update driver leave status' });
   }
 });
 
@@ -2926,6 +3000,8 @@ server.listen(process.env.PORT || PORT, async () => {
   } catch (e) {
     console.warn('[Startup] Seed skipped or already populated:', (e as Error)?.message || e);
   }
+  // Load which routes are currently untracked (driver on leave).
+  await refreshTrackingDisabled();
 });
 
 export default app;
