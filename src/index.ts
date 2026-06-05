@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import attendanceRoutes from './routes/attendance';
 import schedulingRoutes from './routes/scheduling';
 import sisRoutes from './routes/sis';
@@ -29,10 +31,45 @@ import platformRoutes from './routes/platform';
 import circularRoutes from './routes/circulars';
 import announcementRoutes from './routes/announcements';
 import authRoutes from './routes/auth';
+import calendarRoutes from './routes/calendar';
 
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+const io = new SocketIOServer(server, {
+  cors: { origin: '*', methods: ['GET', 'POST'] }
+});
+
+// Active bus GPS locations (busId -> { lat, lng, timestamp })
+const busLocations = new Map<string, { lat: number; lng: number; timestamp: number }>();
+
+// Seed a demo location for bus "r1" (assigned to driver Raju)
+busLocations.set('r1', { lat: 17.3850, lng: 78.4867, timestamp: Date.now() });
+
+io.on('connection', (socket) => {
+  console.log(`[Socket] Client connected: ${socket.id}`);
+
+  // Driver sends GPS update
+  socket.on('driver:location', (data: { busId: string; lat: number; lng: number }) => {
+    const location = { lat: data.lat, lng: data.lng, timestamp: Date.now() };
+    busLocations.set(data.busId, location);
+    // Broadcast to all students watching this bus
+    io.emit(`bus:location:${data.busId}`, location);
+  });
+
+  // Student requests current location for a bus
+  socket.on('bus:subscribe', (busId: string) => {
+    const loc = busLocations.get(busId);
+    if (loc) {
+      socket.emit(`bus:location:${busId}`, loc);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`[Socket] Client disconnected: ${socket.id}`);
+  });
+});
 
 // Manual CORS headers - MUST BE FIRST MIDDLEWARE!
 app.use((req, res, next) => {
@@ -125,6 +162,7 @@ app.use('/api/platform', platformRoutes);
 app.use('/api/circulars', circularRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/calendar', calendarRoutes);
 // Helper: safe user (remove password)
 function safeUser(u: any) {
   if (!u) return null;
@@ -2412,10 +2450,10 @@ app.delete('/api/bus/assignments/:id', async (req, res) => {
 });
 
 // Start server
-app.listen(process.env.PORT || PORT, () => {
+server.listen(process.env.PORT || PORT, () => {
   const actualPort = process.env.PORT || PORT;
   console.log(`EduVault AI Backend running on port ${actualPort}`);
-  console.log(`Firebase RTDB: ${process.env.FIREBASE_DATABASE_URL}`);
+  console.log(`Firebase RTDB URL: ${process.env.FIREBASE_DATABASE_URL || 'https://schoolsync-op-csconnect-default-rtdb.asia-southeast1.firebasedatabase.app'}`);
   console.log(`API endpoints ready at http://localhost:${PORT}/api/`);
   console.log(`POST /api/seed to populate the database`);
 });
