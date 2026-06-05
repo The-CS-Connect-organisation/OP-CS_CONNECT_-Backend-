@@ -34,7 +34,6 @@ import alumniRoutes from './routes/alumni';
 import platformRoutes from './routes/platform';
 import circularRoutes from './routes/circulars';
 import announcementRoutes from './routes/announcements';
-import authRoutes from './routes/auth';
 
 dotenv.config();
 
@@ -163,7 +162,10 @@ app.use('/api/alumni', alumniRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/circulars', circularRoutes);
 app.use('/api/announcements', announcementRoutes);
-app.use('/api/auth', authRoutes);
+// NOTE: '/api/auth' is intentionally NOT mounted from ./routes/auth here.
+// That router's /login matched users by `username` (which no user has, so it
+// always returned the first user — Aarav). The correct email-based auth
+// handlers are defined inline below (app.post('/api/auth/login', ...)).
 app.use('/api/calendar', calendarRoutes);
 // Helper: safe user (remove password)
 function safeUser(u: any) {
