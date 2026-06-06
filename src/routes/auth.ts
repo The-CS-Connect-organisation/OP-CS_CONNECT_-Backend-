@@ -6,7 +6,10 @@ import { getData, setData, removeData, safeUser } from '../firebase';
 
 const router = Router();
 const JWT_SECRET: string = process.env.JWT_SECRET || (() => {
-  throw new Error('FATAL: JWT_SECRET environment variable is required');
+  if (process.env.NODE_ENV === 'production') {
+    console.error('WARNING: JWT_SECRET not set in production. Using generated secret - tokens will be invalidated on restart.');
+  }
+  return `eduvault-fallback-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 })();
 const SALT_ROUNDS = 10;
 

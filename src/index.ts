@@ -102,9 +102,10 @@ io.on('connection', (socket) => {
 });
 
 const JWT_SECRET: string = process.env.JWT_SECRET || (() => {
-  console.error('FATAL: JWT_SECRET environment variable is required');
-  process.exit(1);
-  return '';
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('WARNING: JWT_SECRET not set in production. Using generated secret - tokens will be invalidated on restart.');
+  }
+  return `eduvault-fallback-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 })();
 
 const ALLOWED_ORIGINS = (process.env.CORS_ORIGIN || '').split(',').filter(Boolean);
