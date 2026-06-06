@@ -5,7 +5,6 @@ import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import rateLimit from 'express-rate-limit';
 import attendanceRoutes from './routes/attendance';
 import schedulingRoutes from './routes/scheduling';
 import sisRoutes from './routes/sis';
@@ -101,13 +100,18 @@ io.on('connection', (socket) => {
   });
 });
 
-const JWT_SECRET = process.env.JWT_SECRET || `eduvault-dev-${Date.now()}`;
+const JWT_SECRET: string = process.env.JWT_SECRET || (() => {
+  console.error('FATAL: JWT_SECRET environment variable is required');
+  process.exit(1);
+  return '';
+})();
 
+const ALLOWED_ORIGINS = (process.env.CORS_ORIGIN || '').split(',').filter(Boolean);
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: ALLOWED_ORIGINS.length > 0 ? ALLOWED_ORIGINS : ['http://localhost:5173', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
-  credentials: process.env.CORS_ORIGIN ? true : false,
+  credentials: true,
 }));
 
 // Request Logger
@@ -155,7 +159,34 @@ async function removeData(path: string): Promise<void> {
   }
 }
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '1mb' }));
+
+// Sanitize request body to prevent prototype pollution
+function sanitize(obj: any): any {
+  if (!obj || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitize);
+  const clean: Record<string, any> = {};
+  for (const key of Object.keys(obj)) {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+    clean[key] = sanitize(obj[key]);
+  }
+  return clean;
+}
+app.use((req, _res, next) => {
+  if (req.body && typeof req.body === 'object') {
+    req.body = sanitize(req.body);
+  }
+  next();
+});
+
+// Security headers
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
 
 // Phase 1 + 2 Route Modules
 app.use('/api/attendance', attendanceRoutes);
@@ -190,11 +221,7 @@ app.use('/api/alumni', alumniRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/circulars', circularRoutes);
 app.use('/api/announcements', announcementRoutes);
-// NOTE: '/api/auth' is intentionally NOT mounted from ./routes/auth here.
-// That router's /login matched users by `username` (which no user has, so it
-// always returned the first user — Aarav). The correct email-based auth
-// handlers are defined inline below (app.post('/api/auth/login', ...)).
-app.use('/api/calendar', calendarRoutes);
+app.use('/api/auth', authRoutes);
 // Helper: safe user (remove password)
 function safeUser(u: any) {
   if (!u) return null;
@@ -532,8 +559,12 @@ async function seedDatabase() {
   console.log('[Seed] Database seeded SUCCESSFULLY!');
 }
 
-app.all('/api/seed', async (req, res) => {
+app.all('/api/seed', authMiddleware, async (req, res) => {
   try {
+    const requester = (req as any).user;
+    if (!requester || requester.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden: Admin access required' });
+    }
     const force = req.query.force === 'true';
     if (force) {
       console.log('[Seed] Force reseeding...');
@@ -558,20 +589,14 @@ app.all('/api/seed', async (req, res) => {
     res.json({ success: true, message: 'Database seeded successfully' });
   } catch (error) {
     console.error('[Seed] Seed error:', error);
-    res.status(500).json({ error: 'Seed failed', details: error });
+    res.status(500).json({ error: 'Seed failed' });
   }
 });
 
+
+
 // ==================== AUTH ====================
 const SALT_ROUNDS = 10;
-
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { error: 'Too many attempts, try again later' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
 
 function signToken(user: any): string {
   return jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
@@ -591,130 +616,6 @@ function authMiddleware(req: express.Request, res: express.Response, next: expre
     return res.status(401).json({ error: 'Invalid token' });
   }
 }
-
-app.post('/api/auth/login', authLimiter, async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    console.log('[Login] Attempting login for:', email);
-    const usersData = await getData('users') as any;
-    if (!usersData) return res.status(401).json({ error: 'Invalid credentials' });
-    const entries = Object.entries(usersData) as [string, any][];
-    const entry = entries.find(([_, u]) => u.email === email);
-    if (!entry) return res.status(401).json({ error: 'Invalid credentials' });
-    const [userKey, user] = entry;
-    let valid = false;
-    if (user.password && user.password.startsWith('$2')) {
-      valid = await bcrypt.compare(password, user.password);
-    } else {
-      valid = password === user.password;
-      if (valid) {
-        user.password = await bcrypt.hash(password, SALT_ROUNDS);
-        await setData(`users/${userKey}`, { ...user });
-      }
-    }
-    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
-    res.json({ user: safeUser(user), token: signToken(user) });
-  } catch (error) {
-    console.error('[Login] Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
-  }
-});
-
-app.post('/api/auth/signup', authLimiter, async (req, res) => {
-  try {
-    const { email, password, name, role, class: className, parentEmail } = req.body;
-    const usersData = await getData('users') as any;
-    const users = usersData ? Object.values(usersData) : [];
-    const existing = users.find((u: any) => u.email === email);
-    if (existing) return res.status(400).json({ error: 'User already exists' });
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-    const newUser = {
-      id: `u${Date.now()}`,
-      name,
-      email,
-      password: hashedPassword,
-      role: role || 'student',
-      class: className || '',
-      avatar: name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
-      createdAt: new Date().toISOString()
-    };
-    await setData(`users/${newUser.id}`, newUser);
-    res.status(201).json({ user: safeUser(newUser), token: signToken(newUser) });
-  } catch (error) {
-    res.status(500).json({ error: 'Signup failed' });
-  }
-});
-
-app.post('/api/auth/forgot-password', authLimiter, async (req, res) => {
-  try {
-    const { email } = req.body;
-    const usersData = await getData('users') as any;
-    const users = usersData ? Object.values(usersData) : [];
-    const user = users.find((u: any) => u.email === email);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    await setData(`otpStore/${email}`, { otp, expiresAt: Date.now() + 300000 });
-    res.json({ message: 'OTP sent to email' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to send OTP' });
-  }
-});
-
-app.post('/api/auth/verify-otp', authLimiter, async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-    const otpData = await getData(`otpStore/${email}`);
-    if (!otpData || otpData.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
-    if (Date.now() > otpData.expiresAt) return res.status(400).json({ error: 'OTP expired' });
-    res.json({ valid: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Verification failed' });
-  }
-});
-
-app.post('/api/auth/reset-password', authLimiter, async (req, res) => {
-  try {
-    const { email, otp, newPassword } = req.body;
-    const otpData = await getData(`otpStore/${email}`);
-    if (!otpData || otpData.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
-    if (Date.now() > otpData.expiresAt) return res.status(400).json({ error: 'OTP expired' });
-    const usersData = await getData('users') as any;
-    const users = usersData ? Object.values(usersData) : [];
-    const user = users.find((u: any) => u.email === email);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
-    const userKey = Object.keys(usersData).find((k: string) => usersData[k].email === email);
-    if (!userKey) return res.status(500).json({ error: 'Failed to find user key' });
-    await setData(`users/${userKey}`, { ...user, password: hashedPassword });
-    await removeData(`otpStore/${email}`);
-    res.json({ message: 'Password reset successful' });
-  } catch (error) {
-    res.status(500).json({ error: 'Password reset failed' });
-  }
-});
-
-app.get('/api/auth/me', async (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    let userId: string | null = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      try {
-        const token = authHeader.slice(7);
-        const decoded = jwt.verify(token, JWT_SECRET) as any;
-        userId = decoded.id;
-      } catch { /* fall through to x-user-id */ }
-    }
-    if (!userId) {
-      userId = req.headers['x-user-id'] as string;
-    }
-    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
-    const user = await getData(`users/${userId}`);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json({ user: safeUser(user) });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch user' });
-  }
-});
 
 // ==================== USERS ====================
 app.get('/api/users', async (req, res) => {
@@ -743,7 +644,9 @@ app.get('/api/users/:id', async (req, res) => {
 
 app.post('/api/users', async (req, res) => {
   try {
-    const newUser = { id: `u${Date.now()}`, ...req.body };
+    const { password, ...rest } = req.body;
+    const hashedPassword = password ? await bcrypt.hash(password, SALT_ROUNDS) : undefined;
+    const newUser = { id: `u${Date.now()}`, ...rest, password: hashedPassword };
     await setData(`users/${newUser.id}`, newUser);
     res.status(201).json(safeUser(newUser));
   } catch (error) {
@@ -755,7 +658,11 @@ app.put('/api/users/:id', async (req, res) => {
   try {
     const existing = await getData(`users/${req.params.id}`);
     if (!existing) return res.status(404).json({ error: 'User not found' });
-    const updated = { ...existing, ...req.body };
+    const { password, ...rest } = req.body;
+    const updated = { ...existing, ...rest };
+    if (password) {
+      updated.password = await bcrypt.hash(password, SALT_ROUNDS);
+    }
     await setData(`users/${req.params.id}`, updated);
     res.json(safeUser(updated));
   } catch (error) {
@@ -1486,7 +1393,9 @@ app.get('/api/announcements', async (req, res) => {
     announcements.sort((a, b) => {
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
+      const dateA = a.createdAt || a.date || 0;
+      const dateB = b.createdAt || b.date || 0;
+      return new Date(dateB).getTime() - new Date(dateA).getTime();
     });
     res.json(announcements);
   } catch (error) {
@@ -2697,16 +2606,7 @@ app.delete('/api/bus/assignments/:id', async (req, res) => {
 // These match what the frontend api.ts expects, redirecting to the correct data
 // without requiring frontend rebuilds.
 
-function id(prefix: string): string {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-}
-
-async function listData(path: string): Promise<any[]> {
-  const data = await getData(path);
-  if (!data) return [];
-  if (Array.isArray(data)) return data;
-  return Object.values(data);
-}
+import { id, listData } from './firebase';
 
 // --- Library Aliases ---
 app.get('/api/library/catalogue', async (_req, res) => {
@@ -2986,6 +2886,80 @@ app.delete('/api/scheduling/bell-schedules/:id', async (req, res) => {
 app.put('/api/scheduling/timetable/:className/:day/:periodIdx', async (req, res) => {
   try { const timetable = await getData(`timetable/${req.params.className}`) as any[]; if (!timetable) return res.status(404).json({ error: 'Timetable not found' }); const dayEntry = timetable.find((d: any) => d.day === req.params.day); if (!dayEntry) return res.status(404).json({ error: 'Day not found' }); const idx = parseInt(req.params.periodIdx); if (idx < 0 || idx >= dayEntry.periods.length) return res.status(404).json({ error: 'Period not found' }); dayEntry.periods[idx] = { ...dayEntry.periods[idx], ...req.body }; await setData(`timetable/${req.params.className}`, timetable); res.json({ success: true, timetable }); }
   catch (e) { res.status(500).json({ error: 'Failed to update entry' }); }
+});
+
+// ============ MISSING ENDPOINTS: Lost & Found ============
+app.get('/api/lost-found', async (_req, res) => {
+  try { const data = await getData('lostFound'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch lost & found items' }); }
+});
+app.post('/api/lost-found', async (req, res) => {
+  try { const item = { id: id('lf'), ...req.body, createdAt: new Date().toISOString() }; await setData(`lostFound/${item.id}`, item); res.status(201).json(item); }
+  catch (e) { res.status(500).json({ error: 'Failed to create item' }); }
+});
+app.put('/api/lost-found/:id/claim', async (req, res) => {
+  try { const item = await getData(`lostFound/${req.params.id}`); if (!item) return res.status(404).json({ error: 'Not found' }); item.status = 'claimed'; item.claimedAt = new Date().toISOString(); await setData(`lostFound/${req.params.id}`, item); res.json(item); }
+  catch (e) { res.status(500).json({ error: 'Failed to claim item' }); }
+});
+app.put('/api/lost-found/:id/archive', async (req, res) => {
+  try { const item = await getData(`lostFound/${req.params.id}`); if (!item) return res.status(404).json({ error: 'Not found' }); item.status = 'archived'; await setData(`lostFound/${req.params.id}`, item); res.json(item); }
+  catch (e) { res.status(500).json({ error: 'Failed to archive item' }); }
+});
+
+// ============ MISSING ENDPOINTS: Skip Bus ============
+app.get('/api/skip-bus', async (_req, res) => {
+  try { const data = await getData('skipBusRequests'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch skip bus requests' }); }
+});
+app.post('/api/skip-bus', async (req, res) => {
+  try { const r = { id: id('sb'), ...req.body, status: 'pending', createdAt: new Date().toISOString() }; await setData(`skipBusRequests/${r.id}`, r); res.status(201).json(r); }
+  catch (e) { res.status(500).json({ error: 'Failed to create request' }); }
+});
+app.put('/api/skip-bus/:id/approve', async (req, res) => {
+  try { const r = await getData(`skipBusRequests/${req.params.id}`); if (!r) return res.status(404).json({ error: 'Not found' }); r.status = 'approved'; r.approvedAt = new Date().toISOString(); await setData(`skipBusRequests/${req.params.id}`, r); res.json(r); }
+  catch (e) { res.status(500).json({ error: 'Failed to approve' }); }
+});
+app.put('/api/skip-bus/:id/reject', async (req, res) => {
+  try { const r = await getData(`skipBusRequests/${req.params.id}`); if (!r) return res.status(404).json({ error: 'Not found' }); r.status = 'rejected'; r.rejectedAt = new Date().toISOString(); await setData(`skipBusRequests/${req.params.id}`, r); res.json(r); }
+  catch (e) { res.status(500).json({ error: 'Failed to reject' }); }
+});
+
+// ============ MISSING ENDPOINTS: IT Helpdesk ============
+app.get('/api/helpdesk', async (_req, res) => {
+  try { const data = await getData('helpdeskTickets'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch tickets' }); }
+});
+app.post('/api/helpdesk', async (req, res) => {
+  try { const t = { id: id('ht'), ...req.body, status: 'open', createdAt: new Date().toISOString() }; await setData(`helpdeskTickets/${t.id}`, t); res.status(201).json(t); }
+  catch (e) { res.status(500).json({ error: 'Failed to create ticket' }); }
+});
+app.put('/api/helpdesk/:id', async (req, res) => {
+  try { const existing = await getData(`helpdeskTickets/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() }; await setData(`helpdeskTickets/${req.params.id}`, updated); res.json(updated); }
+  catch (e) { res.status(500).json({ error: 'Failed to update ticket' }); }
+});
+
+// ============ MISSING ENDPOINTS: Clinic ============
+app.get('/api/clinic', async (_req, res) => {
+  try { const data = await getData('clinicVisits'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch clinic visits' }); }
+});
+app.post('/api/clinic', async (req, res) => {
+  try { const v = { id: id('cv'), ...req.body, createdAt: new Date().toISOString() }; await setData(`clinicVisits/${v.id}`, v); res.status(201).json(v); }
+  catch (e) { res.status(500).json({ error: 'Failed to create visit' }); }
+});
+
+// ============ MISSING ENDPOINTS: Anonymous Reports ============
+app.get('/api/anonymous-reports', async (_req, res) => {
+  try { const data = await getData('anonymousReports'); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch reports' }); }
+});
+app.post('/api/anonymous-reports', async (req, res) => {
+  try { const r = { id: id('ar'), ...req.body, status: 'pending', createdAt: new Date().toISOString() }; await setData(`anonymousReports/${r.id}`, r); res.status(201).json(r); }
+  catch (e) { res.status(500).json({ error: 'Failed to create report' }); }
+});
+app.put('/api/anonymous-reports/:id/status', async (req, res) => {
+  try { const existing = await getData(`anonymousReports/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); existing.status = req.body.status; existing.updatedAt = new Date().toISOString(); await setData(`anonymousReports/${req.params.id}`, existing); res.json(existing); }
+  catch (e) { res.status(500).json({ error: 'Failed to update status' }); }
 });
 
 // Start server

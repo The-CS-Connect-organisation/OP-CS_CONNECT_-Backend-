@@ -1,6 +1,8 @@
 import { Request, Response, Router } from 'express';
+import bcrypt from 'bcryptjs';
 import { getData, setData, listData, id, safeUser, removeData } from '../firebase';
 
+const SALT_ROUNDS = 10;
 const router = Router();
 
 // GET /api/users
@@ -74,11 +76,12 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(409).json({ error: 'User with this email already exists' });
     }
 
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     const userId = id('user');
     const newUser = {
       id: userId,
       email,
-      password,
+      password: hashedPassword,
       name,
       role,
       ...rest,
@@ -126,7 +129,7 @@ router.put('/:id', async (req: Request, res: Response) => {
     }
     
     if (password) {
-      updatedUser.password = password;
+      updatedUser.password = await bcrypt.hash(password, SALT_ROUNDS);
     }
 
     await setData(`users/${id}`, updatedUser);

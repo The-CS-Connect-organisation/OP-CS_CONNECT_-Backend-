@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getData, listData, setData, pushData } from '../firebase';
+import { getData, listData, setData, pushData, safeUser } from '../firebase';
 
 const router = Router();
 
@@ -7,7 +7,7 @@ router.get('/', async (req, res) => {
   try {
     const users = await listData('users');
     const students = users.filter(u => u.role === 'student');
-    res.json(students);
+    res.json(students.map(safeUser));
   } catch (error) {
     console.error('Error in /api/students:', error);
     res.status(500).json({ message: 'Error reading database' });
@@ -18,7 +18,7 @@ router.get('/:id', async (req, res) => {
   try {
     const user = await getData(`users/${req.params.id}`);
     if (user && user.role === 'student') {
-      res.json(user);
+      res.json(safeUser(user));
     } else {
       res.status(404).json({ message: 'Student not found' });
     }
