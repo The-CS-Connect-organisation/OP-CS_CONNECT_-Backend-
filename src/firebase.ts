@@ -1,80 +1,69 @@
-import * as admin from 'firebase-admin';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const DB_URL = process.env.FIREBASE_DATABASE_URL || 'https://vnthhh-7b829-default-rtdb.asia-southeast1.firebasedatabase.app';
-
-// Initialize Firebase Admin
-if (!admin.apps.length) {
-  try {
-    // If a service account is provided via env (as a base64 string or file path)
-    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-      const serviceAccount = JSON.parse(
-        process.env.FIREBASE_SERVICE_ACCOUNT.startsWith('{') 
-          ? process.env.FIREBASE_SERVICE_ACCOUNT 
-          : Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT, 'base64').toString()
-      );
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        databaseURL: DB_URL
-      });
-    } else {
-      // Fallback to application default credentials or public access (if configured in DB rules)
-      admin.initializeApp({
-        databaseURL: DB_URL
-      });
-    }
-    console.log('[Firebase] Admin SDK initialized successfully');
-  } catch (error) {
-    console.error('[Firebase] Initialization error:', error);
-  }
-}
-
-const db = admin.database();
+const DB_SECRET = process.env.FIREBASE_DATABASE_SECRET || '';
 
 export async function getData(path: string): Promise<any> {
   try {
-    const snapshot = await db.ref(path).once('value');
-    return snapshot.val();
+    const res = await fetch(`${DB_URL}/${path}.json?auth=${DB_SECRET}`);
+    if (!res.ok) throw new Error(`Firebase GET ${path} failed: ${res.status} ${res.statusText}`);
+    return res.json();
   } catch (err) {
-    console.error(`[Firebase] getData(${path}) error:`, (err as Error).message);
+    console.error(`[Firebase REST] getData(${path}) error:`, (err as Error).message);
     return null;
   }
 }
 
 export async function setData(path: string, value: any): Promise<void> {
   try {
-    await db.ref(path).set(value);
+    const res = await fetch(`${DB_URL}/${path}.json?auth=${DB_SECRET}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(value),
+    });
+    if (!res.ok) throw new Error(`Firebase PUT ${path} failed: ${res.status} ${res.statusText}`);
   } catch (err) {
-    console.error(`[Firebase] setData(${path}) error:`, (err as Error).message);
+    console.error(`[Firebase REST] setData(${path}) error:`, (err as Error).message);
   }
 }
 
 export async function updateData(path: string, value: any): Promise<void> {
   try {
-    await db.ref(path).update(value);
+    const res = await fetch(`${DB_URL}/${path}.json?auth=${DB_SECRET}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(value),
+    });
+    if (!res.ok) throw new Error(`Firebase PATCH ${path} failed: ${res.status} ${res.statusText}`);
   } catch (err) {
-    console.error(`[Firebase] updateData(${path}) error:`, (err as Error).message);
+    console.error(`[Firebase REST] updateData(${path}) error:`, (err as Error).message);
   }
 }
 
 export async function pushData(basePath: string, value: any): Promise<string> {
   try {
-    const newRef = db.ref(basePath).push();
-    await newRef.set(value);
-    return newRef.key || `id_${Date.now()}`;
+    const res = await fetch(`${DB_URL}/${basePath}.json?auth=${DB_SECRET}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(value),
+    });
+    if (!res.ok) throw new Error(`Firebase POST ${basePath} failed: ${res.status} ${res.statusText}`);
+    const data = await res.json() as any;
+    return data.name || `id_${Date.now()}`;
   } catch (err) {
-    console.error(`[Firebase] pushData(${basePath}) error:`, (err as Error).message);
+    console.error(`[Firebase REST] pushData(${basePath}) error:`, (err as Error).message);
     return `id_${Date.now()}`;
   }
 }
 
 export async function removeData(path: string): Promise<void> {
   try {
-    await db.ref(path).remove();
+    const res = await fetch(`${DB_URL}/${path}.json?auth=${DB_SECRET}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`Firebase DELETE ${path} failed: ${res.status} ${res.statusText}`);
   } catch (err) {
-    console.error(`[Firebase] removeData(${path}) error:`, (err as Error).message);
+    console.error(`[Firebase REST] removeData(${path}) error:`, (err as Error).message);
   }
 }
 
@@ -94,3 +83,4 @@ export async function listData(path: string): Promise<any[]> {
   if (Array.isArray(data)) return data;
   return Object.values(data);
 }
+
