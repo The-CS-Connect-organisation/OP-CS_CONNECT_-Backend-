@@ -2826,7 +2826,7 @@ app.post('/api/hr/payroll/process/:month', async (req, res) => {
   catch (e) { res.status(500).json({ error: 'Failed to run payroll' }); }
 });
 app.post('/api/hr/leave/:id/approve', async (req, res) => {
-n// --- MISSING: HR Positions, Leave POST, Training ---
+// --- MISSING: HR Positions, Leave POST, Training ---
 app.get("/api/hr/positions", async (_req, res) => {
   try { const data = await getData("staffPositions"); res.json(data ? Object.values(data) : []); }
   catch (e) { res.status(500).json({ error: "Failed to fetch positions" }); }
@@ -3024,7 +3024,7 @@ app.put('/api/anonymous-reports/:id/status', async (req, res) => {
   catch (e) { res.status(500).json({ error: 'Failed to update status' }); }
 });
 
-n// ==================== MISSING: Nexus Posts ====================
+// ==================== MISSING: Nexus Posts ====================
 app.get("/api/nexus/posts", async (_req, res) => {
   try { const data = await getData("nexusPosts"); res.json(data ? Object.values(data) : []); }
   catch (error) { res.status(500).json({ error: "Failed to fetch posts" }); }
@@ -3064,7 +3064,10 @@ app.post("/api/notes/shared/:id/like", async (req, res) => {
   catch (error) { res.status(500).json({ error: "Failed to like note" }); }
 });
 app.post("/api/notes/:id/share", async (req, res) => {
-n// ==================== MISSING: Timetable DELETE ====================
+  try { const note = await getData(`notes/${req.params.id}`); if (!note) return res.status(404).json({ error: "Note not found" }); if (!note.shares) note.shares = []; note.shares.push({ userId: req.body.userId, sharedAt: new Date().toISOString() }); await setData(`notes/${req.params.id}`, note); res.json({ success: true }); }
+  catch (e) { res.status(500).json({ error: "Failed to share note" }); }
+});
+// ==================== MISSING: Timetable DELETE ====================
 app.delete("/api/timetable/:id", async (req, res) => {
   try {
     // Parse the id: format is "className-day-periodIndex" (e.g. "10-A-Monday-0")
@@ -3085,12 +3088,6 @@ app.delete("/api/timetable/:id", async (req, res) => {
       return res.status(404).json({ error: "Period not found" });
     }
     dayEntry.periods.splice(periodIndex, 1);
-    await setData(`timetable/${className}`, arr);
-    res.json({ success: true });
-  } catch (error) { res.status(500).json({ error: "Failed to delete timetable entry" }); }
-});
-
-    dayEntry.periods.splice(parseInt(periodIndex), 1);
     await setData(`timetable/${className}`, arr);
     res.json({ success: true });
   } catch (error) { res.status(500).json({ error: "Failed to delete timetable entry" }); }
