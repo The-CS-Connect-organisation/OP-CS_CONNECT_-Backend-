@@ -3044,8 +3044,8 @@ app.post("/api/cs-library/search", async (req, res) => {
     const { query, category } = req.body;
     const libraryData = await getData("csLibrary") as any;
     let books = libraryData ? Object.values(libraryData) : [];
-    if (query) { const q = query.toLowerCase(); books = books.filter((b) => b.title?.toLowerCase().includes(q) || b.author?.toLowerCase().includes(q) || b.isbn?.includes(q)); }
-    if (category) books = books.filter((b) => b.category === category);
+    if (query) { const q = query.toLowerCase(); books = books.filter((b: any) => b.title?.toLowerCase().includes(q) || b.author?.toLowerCase().includes(q) || b.isbn?.includes(q)); }
+    if (category) books = books.filter((b: any) => b.category === category);
     res.json(books);
   } catch (error) { res.status(500).json({ error: "Search failed" }); }
 });
