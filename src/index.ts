@@ -2600,6 +2600,28 @@ app.post('/api/bus/assignments', async (req, res) => {
   }
 });
 
+
+app.put('/api/bus/assignments/:id', async (req, res) => {
+  try {
+    const existing = await getData(`routes/${req.params.id}`);
+    if (existing) {
+      await setData(`routes/${req.params.id}`, { ...existing, ...req.body });
+      res.json({ success: true });
+    } else {
+      const data = await getData('busAssignments') as any;
+      if (data && data[req.params.id]) {
+        data[req.params.id] = { ...data[req.params.id], ...req.body };
+        await setData('busAssignments', data);
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: 'Not found' });
+      }
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update' });
+  }
+});
+
 app.delete('/api/bus/assignments/:id', async (req, res) => {
   try {
     await removeData(`busAssignments/${req.params.id}`);
@@ -2736,6 +2758,17 @@ app.post('/api/comms/email', async (req, res) => {
 });
 
 // --- HR Aliases ---
+
+app.get('/api/hr/staff', async (req, res) => {
+  try { res.json(await listData('users')); } catch (error) { res.status(500).json({ error: 'Failed' }); }
+});
+app.get('/api/hr/attendance', async (req, res) => {
+  try { res.json(await listData('hr/attendance')); } catch (error) { res.status(500).json({ error: 'Failed' }); }
+});
+app.get('/api/hr/leave', async (req, res) => {
+  try { res.json(await listData('leaveRequests')); } catch (error) { res.status(500).json({ error: 'Failed' }); }
+});
+
 app.post('/api/hr/staff', async (req, res) => {
   try { const staff = { id: `u${Date.now()}`, ...req.body, createdAt: new Date().toISOString() }; await setData(`users/${staff.id}`, staff); res.status(201).json(staff); }
   catch (e) { res.status(500).json({ error: 'Failed to create staff' }); }
@@ -2793,6 +2826,28 @@ app.post('/api/hr/payroll/process/:month', async (req, res) => {
   catch (e) { res.status(500).json({ error: 'Failed to run payroll' }); }
 });
 app.post('/api/hr/leave/:id/approve', async (req, res) => {
+n// --- MISSING: HR Positions, Leave POST, Training ---
+app.get("/api/hr/positions", async (_req, res) => {
+  try { const data = await getData("staffPositions"); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: "Failed to fetch positions" }); }
+});
+app.post("/api/hr/positions", async (req, res) => {
+  try { const pos = { id: `sp${Date.now()}`, ...req.body, createdAt: new Date().toISOString() }; await setData(`staffPositions/${pos.id}`, pos); res.status(201).json(pos); }
+  catch (e) { res.status(500).json({ error: "Failed to create position" }); }
+});
+app.post("/api/hr/leave", async (req, res) => {
+  try { const leave = { id: `sl${Date.now()}`, ...req.body, status: "pending", createdAt: new Date().toISOString() }; await setData(`staffLeaves/${leave.id}`, leave); res.status(201).json(leave); }
+  catch (e) { res.status(500).json({ error: "Failed to create leave" }); }
+});
+app.get("/api/hr/training", async (_req, res) => {
+  try { const data = await getData("trainingSessions"); res.json(data ? Object.values(data) : []); }
+  catch (e) { res.status(500).json({ error: "Failed to fetch training" }); }
+});
+app.post("/api/hr/training", async (req, res) => {
+  try { const ts = { id: `ts${Date.now()}`, ...req.body, status: req.body.status || "scheduled", createdAt: new Date().toISOString() }; await setData(`trainingSessions/${ts.id}`, ts); res.status(201).json(ts); }
+  catch (e) { res.status(500).json({ error: "Failed to create training" }); }
+});
+
   try { const leave = await getData(`staffLeaves/${req.params.id}`); if (!leave) return res.status(404).json({ error: 'Leave not found' }); leave.status = 'approved'; leave.approvedBy = req.body.approvedBy; leave.approvedAt = new Date().toISOString(); await setData(`staffLeaves/${req.params.id}`, leave); const balances = await getData(`leaveBalances/${leave.userId}`) || {}; balances[leave.type || 'annual'] = (balances[leave.type || 'annual'] || 0) - (leave.days || 1); await setData(`leaveBalances/${leave.userId}`, balances); res.json(leave); }
   catch (e) { res.status(500).json({ error: 'Failed to approve leave' }); }
 });
@@ -2967,6 +3022,78 @@ app.post('/api/anonymous-reports', async (req, res) => {
 app.put('/api/anonymous-reports/:id/status', async (req, res) => {
   try { const existing = await getData(`anonymousReports/${req.params.id}`); if (!existing) return res.status(404).json({ error: 'Not found' }); existing.status = req.body.status; existing.updatedAt = new Date().toISOString(); await setData(`anonymousReports/${req.params.id}`, existing); res.json(existing); }
   catch (e) { res.status(500).json({ error: 'Failed to update status' }); }
+});
+
+n// ==================== MISSING: Nexus Posts ====================
+app.get("/api/nexus/posts", async (_req, res) => {
+  try { const data = await getData("nexusPosts"); res.json(data ? Object.values(data) : []); }
+  catch (error) { res.status(500).json({ error: "Failed to fetch posts" }); }
+});
+app.post("/api/nexus/posts", async (req, res) => {
+  try { const post = { id: `np${Date.now()}`, ...req.body, createdAt: new Date().toISOString(), likes: [] }; await setData(`nexusPosts/${post.id}`, post); res.status(201).json(post); }
+  catch (error) { res.status(500).json({ error: "Failed to create post" }); }
+});
+app.post("/api/nexus/posts/:id/like", async (req, res) => {
+  try { const existing = await getData(`nexusPosts/${req.params.id}`); if (!existing) return res.status(404).json({ error: "Post not found" }); const { userId } = req.body; const likes = existing.likes || []; const idx = likes.indexOf(userId); if (idx >= 0) likes.splice(idx, 1); else likes.push(userId); await setData(`nexusPosts/${req.params.id}/likes`, likes); res.json({ ...existing, likes }); }
+  catch (error) { res.status(500).json({ error: "Failed to toggle like" }); }
+});
+
+// ==================== MISSING: CS Library ====================
+app.post("/api/cs-library/search", async (req, res) => {
+  try {
+    const { query, category } = req.body;
+    const libraryData = await getData("csLibrary") as any;
+    let books = libraryData ? Object.values(libraryData) : [];
+    if (query) { const q = query.toLowerCase(); books = books.filter((b) => b.title?.toLowerCase().includes(q) || b.author?.toLowerCase().includes(q) || b.isbn?.includes(q)); }
+    if (category) books = books.filter((b) => b.category === category);
+    res.json(books);
+  } catch (error) { res.status(500).json({ error: "Search failed" }); }
+});
+app.get("/api/cs-library/book/:bookId", async (req, res) => {
+  try { const book = await getData(`csLibrary/${req.params.bookId}`); if (!book) return res.status(404).json({ error: "Book not found" }); res.json(book); }
+  catch (error) { res.status(500).json({ error: "Failed to fetch book" }); }
+});
+
+// ==================== MISSING: Shared Notes ====================
+app.get("/api/notes/shared", async (_req, res) => {
+  try { const data = await getData("sharedNotes"); res.json(data ? Object.values(data) : []); }
+  catch (error) { res.status(500).json({ error: "Failed to fetch shared notes" }); }
+});
+app.post("/api/notes/shared/:id/like", async (req, res) => {
+  try { const existing = await getData(`sharedNotes/${req.params.id}`); if (!existing) return res.status(404).json({ error: "Note not found" }); const count = (existing.likes || 0) + 1; await setData(`sharedNotes/${req.params.id}/likes`, count); res.json({ ...existing, likes: count }); }
+  catch (error) { res.status(500).json({ error: "Failed to like note" }); }
+});
+app.post("/api/notes/:id/share", async (req, res) => {
+n// ==================== MISSING: Timetable DELETE ====================
+app.delete("/api/timetable/:id", async (req, res) => {
+  try {
+    // Parse the id: format is "className-day-periodIndex" (e.g. "10-A-Monday-0")
+    const parts = req.params.id.split("-");
+    // className may contain hyphens (e.g. "10-A"), so extract day and periodIndex from the end
+    const periodIndex = parseInt(parts[parts.length - 1]);
+    const day = parts[parts.length - 2];
+    const className = parts.slice(0, parts.length - 2).join("-");
+    if (!className || !day || isNaN(periodIndex)) {
+      return res.status(400).json({ error: "Invalid timetable entry id" });
+    }
+    const timetable = await getData(`timetable/${className}`);
+    if (!timetable) return res.status(404).json({ error: "Timetable not found" });
+    const arr = Array.isArray(timetable) ? timetable : [];
+    const dayEntry = arr.find((d) => d.day === day);
+    if (!dayEntry || !dayEntry.periods) return res.status(404).json({ error: "Day not found" });
+    if (periodIndex < 0 || periodIndex >= dayEntry.periods.length) {
+      return res.status(404).json({ error: "Period not found" });
+    }
+    dayEntry.periods.splice(periodIndex, 1);
+    await setData(`timetable/${className}`, arr);
+    res.json({ success: true });
+  } catch (error) { res.status(500).json({ error: "Failed to delete timetable entry" }); }
+});
+
+    dayEntry.periods.splice(parseInt(periodIndex), 1);
+    await setData(`timetable/${className}`, arr);
+    res.json({ success: true });
+  } catch (error) { res.status(500).json({ error: "Failed to delete timetable entry" }); }
 });
 
 // Start server
