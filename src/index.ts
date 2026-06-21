@@ -34,6 +34,10 @@ import platformRoutes from './routes/platform';
 import circularRoutes from './routes/circulars';
 import announcementRoutes from './routes/announcements';
 import authRoutes from './routes/auth';
+import classesRoutes from './routes/classes';
+import sectionsRoutes from './routes/sections';
+import subjectsRoutes from './routes/subjects';
+
 
 dotenv.config();
 
@@ -229,6 +233,11 @@ app.use('/api/platform', platformRoutes);
 app.use('/api/circulars', circularRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/v1/classes', classesRoutes);
+app.use('/api/v1/sections', sectionsRoutes);
+app.use('/api/v1/subjects', subjectsRoutes);
+app.use('/api/v1/students', studentsRoutes);
+
 // Helper: safe user (remove password)
 function safeUser(u: any) {
   if (!u) return null;

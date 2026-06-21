@@ -146,4 +146,28 @@ router.get('/teacher', async (req: Request, res: Response) => {
     }
 });
 
+
+// GET /api/analytics/class/:id
+router.get('/class/:id', async (req: Request, res: Response) => {
+    try {
+        const classId = req.params.id;
+        const users = await listData('users');
+        const students = users.filter((u: any) => u.role === 'student' && (u.classId === classId || u.class === classId));
+        
+        // Mocked response for now since we don't have grades hooked up fully yet
+        const analytics = {
+            classAverage: 85,
+            topScore: 98,
+            atRiskCount: students.length > 5 ? 2 : 0,
+            complianceScore: 92,
+            totalStudents: students.length,
+            attendanceRate: 94
+        };
+        
+        res.json({ success: true, analytics });
+    } catch (err) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 export default router;

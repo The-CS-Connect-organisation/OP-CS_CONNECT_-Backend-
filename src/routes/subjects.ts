@@ -1,28 +1,45 @@
 import { Router } from 'express';
-import { getData } from '../firebase';
+import { getData, setData, listData, id } from '../firebase';
 
 const router = Router();
 
-// GET /api/subjects
 router.get('/', async (req, res) => {
   try {
-    const subjects = await getData('subjects');
-    res.json(subjects ? Object.values(subjects) : []);
-  } catch (error) {
-    console.error('[Subjects] Get all error:', error);
+    const subjects = await listData('subjects');
+    res.json(subjects || []);
+  } catch (err) {
     res.status(500).json({ error: 'Failed to fetch subjects' });
   }
 });
 
-// GET /api/subjects/:id
-router.get('/:id', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const subject = await getData(`subjects/${req.params.id}`);
-    if (!subject) return res.status(404).json({ error: 'Subject not found' });
-    res.json(subject);
-  } catch (error) {
-    console.error(`[Subjects] Get ${req.params.id} error:`, error);
-    res.status(500).json({ error: 'Failed to fetch subject' });
+    const newSub = { id: id('sub'), ...req.body, createdAt: new Date().toISOString() };
+    await setData(`subjects/${newSub.id}`, newSub);
+    res.status(201).json(newSub);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create subject' });
+  }
+});
+
+router.patch('/:id', async (req, res) => {
+  try {
+    const existing = await getData(`subjects/${req.params.id}`);
+    if (!existing) return res.status(404).json({ error: 'Not found' });
+    const updated = { ...existing, ...req.body };
+    await setData(`subjects/${req.params.id}`, updated);
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update subject' });
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    await setData(`subjects/${req.params.id}`, null);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete subject' });
   }
 });
 
