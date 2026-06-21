@@ -3,6 +3,17 @@ import { getData, setData, listData, id } from '../firebase';
 
 const router = Router();
 
+// GET /api/fees
+router.get('/', async (req: Request, res: Response) => {
+  try {
+    const allFees = await listData('feeRecords');
+    res.json(allFees || []);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch fee records' });
+  }
+});
+
+
 // GET /api/fees/student/:studentId
 router.get('/student/:studentId', async (req: Request, res: Response) => {
   try {
