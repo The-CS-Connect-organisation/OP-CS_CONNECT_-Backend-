@@ -1712,41 +1712,15 @@ app.put('/api/uniform-schedule/:id', async (req, res) => {
 });
 
 // ==================== AI PROXY ====================
-const CEREBRAS_MODELS: Record<string, string> = {
-  'gpt-oss-120b': 'openai/gpt-oss-120b',
-  'llama3.1-8b': 'llama3.1-8b',
-  'qwen-3-235b': 'qwen/qwen3-32b',
-  'zai-glm-4.7': 'zai-glm-4.7',
-};
-
 const GROQ_MODELS: Record<string, string> = {
   'llama-3.3-70b': 'llama-3.3-70b-versatile',
-  'llama-4-scout': 'meta-llama/llama-4-scout-17b-16e-instruct',
-  'llama-3.1-8b-instant': 'llama-3.1-8b-instant',
-  'gpt-oss-120b-groq': 'openai/gpt-oss-120b',
-  'qwen3-32b': 'qwen/qwen3-32b',
   'compound': 'groq/compound',
-  'compound-mini': 'groq/compound-mini',
 };
 
 app.post('/api/ai/chat', async (req, res) => {
   try {
-    // #region agent log
-    fetch('http://127.0.0.1:7648/ingest/9083a094-cb0a-4860-b6f2-236bb876b0d0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6a311b'},body:JSON.stringify({sessionId:'6a311b',runId:'pre-fix',hypothesisId:'H5',location:'index.ts:ai-chat-entry',message:'index ai chat handler entered',data:{model:req.body?.model || 'none',messagesCount:Array.isArray(req.body?.messages) ? req.body.messages.length : -1},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-    const { messages, model = 'gemini', systemPrompt } = req.body;
+    const { messages, model = 'llama-3.3-70b', systemPrompt } = req.body;
     const allMessages = [...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []), ...messages];
-
-    if (CEREBRAS_MODELS[model] && process.env.CEREBRAS_API_KEY) {
-      const response = await fetch('https://api.cerebras.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.CEREBRAS_API_KEY}` },
-        body: JSON.stringify({ model: CEREBRAS_MODELS[model], messages: allMessages, temperature: 0.7, max_tokens: 2048 }),
-      });
-      const data: any = await response.json();
-      if (data.choices?.[0]?.message?.content) return res.json({ response: data.choices[0].message.content });
-      return res.json({ response: 'No response from Cerebras', error: data });
-    }
 
     if (GROQ_MODELS[model] && process.env.GROQ_API_KEY) {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -1757,27 +1731,6 @@ app.post('/api/ai/chat', async (req, res) => {
       const data: any = await response.json();
       if (data.choices?.[0]?.message?.content) return res.json({ response: data.choices[0].message.content });
       return res.json({ response: 'No response from Groq', error: data });
-    }
-
-    if (process.env.GEMINI_API_KEY) {
-      const contents = messages.map((m: { role: string; content: string }) => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }],
-      }));
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents,
-            systemInstruction: systemPrompt ? { parts: [{ text: systemPrompt }] } : undefined,
-            generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
-          }),
-        }
-      );
-      const data: any = await response.json();
-      if (data.candidates?.[0]?.content?.parts?.[0]?.text) return res.json({ response: data.candidates[0].content.parts[0].text });
     }
 
     const lastMessage = messages[messages.length - 1]?.content || '';
