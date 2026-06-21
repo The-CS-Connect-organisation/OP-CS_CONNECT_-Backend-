@@ -1099,11 +1099,16 @@ app.delete('/api/events/:id', async (req, res) => {
 });
 
 // ==================== CLUBS ====================
-app.get('/api/clubs', async (_req, res) => {
+app.get('/api/clubs', async (req, res) => {
   try {
     const data = await getData('clubs') as any;
     const clubs = data ? Object.values(data) as any[] : [];
-    res.json(clubs);
+    const { pending, createdBy } = req.query;
+    let filtered = clubs;
+    if (pending === 'true') filtered = filtered.filter((c: any) => c.status === 'pending');
+    else if (!createdBy) filtered = filtered.filter((c: any) => c.status === 'approved');
+    if (createdBy) filtered = filtered.filter((c: any) => c.createdBy === createdBy);
+    res.json(filtered);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch clubs' });
   }
@@ -1111,11 +1116,104 @@ app.get('/api/clubs', async (_req, res) => {
 
 app.post('/api/clubs', async (req, res) => {
   try {
-    const club = { id: `c${Date.now()}`, ...req.body };
+    const club = {
+      id: `c${Date.now()}`,
+      ...req.body,
+      status: 'pending',
+      members: req.body.members || [],
+      joinRequests: [],
+      posts: [],
+      createdAt: new Date().toISOString(),
+    };
     await setData(`clubs/${club.id}`, club);
     res.status(201).json(club);
   } catch (error) {
     res.status(500).json({ error: 'Failed to create club' });
+  }
+});
+
+app.put('/api/clubs/:id/approve', async (req, res) => {
+  try {
+    const data = await getData('clubs') as any;
+    if (!data || !data[req.params.id]) return res.status(404).json({ error: 'Club not found' });
+    data[req.params.id].status = 'approved';
+    await setData(`clubs/${req.params.id}`, data[req.params.id]);
+    res.json({ success: true, club: data[req.params.id] });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to approve club' });
+  }
+});
+
+app.put('/api/clubs/:id/reject', async (req, res) => {
+  try {
+    const data = await getData('clubs') as any;
+    if (!data || !data[req.params.id]) return res.status(404).json({ error: 'Club not found' });
+    data[req.params.id].status = 'rejected';
+    await setData(`clubs/${req.params.id}`, data[req.params.id]);
+    res.json({ success: true, club: data[req.params.id] });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to reject club' });
+  }
+});
+
+app.post('/api/clubs/:id/join', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const data = await getData('clubs') as any;
+    if (!data || !data[req.params.id]) return res.status(404).json({ error: 'Club not found' });
+    const club = data[req.params.id];
+    if (!club.joinRequests) club.joinRequests = [];
+    if (club.members?.includes(userId)) return res.status(400).json({ error: 'Already a member' });
+    if (club.joinRequests.includes(userId)) return res.status(400).json({ error: 'Already requested' });
+    club.joinRequests.push(userId);
+    await setData(`clubs/${req.params.id}`, club);
+    res.json({ success: true, joinRequests: club.joinRequests });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to request join' });
+  }
+});
+
+app.put('/api/clubs/:id/join/:userId/approve', async (req, res) => {
+  try {
+    const data = await getData('clubs') as any;
+    if (!data || !data[req.params.id]) return res.status(404).json({ error: 'Club not found' });
+    const club = data[req.params.id];
+    if (!club.members) club.members = [];
+    if (!club.joinRequests) club.joinRequests = [];
+    club.joinRequests = club.joinRequests.filter((id: string) => id !== req.params.userId);
+    if (!club.members.includes(req.params.userId)) club.members.push(req.params.userId);
+    await setData(`clubs/${req.params.id}`, club);
+    res.json({ success: true, members: club.members, joinRequests: club.joinRequests });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to approve join request' });
+  }
+});
+
+app.put('/api/clubs/:id/join/:userId/reject', async (req, res) => {
+  try {
+    const data = await getData('clubs') as any;
+    if (!data || !data[req.params.id]) return res.status(404).json({ error: 'Club not found' });
+    const club = data[req.params.id];
+    if (!club.joinRequests) club.joinRequests = [];
+    club.joinRequests = club.joinRequests.filter((id: string) => id !== req.params.userId);
+    await setData(`clubs/${req.params.id}`, club);
+    res.json({ success: true, joinRequests: club.joinRequests });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to reject join request' });
+  }
+});
+
+app.post('/api/clubs/:id/leave', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const data = await getData('clubs') as any;
+    if (!data || !data[req.params.id]) return res.status(404).json({ error: 'Club not found' });
+    const club = data[req.params.id];
+    if (club.members) club.members = club.members.filter((id: string) => id !== userId);
+    await setData(`clubs/${req.params.id}`, club);
+    res.json({ success: true, members: club.members || [] });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to leave club' });
   }
 });
 
