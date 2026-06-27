@@ -84,3 +84,16 @@ export async function listData(path: string): Promise<any[]> {
   return Object.values(data);
 }
 
+export async function queryData(path: string, orderBy: string, equalTo: string): Promise<any[]> {
+  try {
+    const url = `${DB_URL}/${path}.json?auth=${DB_SECRET}&orderBy="${orderBy}"&equalTo="${encodeURIComponent(equalTo)}"`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Firebase query ${path} failed: ${res.status} ${res.statusText}`);
+    const data = await res.json();
+    if (!data) return [];
+    return Object.values(data);
+  } catch (err) {
+    console.error(`[Firebase REST] queryData(${path}) error:`, (err as Error).message);
+    return [];
+  }
+}

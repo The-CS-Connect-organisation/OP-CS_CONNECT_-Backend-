@@ -33,6 +33,7 @@ import alumniRoutes from './routes/alumni';
 import platformRoutes from './routes/platform';
 import circularRoutes from './routes/circulars';
 import announcementRoutes from './routes/announcements';
+import talentMarketRoutes from './routes/talent-market';
 import authRoutes from './routes/auth';
 import classesRoutes from './routes/classes';
 import sectionsRoutes from './routes/sections';
@@ -238,6 +239,8 @@ app.use('/api/v1/sections', sectionsRoutes);
 app.use('/api/v1/subjects', subjectsRoutes);
 app.use('/api/v1/students', studentsRoutes);
 
+// Talent Market
+app.use('/api/talent-market', talentMarketRoutes);
 // Helper: safe user (remove password)
 function safeUser(u: any) {
   if (!u) return null;
