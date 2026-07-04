@@ -109,15 +109,32 @@ router.post('/invoices', async (req, res) => {
   try {
     const items = await listData('invoices');
     const invoiceNumber = `INV-${new Date().getFullYear()}-${String(items.length + 1).padStart(4, '0')}`;
-    const { clientName, clientEmail, items: lineItems, taxRate = 0, notes, dueDate, createdBy } = req.body;
-    const subTotal = (lineItems || []).reduce((s: number, i: any) => s + (i.quantity || 0) * (i.unitPrice || 0), 0);
-    const taxTotal = subTotal * (taxRate / 100);
-    const total = subTotal + taxTotal;
+    const { clientName, clientEmail, items: lineItems, taxRate = 0, notes, dueDate, createdBy, studentId, studentName, tax } = req.body;
+    // Support both frontend format (studentId/studentName, items[{description,amount}], tax as absolute) and backend format
+    const invClientName = clientName || studentName || '';
+    const invClientEmail = clientEmail || '';
+    const invItems = (lineItems || req.body.items || []).map((i: any) => {
+      const unitPrice = i.unitPrice || i.amount || 0;
+      const qty = i.quantity || 1;
+      return {
+        description: i.description || i.itemName || '',
+        quantity: qty,
+        unitPrice,
+        amount: unitPrice,
+        total: qty * unitPrice,
+      };
+    });
+    const subTotal = invItems.reduce((s: number, i: any) => s + (i.quantity || 0) * (i.unitPrice || 0), 0);
+    // If tax is sent as absolute amount, treat it as taxTotal; otherwise treat taxRate as percentage
+    const taxAmount = tax !== undefined ? Number(tax) : (subTotal * (taxRate / 100));
+    const total = subTotal + taxAmount;
     const invoice = {
-      id: id('inv'), invoiceNumber, clientName, clientEmail, items: lineItems || [],
-      subTotal, taxRate, taxTotal, total, notes, dueDate,
+      id: id('inv'), invoiceNumber, clientName: invClientName, clientEmail: invClientEmail,
+      studentId: studentId || '',
+      items: invItems, subTotal, taxRate: taxRate || (tax ? 0 : 0), taxTotal: taxAmount, total,
+      notes: notes || '', dueDate, studentName: studentName || invClientName,
       status: 'draft', paymentStatus: 'unpaid',
-      createdBy, createdAt: new Date().toISOString(),
+      createdBy: createdBy || '', createdAt: new Date().toISOString(),
     };
     await setData(`invoices/${invoice.id}`, invoice);
     res.status(201).json(invoice);
@@ -129,10 +146,11 @@ router.post('/invoices', async (req, res) => {
 router.get('/invoices', async (req, res) => {
   try {
     let invoices = await listData('invoices');
-    const { status, paymentStatus, clientEmail } = req.query;
+    const { status, paymentStatus, clientEmail, studentId } = req.query;
     if (status) invoices = invoices.filter((i: any) => i.status === status);
     if (paymentStatus) invoices = invoices.filter((i: any) => i.paymentStatus === paymentStatus);
     if (clientEmail) invoices = invoices.filter((i: any) => i.clientEmail === clientEmail);
+    if (studentId) invoices = invoices.filter((i: any) => i.studentId === studentId);
     res.json(invoices.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch invoices' });
@@ -226,14 +244,29 @@ router.post('/quotes', async (req, res) => {
   try {
     const items = await listData('quotes');
     const quoteNumber = `QTE-${new Date().getFullYear()}-${String(items.length + 1).padStart(4, '0')}`;
-    const { clientName, clientEmail, items: lineItems, taxRate = 0, notes, validUntil, createdBy } = req.body;
-    const subTotal = (lineItems || []).reduce((s: number, i: any) => s + (i.quantity || 0) * (i.unitPrice || 0), 0);
+    const { clientName, clientEmail, items: lineItems, taxRate = 0, notes, validUntil, createdBy, client } = req.body;
+    // Support both frontend format (client, items[{description,amount}]) and backend format
+    const qClientName = clientName || client || '';
+    const qClientEmail = clientEmail || '';
+    const qItems = (lineItems || req.body.items || []).map((i: any) => {
+      const unitPrice = i.unitPrice || i.amount || 0;
+      const qty = i.quantity || 1;
+      return {
+        description: i.description || '',
+        quantity: qty,
+        unitPrice,
+        amount: unitPrice,
+        total: qty * unitPrice,
+      };
+    });
+    const subTotal = qItems.reduce((s: number, i: any) => s + (i.quantity || 0) * (i.unitPrice || 0), 0);
     const taxTotal = subTotal * (taxRate / 100);
     const total = subTotal + taxTotal;
     const quote = {
-      id: id('qte'), quoteNumber, clientName, clientEmail, items: lineItems || [],
-      subTotal, taxRate, taxTotal, total, notes, validUntil,
-      status: 'draft', createdBy, createdAt: new Date().toISOString(),
+      id: id('qte'), quoteNumber, clientName: qClientName, clientEmail: qClientEmail,
+      items: qItems, subTotal, taxRate, taxTotal, total,
+      notes: notes || '', validUntil,
+      status: 'draft', createdBy: createdBy || '', createdAt: new Date().toISOString(),
     };
     await setData(`quotes/${quote.id}`, quote);
     res.status(201).json(quote);
@@ -281,11 +314,20 @@ router.post('/payments', async (req, res) => {
   try {
     const items = await listData('payments');
     const paymentNumber = `PAY-${String(items.length + 1).padStart(4, '0')}`;
-    const { invoiceId, clientName, amount, paymentMode, reference, notes, createdBy } = req.body;
+    const { invoiceId, clientName, amount, paymentMode, reference, notes, createdBy, studentName, studentId, method, transactionId, receiptNo, date, paidAmount } = req.body;
+    const payAmount = amount || paidAmount || 0;
+    const payClientName = clientName || studentName || studentId || '';
+    const payMode = paymentMode || method || 'cash';
+    const payRef = reference || transactionId || '';
+    const now = new Date().toISOString();
     const payment = {
-      id: id('pay'), paymentNumber, invoiceId, clientName, amount,
-      paymentMode: paymentMode || 'cash', reference, notes,
-      createdBy, createdAt: new Date().toISOString(),
+      id: id('pay'), paymentNumber, invoiceId: invoiceId || '',
+      clientName: payClientName, studentName: studentName || payClientName,
+      amount: payAmount,
+      paymentMode: payMode, reference: payRef, notes: notes || '',
+      method: method || payMode, transactionId: transactionId || payRef,
+      date: date || now,
+      createdBy: createdBy || '', createdAt: now,
     };
     await setData(`payments/${payment.id}`, payment);
     // Update invoice payment status
@@ -294,7 +336,7 @@ router.post('/payments', async (req, res) => {
       if (invoice) {
         const allPayments = await listData('payments');
         const invoicePayments = allPayments.filter((p: any) => p.invoiceId === invoiceId);
-        const totalPaid = invoicePayments.reduce((s: number, p: any) => s + p.amount, 0) + amount;
+        const totalPaid = invoicePayments.reduce((s: number, p: any) => s + p.amount, 0) + payAmount;
         invoice.paymentStatus = totalPaid >= invoice.total ? 'paid' : 'partial';
         invoice.lastPaymentAt = new Date().toISOString();
         await setData(`invoices/${invoiceId}`, invoice);
@@ -603,9 +645,15 @@ router.get('/recurring-invoices', async (_req, res) => {
 router.get('/spending-analytics', async (req, res) => {
   try {
     const expenses = await listData('expenses');
-    const categories = await listData('expenseCategories');
-    const { fromDate, toDate } = req.query;
+    const { fromDate, toDate, month } = req.query;
     let filtered = expenses;
+    if (month) {
+      const [year, mon] = (month as string).split('-').map(Number);
+      filtered = filtered.filter((e: any) => {
+        const d = new Date(e.date);
+        return d.getFullYear() === year && d.getMonth() + 1 === mon;
+      });
+    }
     if (fromDate) filtered = filtered.filter((e: any) => new Date(e.date) >= new Date(fromDate as string));
     if (toDate) filtered = filtered.filter((e: any) => new Date(e.date) <= new Date(toDate as string));
     const totalSpent = filtered.reduce((s: number, e: any) => s + (e.amount || 0), 0);
@@ -613,14 +661,13 @@ router.get('/spending-analytics', async (req, res) => {
     for (const e of filtered) {
       byCategory[e.category] = (byCategory[e.category] || 0) + (e.amount || 0);
     }
-    // Budget vs Actuals
-    const budgets = await listData('budgets');
-    const budgetVsActual = budgets.map((b: any) => ({
-      department: b.department, budgeted: b.amount || 0,
-      actual: filtered.filter((e: any) => e.department === b.department).reduce((s: number, e: any) => s + (e.amount || 0), 0),
-      remaining: (b.amount || 0) - filtered.filter((e: any) => e.department === b.department).reduce((s: number, e: any) => s + (e.amount || 0), 0),
+    // Return flat array format expected by frontend: [{category, amount, percentage}]
+    const result = Object.entries(byCategory).map(([category, amount]) => ({
+      category,
+      amount,
+      percentage: totalSpent > 0 ? Math.round((amount / totalSpent) * 100) : 0,
     }));
-    res.json({ totalSpent, byCategory, budgetVsActual, count: filtered.length });
+    res.json(result);
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch analytics' });
   }
