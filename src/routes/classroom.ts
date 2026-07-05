@@ -3,6 +3,21 @@ import { getData, setData, listData, id } from '../firebase';
 
 const router = Router();
 
+// --- Courses / Classes ---
+router.get('/courses', async (req, res) => {
+  try {
+    const users = await listData('users');
+    const classNames = new Set(
+      users.filter((u: any) => u.role === 'student' && u.class)
+           .map((u: any) => u.class)
+    );
+    const classes = Array.from(classNames).map(name => ({ id: name, name: name }));
+    res.json(classes);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch courses' });
+  }
+});
+
 // --- Lesson Plans (Phase 1) ---
 router.post('/lesson-plans', async (req, res) => {
   try {
