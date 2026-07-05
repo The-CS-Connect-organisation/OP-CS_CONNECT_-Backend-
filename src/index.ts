@@ -267,7 +267,6 @@ const buildSeedData = () => ({
     { id: "u7", name: "Admin User", email: "admin@eduvault.ai", password: "admin123", role: "admin", avatar: "AU" },
     { id: "u8", name: "Mrs. Meera Kapoor", email: "meera@eduvault.ai", password: "demo1234", role: "admin" },
     { id: "u9", name: "Raju Kumar", email: "raju@eduvault.ai", password: "demo1234", role: "driver" },
-  ])
     { id: "u10", name: "Mrs. Lakshmi Iyer", email: "lakshmi@eduvault.ai", password: "demo1234", role: "librarian", avatar: "LI" },
     { id: "u11", name: "Mrs. Kavita Sharma", email: "parent@eduvault.ai", password: "demo1234", role: "parent", children: ["u1", "u2"], avatar: "KS" }
   ]),
