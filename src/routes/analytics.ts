@@ -59,7 +59,7 @@ router.get('/admin', async (req: Request, res: Response) => {
                     weeklyActiveUsers: activeUsers,
                 },
                 attendance: {
-                    overallAttendanceRate: overallAttendanceRate.toFixed(2) + '%',
+                    overallAttendanceRate: overallAttendanceRate.toFixed(2),
                     totalRecords: totalAttendance,
                 },
                 finance: {
@@ -146,6 +146,66 @@ router.get('/teacher', async (req: Request, res: Response) => {
     }
 });
 
+
+// GET /api/analytics/manager/finance
+router.get('/manager/finance', async (req: Request, res: Response) => {
+    try {
+        const feesData = await listData('fees') as any;
+        let totalCollected = 0;
+        let totalOutstanding = 0;
+        if (feesData) {
+            for (const studentFees of feesData) {
+                const feeList = Object.values(studentFees) as any[];
+                for (const f of feeList) {
+                    totalCollected += f.paid || 0;
+                    totalOutstanding += (f.amount || 0) - (f.paid || 0);
+                }
+            }
+        }
+
+        const expensesArr = await listData('expenses');
+        const expenses = expensesArr.reduce((s: number, e: any) => s + (e.amount || 0), 0);
+
+        const payslipsArr = await listData('payslips');
+        const payroll = payslipsArr.reduce((s: number, p: any) => s + (p.amount || 0), 0);
+
+        const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const monthlyMap: Record<string, { revenue: number; expenses: number }> = {};
+
+        for (const e of expensesArr) {
+            if (e.date) {
+                const m = monthNames[new Date(e.date).getMonth()] || 'Unknown';
+                if (!monthlyMap[m]) monthlyMap[m] = { revenue: 0, expenses: 0 };
+                monthlyMap[m].expenses += e.amount || 0;
+            }
+        }
+
+        monthlyMap['Jan'] = { revenue: 0, expenses: 0 };
+        if (feesData) {
+            for (const studentFees of feesData) {
+                for (const f of Object.values(studentFees) as any[]) {
+                    if (f.paid) monthlyMap['Jan'].revenue += f.paid;
+                }
+            }
+        }
+
+        const monthlyTrend = Object.entries(monthlyMap).map(([month, v]) => ({ month, ...v }));
+
+        res.json({
+            success: true,
+            revenue: totalCollected,
+            expenses,
+            profit: totalCollected - expenses,
+            feeCollection: { collected: totalCollected, pending: totalOutstanding },
+            payroll,
+            monthlyTrend,
+        });
+
+    } catch (err) {
+        console.error('[Analytics] Finance dashboard error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 // GET /api/analytics/class/:id
 router.get('/class/:id', async (req: Request, res: Response) => {
