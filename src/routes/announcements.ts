@@ -5,13 +5,21 @@ const router = Router();
 
 router.get('/', async (req, res) => {
   try {
-    const items = await listData('announcements');
+    let items = await listData('announcements');
     const priority = req.query.priority as string;
     if (priority) {
-      res.json(items.filter((a: any) => a.priority === priority));
-    } else {
-      res.json(items);
+      items = items.filter((a: any) => a.priority === priority);
     }
+
+    items.sort((a: any, b: any) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      const dateA = a.createdAt || a.date || 0;
+      const dateB = b.createdAt || b.date || 0;
+      return new Date(dateB).getTime() - new Date(dateA).getTime();
+    });
+
+    res.json(items);
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch announcements' });
   }
