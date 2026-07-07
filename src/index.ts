@@ -118,6 +118,7 @@ const JWT_SECRET: string = process.env.JWT_SECRET || (() => {
   }
   return `eduvault-fallback-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 })();
+process.env.JWT_SECRET = JWT_SECRET;
 
 app.use(cors({
   origin: ALLOWED_ORIGINS_LIST,

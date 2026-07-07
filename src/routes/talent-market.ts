@@ -4,12 +4,7 @@ import jwt from 'jsonwebtoken';
 
 const router = Router();
 
-const JWT_SECRET: string = process.env.JWT_SECRET || (() => {
-  if (process.env.NODE_ENV === 'production') {
-    console.warn('WARNING: JWT_SECRET not set in production. Using generated secret - tokens will be invalidated on restart.');
-  }
-  return `eduvault-fallback-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-})();
+const JWT_SECRET: string = process.env.JWT_SECRET || 'eduvault-dev-secret';
 
 // --- Auth Middleware ---
 function authMiddleware(req: any, res: any, next: any) {
