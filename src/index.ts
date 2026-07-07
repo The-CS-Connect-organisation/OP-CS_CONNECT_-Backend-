@@ -1716,6 +1716,32 @@ app.delete('/api/exams/:id', async (req, res) => {
   }
 });
 
+// ==================== ROLL NUMBER CLEANUP ====================
+app.delete('/api/roll-numbers', async (req, res) => {
+  try {
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
+    const requester = await getData(`users/${requesterId}`);
+    if (!requester || !['admin', 'manager'].includes(requester.role)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const users = await getData('users');
+    if (!users) return res.json({ success: true, cleared: 0 });
+    let cleared = 0;
+    for (const [uid, u] of Object.entries(users as any)) {
+      if (u.rollNo) {
+        const { rollNo, ...rest } = u;
+        await setData(`users/${uid}`, rest);
+        cleared++;
+      }
+    }
+    res.json({ success: true, cleared, message: `Cleared roll numbers for ${cleared} users` });
+  } catch (err) {
+    console.error('[RollNo] Clear error:', err);
+    res.status(500).json({ error: 'Failed to clear roll numbers' });
+  }
+});
+
 // ==================== SUPPLY ALERTS ====================
 app.get('/api/supply-alerts', async (req, res) => {
   try {
