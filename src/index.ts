@@ -1547,8 +1547,12 @@ app.post('/api/chat/channels/:id/messages', async (req, res) => {
 });
 
 // ==================== GRADES ENTRY ====================
-app.post('/api/grades/enter', async (req, res) => {
+app.post('/api/grades/enter', authMiddleware, async (req, res) => {
   try {
+    const requester = (req as any).user;
+    if (!['admin', 'teacher', 'principal'].includes(requester?.role)) {
+      return res.status(403).json({ error: 'Only teachers can enter grades' });
+    }
     const { studentId, subject, grade, marks } = req.body;
     const existing = await getData(`grades/${studentId}`);
     const records = existing ? Object.values(existing) : [];

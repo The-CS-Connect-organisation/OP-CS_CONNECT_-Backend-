@@ -4,7 +4,12 @@ import jwt from 'jsonwebtoken';
 
 const router = Router();
 
-const JWT_SECRET: string = process.env.JWT_SECRET || 'eduvault-dev-secret';
+function getJwtSecret(): string {
+  return process.env.JWT_SECRET || (() => {
+    console.warn('[talent-market] JWT_SECRET not set, tokens will fail');
+    return 'eduvault-fallback-';
+  })();
+}
 
 // --- Auth Middleware ---
 function authMiddleware(req: any, res: any, next: any) {
@@ -14,7 +19,7 @@ function authMiddleware(req: any, res: any, next: any) {
   }
   try {
     const token = authHeader.slice(7);
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, getJwtSecret()) as any;
     req.user = decoded;
     next();
   } catch {
