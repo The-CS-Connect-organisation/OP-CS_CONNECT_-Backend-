@@ -3144,24 +3144,6 @@ app.put('/api/lost-found/:id/archive', async (req, res) => {
   catch (e) { res.status(500).json({ error: 'Failed to archive item' }); }
 });
 
-// ============ MISSING ENDPOINTS: Skip Bus ============
-app.get('/api/skip-bus', async (_req, res) => {
-  try { const data = await getData('skipBusRequests'); res.json(data ? Object.values(data) : []); }
-  catch (e) { res.status(500).json({ error: 'Failed to fetch skip bus requests' }); }
-});
-app.post('/api/skip-bus', async (req, res) => {
-  try { const r = { id: id('sb'), ...req.body, status: 'pending', createdAt: new Date().toISOString() }; await setData(`skipBusRequests/${r.id}`, r); res.status(201).json(r); }
-  catch (e) { res.status(500).json({ error: 'Failed to create request' }); }
-});
-app.put('/api/skip-bus/:id/approve', async (req, res) => {
-  try { const r = await getData(`skipBusRequests/${req.params.id}`); if (!r) return res.status(404).json({ error: 'Not found' }); r.status = 'approved'; r.approvedAt = new Date().toISOString(); await setData(`skipBusRequests/${req.params.id}`, r); res.json(r); }
-  catch (e) { res.status(500).json({ error: 'Failed to approve' }); }
-});
-app.put('/api/skip-bus/:id/reject', async (req, res) => {
-  try { const r = await getData(`skipBusRequests/${req.params.id}`); if (!r) return res.status(404).json({ error: 'Not found' }); r.status = 'rejected'; r.rejectedAt = new Date().toISOString(); await setData(`skipBusRequests/${req.params.id}`, r); res.json(r); }
-  catch (e) { res.status(500).json({ error: 'Failed to reject' }); }
-});
-
 // ============ MISSING ENDPOINTS: IT Helpdesk ============
 app.get('/api/helpdesk', async (_req, res) => {
   try { const data = await getData('helpdeskTickets'); res.json(data ? Object.values(data) : []); }
