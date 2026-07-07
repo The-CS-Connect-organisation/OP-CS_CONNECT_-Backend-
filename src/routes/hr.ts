@@ -6,9 +6,20 @@ const router = Router();
 // --- Staff Directory (Phase 2) ---
 router.get('/staff', async (req, res) => {
   try {
-    const users = await listData('users');
+    const users = await listData('users') || [];
+    const profiles = await listData('staffProfiles') || [];
     const { department, position } = req.query;
-    let staff = users.filter((u: any) => ['teacher', 'admin', 'coordinator', 'manager', 'driver', 'librarian'].includes(u.role));
+    let staff = [
+      ...users.filter((u: any) => ['teacher', 'admin', 'coordinator', 'manager', 'driver', 'librarian'].includes(u.role)),
+      ...profiles,
+    ];
+    const seen = new Set();
+    staff = staff.filter((s: any) => {
+      const key = s.id || s.employeeId;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
     if (department) staff = staff.filter((s: any) => s.department === department);
     if (position) staff = staff.filter((s: any) => s.position === position);
     res.json(staff);
@@ -17,12 +28,22 @@ router.get('/staff', async (req, res) => {
   }
 });
 
-router.put('/staff/:id/profile', async (req, res) => {
+router.post('/staff', async (req, res) => {
   try {
-    const existing = await getData(`users/${req.params.id}`);
+    const newStaff = { id: id('stf'), ...req.body, createdAt: new Date().toISOString() };
+    await setData(`staffProfiles/${newStaff.id}`, newStaff);
+    res.status(201).json(newStaff);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to create staff profile' });
+  }
+});
+
+router.put('/staff/:id', async (req, res) => {
+  try {
+    const existing = await getData(`staffProfiles/${req.params.id}`) || await getData(`users/${req.params.id}`);
     if (!existing) return res.status(404).json({ error: 'Staff not found' });
     const updated = { ...existing, ...req.body, updatedAt: new Date().toISOString() };
-    await setData(`users/${req.params.id}`, updated);
+    await setData(`staffProfiles/${req.params.id}`, updated);
     res.json(updated);
   } catch (e) {
     res.status(500).json({ error: 'Failed to update staff profile' });
