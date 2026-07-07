@@ -890,6 +890,20 @@ app.get('/api/assignments', async (req, res) => {
       assignments = assignments.filter((a: any) => a.teacherId === requesterId);
     }
     
+    // Student: only assignments from sections they belong to
+    if (requester?.role === 'student') {
+      const sectionsData = await getData('sections') as any;
+      const studentSections = sectionsData
+        ? Object.values(sectionsData).filter((s: any) => s.memberIds?.includes(requesterId))
+        : [];
+      const sectionIds = new Set(studentSections.map((s: any) => s.id));
+      assignments = assignments.filter((a: any) => {
+        if (a.sectionId) return sectionIds.has(a.sectionId);
+        if (requester?.class) return a.class === requester.class;
+        return true;
+      });
+    }
+    
     if (className) assignments = assignments.filter((a: any) => a.class === className);
     if (subjectId) assignments = assignments.filter((a: any) => a.subjectId === subjectId);
     if (studentId) {
@@ -931,6 +945,15 @@ app.post('/api/assignments', async (req, res) => {
     if (!title || !description || !className || !subject || !dueDate) {
       return res.status(400).json({ error: 'Missing required fields: title, description, class, subject, dueDate' });
     }
+    // Auto-attach teacher's sectionId
+    let sectionId = '';
+    if (requester?.role === 'teacher') {
+      const sectionsData = await getData('sections') as any;
+      const teacherSection = sectionsData
+        ? Object.values(sectionsData).find((s: any) => s.teacherId === requesterId)
+        : null;
+      sectionId = teacherSection?.id || '';
+    }
     const newAssignment = {
       id: `a${Date.now()}`,
       title,
@@ -941,6 +964,7 @@ app.post('/api/assignments', async (req, res) => {
       points: parseInt(reqPoints) || 100,
       teacherId: requesterId,
       teacherName: requester.name,
+      sectionId,
       published: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
