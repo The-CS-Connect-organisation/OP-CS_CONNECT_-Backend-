@@ -51,7 +51,7 @@ const ALLOWED_ORIGINS_LIST = (process.env.CORS_ORIGIN || '')
   ? (process.env.CORS_ORIGIN || '').split(',').filter(Boolean)
   : ['http://localhost:5173', 'http://localhost:3000', 'https://the-cs-connect-organisation.github.io'];
 const io = new SocketIOServer(server, {
-  cors: { origin: ALLOWED_ORIGINS_LIST, methods: ['GET', 'POST'] }
+  cors: { origin: ALLOWED_ORIGINS_LIST, methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] }
 });
 
 // Active bus GPS locations (busId -> { lat, lng, timestamp })
@@ -121,7 +121,7 @@ const JWT_SECRET: string = process.env.JWT_SECRET || (() => {
 
 app.use(cors({
   origin: ALLOWED_ORIGINS_LIST,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
   credentials: true,
 }));
