@@ -314,4 +314,28 @@ router.post('/:id/publish', async (req: Request, res: Response) => {
   }
 });
 
+// DELETE /api/assignments (admin only — clear all seeded assignments)
+router.delete('/', async (req: Request, res: Response) => {
+  try {
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) {
+      return res.status(401).json({ error: 'Unauthorized - User ID required' });
+    }
+    const requester = await getData(`users/${requesterId}`);
+    if (requester?.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden - Admin only' });
+    }
+    const existing = await listData('assignments');
+    if (existing && existing.length > 0) {
+      for (const a of existing) {
+        await removeData(`assignments/${a.id}`);
+      }
+    }
+    res.json({ success: true, message: `Cleared ${existing?.length || 0} assignments` });
+  } catch (err) {
+    console.error('[Assignments] Clear all error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

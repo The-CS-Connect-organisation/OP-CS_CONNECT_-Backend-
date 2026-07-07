@@ -319,17 +319,7 @@ const buildSeedData = () => ({
     { id: "c6", name: "Debate Society", description: "Public speaking, argumentation, and competitive debate", members: ["u2", "u4"], lead: "u4", leadName: "Ananya Singh", avatar: "https://randomuser.me/api/portraits/women/53.jpg", category: "Academic", meetingDay: "Wednesday", meetingTime: "4:30 PM", posts: [] },
     { id: "c7", name: "Art Studio", description: "Painting, sculpture, and digital art creation", members: ["u1", "u2", "u4"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Arts", meetingDay: "Thursday", meetingTime: "3:00 PM", posts: [] },
     { id: "c8", name: "Robotics Club", description: "Build and program robots for competitions", members: ["u1", "u3"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Technology", meetingDay: "Friday", meetingTime: "4:00 PM", posts: [] }
-  ]),
-  assignments: toObj([
-    { id: "a1", title: "Quadratic Equations", subjectId: "sub1", subject: "Mathematics", class: "10-A", dueDate: "2026-05-05", published: true, description: "Solve 20 quadratic equations", points: 50, teacherId: "u5", teacherName: "Mr. Rajesh Gupta", createdAt: "2026-04-28T10:00:00Z", updatedAt: "2026-04-28T10:00:00Z", submissions: [] },
-    { id: "a2", title: "Newton's Laws Essay", subjectId: "sub2", subject: "Physics", class: "10-A", dueDate: "2026-05-10", published: true, description: "Write an essay on Newton's three laws", points: 30, teacherId: "u5", teacherName: "Mr. Rajesh Gupta", createdAt: "2026-04-29T10:00:00Z", updatedAt: "2026-04-29T10:00:00Z", submissions: [] },
-    { id: "a3", title: "Organic Chemistry Basics", subjectId: "sub3", subject: "Chemistry", class: "10-A", dueDate: "2026-05-12", published: true, description: "Complete the worksheet", points: 40, teacherId: "u5", teacherName: "Mr. Rajesh Gupta", createdAt: "2026-04-30T10:00:00Z", updatedAt: "2026-04-30T10:00:00Z", submissions: [] },
-    { id: "a4", title: "Essay: Climate Change", subjectId: "sub4", subject: "English", class: "10-A", dueDate: "2026-05-15", published: true, description: "Write a 500-word essay", points: 25, teacherId: "u5", teacherName: "Mr. Rajesh Gupta", createdAt: "2026-05-01T10:00:00Z", updatedAt: "2026-05-01T10:00:00Z", submissions: [] },
-    { id: "a5", title: "HTML Basics Project", subjectId: "sub5", subject: "CS", class: "10-A", dueDate: "2026-05-08", published: true, description: "Create a personal webpage", points: 50, teacherId: "u5", teacherName: "Mr. Rajesh Gupta", createdAt: "2026-05-02T10:00:00Z", updatedAt: "2026-05-02T10:00:00Z", submissions: [] },
-    { id: "a6", title: "Quadratic Equations", subjectId: "sub1", subject: "Mathematics", class: "10-B", dueDate: "2026-05-05", published: true, description: "Solve 20 quadratic equations", points: 50, teacherId: "u5", teacherName: "Mr. Rajesh Gupta", createdAt: "2026-04-28T10:00:00Z", updatedAt: "2026-04-28T10:00:00Z", submissions: [] },
-    { id: "a7", title: "Shakespeare Analysis", subjectId: "sub4", subject: "English", class: "10-B", dueDate: "2026-05-10", published: true, description: "Analyze Hamlet's soliloquy", points: 40, teacherId: "u6", teacherName: "Dr. Sunita Verma", createdAt: "2026-04-29T10:00:00Z", updatedAt: "2026-04-29T10:00:00Z", submissions: [{ studentId: "u3", content: "Analysis submitted", scoredMarks: 35, feedback: "Well written", submittedAt: "2026-05-09T16:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 38, feedback: "Excellent analysis", submittedAt: "2026-05-09T14:00:00Z" }] },
-    { id: "a8", title: "Trigonometry Problems", subjectId: "sub1", subject: "Mathematics", class: "10-B", dueDate: "2026-05-08", published: true, description: "Solve trigonometric identities", points: 50, teacherId: "u5", teacherName: "Mr. Rajesh Gupta", createdAt: "2026-05-01T10:00:00Z", updatedAt: "2026-05-01T10:00:00Z", submissions: [{ studentId: "u3", content: "Completed", scoredMarks: 40, feedback: "Good work", submittedAt: "2026-05-07T12:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 46, feedback: "Excellent", submittedAt: "2026-05-07T11:00:00Z" }] }
-  ]),
+  ]  ),
   grades: {
     u1: [
       { subject: "Math", overall: 92, marks: 92, midTerm: 45, finalTerm: 47, grade: "A", trend: "up" },
@@ -590,6 +580,12 @@ app.all('/api/seed', authMiddleware, async (req, res) => {
     const force = req.query.force === 'true';
     if (force) {
       console.log('[Seed] Force reseeding...');
+      const existingAssignments = await listData('assignments');
+      if (existingAssignments && existingAssignments.length > 0) {
+        for (const a of existingAssignments) {
+          await removeData(`assignments/${a.id}`);
+        }
+      }
       const data = buildSeedData();
       const users = data.users as any;
       if (users) {
@@ -601,7 +597,7 @@ app.all('/api/seed', authMiddleware, async (req, res) => {
         }
       }
       await setData('/', data);
-      return res.json({ success: true, message: 'Database force-seeded' });
+      return res.json({ success: true, message: 'Database force-seeded (assignments cleared)' });
     }
     const existing = await getData('users');
     if (existing && Object.keys(existing).length > 0) {
