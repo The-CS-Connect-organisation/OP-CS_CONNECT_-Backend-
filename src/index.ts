@@ -1747,12 +1747,12 @@ app.delete('/api/roll-numbers', async (req, res) => {
     if (!requester || !['admin', 'manager'].includes(requester.role)) {
       return res.status(403).json({ error: 'Forbidden' });
     }
-    const users = await getData('users');
+    const users = await getData('users') as Record<string, any> | null;
     if (!users) return res.json({ success: true, cleared: 0 });
     let cleared = 0;
-    for (const [uid, u] of Object.entries(users as any)) {
-      if (u.rollNo) {
-        const { rollNo, ...rest } = u;
+    for (const uid of Object.keys(users)) {
+      if (users[uid].rollNo) {
+        const { rollNo, ...rest } = users[uid];
         await setData(`users/${uid}`, rest);
         cleared++;
       }
