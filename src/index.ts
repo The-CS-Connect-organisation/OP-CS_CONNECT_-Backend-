@@ -994,6 +994,28 @@ app.put('/api/assignments/:id', async (req, res) => {
   }
 });
 
+// DELETE /api/assignments — admin only, clear all assignments
+app.delete('/api/assignments', async (req, res) => {
+  try {
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
+    const requester = await getData(`users/${requesterId}`);
+    if (!requester || requester.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden - Admin only' });
+    }
+    const existing = await listData('assignments');
+    if (existing && existing.length > 0) {
+      for (const a of existing) {
+        await removeData(`assignments/${a.id}`);
+      }
+    }
+    res.json({ success: true, message: `Cleared ${existing?.length || 0} assignments` });
+  } catch (err) {
+    console.error('[Assignments] Clear all error:', err);
+    res.status(500).json({ error: 'Failed to clear assignments' });
+  }
+});
+
 app.delete('/api/assignments/:id', async (req, res) => {
   try {
     const requesterId = req.headers['x-user-id'] as string;
