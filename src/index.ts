@@ -895,7 +895,7 @@ app.get('/api/assignments', async (req, res) => {
     if (requester?.role === 'student') {
       const sectionsData = await getData('sections') as any;
       const studentSections = sectionsData
-        ? Object.values(sectionsData).filter((s: any) => s.memberIds?.includes(requesterId))
+        ? (Object.values(sectionsData) as any[]).filter((s: any) => s.memberIds?.includes(requesterId))
         : [];
       const sectionIds = new Set(studentSections.map((s: any) => s.id));
       assignments = assignments.filter((a: any) => {
@@ -951,7 +951,7 @@ app.post('/api/assignments', async (req, res) => {
     if (requester?.role === 'teacher') {
       const sectionsData = await getData('sections') as any;
       const teacherSection = sectionsData
-        ? Object.values(sectionsData).find((s: any) => s.teacherId === requesterId)
+        ? (Object.values(sectionsData) as any[]).find((s: any) => s.teacherId === requesterId)
         : null;
       sectionId = teacherSection?.id || '';
     }
