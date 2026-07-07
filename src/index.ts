@@ -262,8 +262,8 @@ const buildSeedData = () => ({
     { id: "u2", name: "Priya Patel", email: "priya@eduvault.ai", password: "demo1234", role: "student", class: "10-A", subjects: ["Math", "Physics", "Chemistry", "English", "Biology"], gpa: 3.9, attendance: 96, feesPaid: true, routeId: "r1", avatar: "PP", avatarUrl: "https://randomuser.me/api/portraits/women/68.jpg", phone: "+91-9876543220", address: "15 Garden Colony, New Delhi", dateOfBirth: "2008-03-22", admissionNo: "ADM-2024-002", rollNo: "1002", bloodGroup: "A+", aadharNo: "2345-6789-0123", penNo: "PEN-002", apaarId: "APAAR-002", religion: "Hindu", nationality: "Indian", schoolHouse: "Green House", houseLocation: "Delhi NCR", fatherName: "Mr. Amit Patel", fatherPhone: "+91-9876543221", motherName: "Mrs. Neha Patel", motherPhone: "+91-9876543222", parentId: "u11" },
     { id: "u3", name: "Rohan Kumar", email: "rohan@eduvault.ai", password: "demo1234", role: "student", class: "10-B", subjects: ["Math", "Physics", "Chemistry", "English", "CS"], gpa: 3.5, attendance: 85, feesPaid: false, routeId: "r2", avatar: "RK", avatarUrl: "https://randomuser.me/api/portraits/men/51.jpg", phone: "+91-9876543230", address: "8 Sunshine Apartments, New Delhi", dateOfBirth: "2008-11-08", admissionNo: "ADM-2024-003", rollNo: "1003", bloodGroup: "B+", aadharNo: "3456-7890-1234", penNo: "PEN-003", apaarId: "APAAR-003", religion: "Hindu", nationality: "Indian", schoolHouse: "Red House", houseLocation: "Delhi NCR", fatherName: "Mr. Suresh Kumar", fatherPhone: "+91-9876543231", motherName: "Mrs. Poonam Kumar", motherPhone: "+91-9876543232" },
     { id: "u4", name: "Ananya Singh", email: "ananya@eduvault.ai", password: "demo1234", role: "student", class: "10-B", subjects: ["Math", "Physics", "Chemistry", "English", "Biology"], gpa: 3.7, attendance: 89, feesPaid: true, routeId: "r2", avatar: "AS", avatarUrl: "https://randomuser.me/api/portraits/women/53.jpg", phone: "+91-9876543240", address: "27 Royal Enclave, New Delhi", dateOfBirth: "2008-07-19", admissionNo: "ADM-2024-004", rollNo: "1004", bloodGroup: "AB+", aadharNo: "4567-8901-2345", penNo: "PEN-004", apaarId: "APAAR-004", religion: "Hindu", nationality: "Indian", schoolHouse: "Green House", houseLocation: "Delhi NCR", fatherName: "Mr. Vikram Singh", fatherPhone: "+91-9876543241", motherName: "Mrs. Anita Singh", motherPhone: "+91-9876543242" },
-    { id: "u5", name: "Mr. Rajesh Gupta", email: "rajesh@eduvault.ai", password: "demo1234", role: "teacher", class: "10-A", subjects: ["Math", "Physics"], avatar: "RG", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rajesh" },
-    { id: "u6", name: "Dr. Sunita Verma", email: "sunita@eduvault.ai", password: "demo1234", role: "teacher", class: "10-B", subjects: ["Chemistry", "Biology"], avatar: "SV", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sunita" },
+    { id: "u5", name: "Mr. Rajesh Gupta", email: "rajesh@eduvault.ai", password: "demo1234", role: "teacher", class: "10-A", classes: ["10-A", "10-B"], subjects: ["Math", "Physics"], avatar: "RG", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rajesh" },
+    { id: "u6", name: "Dr. Sunita Verma", email: "sunita@eduvault.ai", password: "demo1234", role: "teacher", class: "10-B", classes: ["10-B"], subjects: ["Chemistry", "Biology"], avatar: "SV", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sunita" },
     { id: "u7", name: "Admin User", email: "admin@eduvault.ai", password: "admin123", role: "admin", avatar: "AU", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" },
     { id: "u8", name: "Mrs. Meera Kapoor", email: "meera@eduvault.ai", password: "demo1234", role: "admin", avatar: "MK", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Meera" },
     { id: "u9", name: "Raju Kumar", email: "raju@eduvault.ai", password: "demo1234", role: "driver", avatar: "RK", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Raju" },
@@ -320,14 +320,14 @@ const buildSeedData = () => ({
     { id: "c8", name: "Robotics Club", description: "Build and program robots for competitions", members: ["u1", "u3"], lead: "u1", leadName: "Aarav Sharma", avatar: "https://randomuser.me/api/portraits/men/32.jpg", category: "Technology", meetingDay: "Friday", meetingTime: "4:00 PM", posts: [] }
   ]),
   assignments: toObj([
-    { id: "a1", title: "Quadratic Equations", subjectId: "sub1", subject: "Mathematics", class: "10-A", dueDate: "2026-05-05", status: "active", description: "Solve 20 quadratic equations", maxMarks: 50, submissions: [] },
-    { id: "a2", title: "Newton's Laws Essay", subjectId: "sub2", subject: "Physics", class: "10-A", dueDate: "2026-05-10", status: "active", description: "Write an essay on Newton's three laws", maxMarks: 30, submissions: [] },
-    { id: "a3", title: "Organic Chemistry Basics", subjectId: "sub3", subject: "Chemistry", class: "10-A", dueDate: "2026-05-12", status: "active", description: "Complete the worksheet", maxMarks: 40, submissions: [] },
-    { id: "a4", title: "Essay: Climate Change", subjectId: "sub4", subject: "English", class: "10-A", dueDate: "2026-05-15", status: "active", description: "Write a 500-word essay", maxMarks: 25, submissions: [] },
-    { id: "a5", title: "HTML Basics Project", subjectId: "sub5", subject: "CS", class: "10-A", dueDate: "2026-05-08", status: "active", description: "Create a personal webpage", maxMarks: 50, submissions: [] },
-    { id: "a6", title: "Quadratic Equations", subjectId: "sub1", subject: "Mathematics", class: "10-B", dueDate: "2026-05-05", status: "active", description: "Solve 20 quadratic equations", maxMarks: 50, submissions: [] },
-    { id: "a7", title: "Shakespeare Analysis", subjectId: "sub4", subject: "English", class: "10-B", dueDate: "2026-05-10", status: "completed", description: "Analyze Hamlet's soliloquy", maxMarks: 40, submissions: [{ studentId: "u3", content: "Analysis submitted", scoredMarks: 35, feedback: "Well written", submittedAt: "2026-05-09T16:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 38, feedback: "Excellent analysis", submittedAt: "2026-05-09T14:00:00Z" }] },
-    { id: "a8", title: "Trigonometry Problems", subjectId: "sub1", subject: "Mathematics", class: "10-B", dueDate: "2026-05-08", status: "completed", description: "Solve trigonometric identities", maxMarks: 50, submissions: [{ studentId: "u3", content: "Completed", scoredMarks: 40, feedback: "Good work", submittedAt: "2026-05-07T12:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 46, feedback: "Excellent", submittedAt: "2026-05-07T11:00:00Z" }] }
+    { id: "a1", title: "Quadratic Equations", subjectId: "sub1", subject: "Mathematics", class: "10-A", dueDate: "2026-05-05", published: true, description: "Solve 20 quadratic equations", points: 50, teacherId: "u5", teacherName: "Mr. Rajesh Gupta", createdAt: "2026-04-28T10:00:00Z", updatedAt: "2026-04-28T10:00:00Z", submissions: [] },
+    { id: "a2", title: "Newton's Laws Essay", subjectId: "sub2", subject: "Physics", class: "10-A", dueDate: "2026-05-10", published: true, description: "Write an essay on Newton's three laws", points: 30, teacherId: "u5", teacherName: "Mr. Rajesh Gupta", createdAt: "2026-04-29T10:00:00Z", updatedAt: "2026-04-29T10:00:00Z", submissions: [] },
+    { id: "a3", title: "Organic Chemistry Basics", subjectId: "sub3", subject: "Chemistry", class: "10-A", dueDate: "2026-05-12", published: true, description: "Complete the worksheet", points: 40, teacherId: "u5", teacherName: "Mr. Rajesh Gupta", createdAt: "2026-04-30T10:00:00Z", updatedAt: "2026-04-30T10:00:00Z", submissions: [] },
+    { id: "a4", title: "Essay: Climate Change", subjectId: "sub4", subject: "English", class: "10-A", dueDate: "2026-05-15", published: true, description: "Write a 500-word essay", points: 25, teacherId: "u5", teacherName: "Mr. Rajesh Gupta", createdAt: "2026-05-01T10:00:00Z", updatedAt: "2026-05-01T10:00:00Z", submissions: [] },
+    { id: "a5", title: "HTML Basics Project", subjectId: "sub5", subject: "CS", class: "10-A", dueDate: "2026-05-08", published: true, description: "Create a personal webpage", points: 50, teacherId: "u5", teacherName: "Mr. Rajesh Gupta", createdAt: "2026-05-02T10:00:00Z", updatedAt: "2026-05-02T10:00:00Z", submissions: [] },
+    { id: "a6", title: "Quadratic Equations", subjectId: "sub1", subject: "Mathematics", class: "10-B", dueDate: "2026-05-05", published: true, description: "Solve 20 quadratic equations", points: 50, teacherId: "u5", teacherName: "Mr. Rajesh Gupta", createdAt: "2026-04-28T10:00:00Z", updatedAt: "2026-04-28T10:00:00Z", submissions: [] },
+    { id: "a7", title: "Shakespeare Analysis", subjectId: "sub4", subject: "English", class: "10-B", dueDate: "2026-05-10", published: true, description: "Analyze Hamlet's soliloquy", points: 40, teacherId: "u6", teacherName: "Dr. Sunita Verma", createdAt: "2026-04-29T10:00:00Z", updatedAt: "2026-04-29T10:00:00Z", submissions: [{ studentId: "u3", content: "Analysis submitted", scoredMarks: 35, feedback: "Well written", submittedAt: "2026-05-09T16:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 38, feedback: "Excellent analysis", submittedAt: "2026-05-09T14:00:00Z" }] },
+    { id: "a8", title: "Trigonometry Problems", subjectId: "sub1", subject: "Mathematics", class: "10-B", dueDate: "2026-05-08", published: true, description: "Solve trigonometric identities", points: 50, teacherId: "u5", teacherName: "Mr. Rajesh Gupta", createdAt: "2026-05-01T10:00:00Z", updatedAt: "2026-05-01T10:00:00Z", submissions: [{ studentId: "u3", content: "Completed", scoredMarks: 40, feedback: "Good work", submittedAt: "2026-05-07T12:00:00Z" }, { studentId: "u4", content: "Done", scoredMarks: 46, feedback: "Excellent", submittedAt: "2026-05-07T11:00:00Z" }] }
   ]),
   grades: {
     u1: [
@@ -667,7 +667,11 @@ app.post('/api/users', async (req, res) => {
   try {
     const { password, ...rest } = req.body;
     const hashedPassword = password ? await bcrypt.hash(password, SALT_ROUNDS) : undefined;
-    const newUser = { id: `u${Date.now()}`, ...rest, password: hashedPassword };
+    const newUser: Record<string, any> = { id: `u${Date.now()}`, ...rest, password: hashedPassword };
+    // Auto-set classes array for teachers based on class field
+    if (newUser.role === 'teacher' && newUser.class && !newUser.classes) {
+      newUser.classes = [newUser.class];
+    }
     await setData(`users/${newUser.id}`, newUser);
     res.status(201).json(safeUser(newUser));
   } catch (error) {
@@ -876,8 +880,16 @@ app.get('/api/dashboard/stats', async (req, res) => {
 app.get('/api/assignments', async (req, res) => {
   try {
     const assignmentsData = await getData('assignments');
+    const requesterId = req.headers['x-user-id'] as string;
+    const requester = requesterId ? await getData(`users/${requesterId}`) : null;
     const { class: className, subjectId, studentId } = req.query;
     let assignments = assignmentsData ? Object.values(assignmentsData) : [];
+    
+    // Teacher: only their own assignments
+    if (requester?.role === 'teacher') {
+      assignments = assignments.filter((a: any) => a.teacherId === requesterId);
+    }
+    
     if (className) assignments = assignments.filter((a: any) => a.class === className);
     if (subjectId) assignments = assignments.filter((a: any) => a.subjectId === subjectId);
     if (studentId) {
@@ -909,7 +921,31 @@ app.get('/api/assignments/:id', async (req, res) => {
 
 app.post('/api/assignments', async (req, res) => {
   try {
-    const newAssignment = { id: `a${Date.now()}`, ...req.body, submissions: [] };
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
+    const requester = await getData(`users/${requesterId}`);
+    if (!['admin', 'principal', 'teacher'].includes(requester?.role)) {
+      return res.status(403).json({ error: 'Only teachers can create assignments' });
+    }
+    const { title, description, class: className, subject, dueDate, points: reqPoints } = req.body;
+    if (!title || !description || !className || !subject || !dueDate) {
+      return res.status(400).json({ error: 'Missing required fields: title, description, class, subject, dueDate' });
+    }
+    const newAssignment = {
+      id: `a${Date.now()}`,
+      title,
+      description,
+      class: className,
+      subject,
+      dueDate,
+      points: parseInt(reqPoints) || 100,
+      teacherId: requesterId,
+      teacherName: requester.name,
+      published: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      submissions: []
+    };
     await setData(`assignments/${newAssignment.id}`, newAssignment);
     res.status(201).json(newAssignment);
   } catch (error) {
@@ -919,9 +955,17 @@ app.post('/api/assignments', async (req, res) => {
 
 app.put('/api/assignments/:id', async (req, res) => {
   try {
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
     const assignment = await getData(`assignments/${req.params.id}`);
     if (!assignment) return res.status(404).json({ error: 'Assignment not found' });
-    const updated = { ...assignment, ...req.body };
+    if (assignment.teacherId !== requesterId) {
+      const requester = await getData(`users/${requesterId}`);
+      if (!['admin', 'principal'].includes(requester?.role)) {
+        return res.status(403).json({ error: 'Only the owner can update this assignment' });
+      }
+    }
+    const updated = { ...assignment, ...req.body, updatedAt: new Date().toISOString() };
     await setData(`assignments/${req.params.id}`, updated);
     res.json(updated);
   } catch (error) {
@@ -931,6 +975,16 @@ app.put('/api/assignments/:id', async (req, res) => {
 
 app.delete('/api/assignments/:id', async (req, res) => {
   try {
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
+    const assignment = await getData(`assignments/${req.params.id}`);
+    if (!assignment) return res.status(404).json({ error: 'Assignment not found' });
+    if (assignment.teacherId !== requesterId) {
+      const requester = await getData(`users/${requesterId}`);
+      if (!['admin', 'principal'].includes(requester?.role)) {
+        return res.status(403).json({ error: 'Only the owner can delete this assignment' });
+      }
+    }
     await removeData(`assignments/${req.params.id}`);
     res.json({ success: true });
   } catch (error) {
@@ -940,16 +994,27 @@ app.delete('/api/assignments/:id', async (req, res) => {
 
 app.post('/api/assignments/:id/submit', async (req, res) => {
   try {
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
     const assignment = await getData(`assignments/${req.params.id}`);
     if (!assignment) return res.status(404).json({ error: 'Assignment not found' });
-    const { studentId, content } = req.body;
+    if (!assignment.published) return res.status(400).json({ error: 'Assignment not yet published' });
+    const { content } = req.body;
+    if (!content) return res.status(400).json({ error: 'Submission content is required' });
+    const submitter = await getData(`users/${requesterId}`);
+    if (submitter?.role !== 'student') return res.status(403).json({ error: 'Only students can submit' });
     const submissions = assignment.submissions || [];
-    const existingIdx = submissions.findIndex((s: any) => s.studentId === studentId);
+    const existingIdx = submissions.findIndex((s: any) => s.studentId === requesterId);
     if (existingIdx >= 0) {
-      submissions[existingIdx] = { ...submissions[existingIdx], content, submittedAt: new Date().toISOString() };
-    } else {
-      submissions.push({ studentId, content, submittedAt: new Date().toISOString() });
+      return res.status(409).json({ error: 'Already submitted' });
     }
+    submissions.push({
+      studentId: requesterId,
+      studentName: submitter.name,
+      content,
+      submittedAt: new Date().toISOString(),
+      isLate: new Date() > new Date(assignment.dueDate)
+    });
     await setData(`assignments/${req.params.id}/submissions`, submissions);
     res.json({ ...assignment, submissions });
   } catch (error) {
@@ -971,6 +1036,28 @@ app.post('/api/assignments/:id/grade', async (req, res) => {
     res.json({ ...assignment, submissions });
   } catch (error) {
     res.status(500).json({ error: 'Failed to grade assignment' });
+  }
+});
+
+// POST /api/assignments/:id/publish
+app.post('/api/assignments/:id/publish', async (req, res) => {
+  try {
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
+    const assignment = await getData(`assignments/${req.params.id}`);
+    if (!assignment) return res.status(404).json({ error: 'Assignment not found' });
+    if (assignment.teacherId !== requesterId) {
+      const requester = await getData(`users/${requesterId}`);
+      if (!['admin', 'principal'].includes(requester?.role)) {
+        return res.status(403).json({ error: 'Only the owner can publish this assignment' });
+      }
+    }
+    if (assignment.published) return res.status(400).json({ error: 'Already published' });
+    const published = { ...assignment, published: true, publishedAt: new Date().toISOString() };
+    await setData(`assignments/${req.params.id}`, published);
+    res.json(published);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to publish assignment' });
   }
 });
 

@@ -58,14 +58,17 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
 
 router.post('/signup', authLimiter, async (req: Request, res: Response) => {
   try {
-    const { email, password, name, role, class: className } = req.body;
+    const { email, password, name, role, class: className,
+      subjects, rollNo, admissionNo, phone, address, dateOfBirth,
+      bloodGroup, aadharNo, penNo, apaarId, religion, nationality,
+      schoolHouse, houseLocation, fatherName, fatherPhone, motherName, motherPhone } = req.body;
     const usersData = await getData('users') as any;
     const users = usersData ? Object.values(usersData) : [];
     const existing = users.find((u: any) => u.email === email);
     if (existing) return res.status(400).json({ error: 'User already exists' });
     
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-    const newUser = {
+    const newUser: Record<string, any> = {
       id: `u${Date.now()}`,
       name,
       email,
@@ -75,6 +78,33 @@ router.post('/signup', authLimiter, async (req: Request, res: Response) => {
       avatar: name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
       createdAt: new Date().toISOString()
     };
+
+    // Teacher-specific fields
+    if (role === 'teacher') {
+      if (subjects) newUser.subjects = subjects;
+      if (className) newUser.classes = [className];
+    }
+    // Student-specific fields
+    if (role === 'student') {
+      if (subjects) newUser.subjects = subjects;
+      if (rollNo) newUser.rollNo = rollNo;
+      if (admissionNo) newUser.admissionNo = admissionNo;
+      if (phone) newUser.phone = phone;
+      if (address) newUser.address = address;
+      if (dateOfBirth) newUser.dateOfBirth = dateOfBirth;
+      if (bloodGroup) newUser.bloodGroup = bloodGroup;
+      if (aadharNo) newUser.aadharNo = aadharNo;
+      if (penNo) newUser.penNo = penNo;
+      if (apaarId) newUser.apaarId = apaarId;
+      if (religion) newUser.religion = religion;
+      if (nationality) newUser.nationality = nationality;
+      if (schoolHouse) newUser.schoolHouse = schoolHouse;
+      if (houseLocation) newUser.houseLocation = houseLocation;
+      if (fatherName) newUser.fatherName = fatherName;
+      if (fatherPhone) newUser.fatherPhone = fatherPhone;
+      if (motherName) newUser.motherName = motherName;
+      if (motherPhone) newUser.motherPhone = motherPhone;
+    }
     
     await setData(`users/${newUser.id}`, newUser);
     res.status(201).json({ user: safeUser(newUser), token: signToken(newUser) });
