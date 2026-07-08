@@ -820,6 +820,30 @@ app.get('/api/teachers/:id/classes', async (req, res) => {
   }
 });
 
+// V1 teachers route — returns detailed class info with classTeacherId
+app.get('/api/v1/teachers/:id/classes', async (req, res) => {
+  try {
+    const teacher = await getData(`users/${req.params.id}`);
+    if (!teacher || teacher.role !== 'teacher') return res.status(404).json({ error: 'Teacher not found' });
+    const allClasses = await listData('classes');
+    const teacherClassNames = teacher.classes || [];
+    const result = (allClasses || [])
+      .filter((c: any) => teacherClassNames.includes(c.name))
+      .map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        className: c.name,
+        grade: c.grade,
+        classTeacherId: c.classTeacherId || null,
+        isClassTeacher: c.classTeacherId === req.params.id,
+      }));
+    res.json(result);
+  } catch (error) {
+    console.error('[V1 Teachers] Get classes error:', error);
+    res.status(500).json({ error: 'Failed to fetch teacher classes' });
+  }
+});
+
 // ==================== SUBJECTS ====================
 app.get('/api/subjects', async (req, res) => {
   try {
