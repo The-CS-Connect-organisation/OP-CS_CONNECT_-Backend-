@@ -13,12 +13,15 @@ router.post('/timetable/generate', async (req, res) => {
     const classSubjects = subjects.filter((s: any) => s.classes?.includes(className));
     const classTeachers = teachers.filter((t: any) => t.role === 'teacher' && t.classes?.includes(className));
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-    const periodsPerDay = constraints?.periodsPerDay || 6;
-    const periodDuration = constraints?.periodDuration || 45;
-    const startTime = constraints?.startTime || '8:00';
+    const periodsPerDay = constraints?.periodsPerDay || 8;
+    const periodDuration = constraints?.periodDuration || 40;
+    const startTime = constraints?.startTime || '8:20';
+    const breakAfterPeriod = 3;
+    const snackDuration = 10;
+    const lunchAfterPeriod = 6;
+    const lunchDuration = 30;
     const timetable: any[] = [];
 
-    // Parse start time to minutes
     const [sh, sm] = startTime.split(':').map(Number);
     const startMinutes = sh * 60 + sm;
 
@@ -26,16 +29,15 @@ router.post('/timetable/generate', async (req, res) => {
       const periods: any[] = [];
       let assignedSubjects = [...classSubjects];
       const usedTeachers: Set<string> = new Set();
+      let breakOffset = 0;
       for (let p = 0; p < periodsPerDay; p++) {
-        // Round-robin subject assignment
         const subjIdx = p % assignedSubjects.length;
         const subject = assignedSubjects[subjIdx];
-        // Find teacher for this subject
         const teacher = classTeachers.find((t: any) =>
           t.subjects?.includes(subject.name) && !usedTeachers.has(t.id)
         ) || classTeachers.find((t: any) => t.subjects?.includes(subject.name));
         if (teacher) usedTeachers.add(teacher.id);
-        const periodStart = startMinutes + p * periodDuration;
+        const periodStart = startMinutes + p * periodDuration + breakOffset;
         const periodEnd = periodStart + periodDuration;
         const fmt = (m: number) => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
         periods.push({
@@ -43,6 +45,8 @@ router.post('/timetable/generate', async (req, res) => {
           subject: subject?.name || 'Free', subjectId: subject?.id || '',
           teacher: teacher?.name || '', teacherId: teacher?.id || '',
         });
+        if (p + 1 === breakAfterPeriod) breakOffset += snackDuration;
+        if (p + 1 === lunchAfterPeriod) breakOffset += lunchDuration;
       }
       timetable.push({ day, periods });
     }

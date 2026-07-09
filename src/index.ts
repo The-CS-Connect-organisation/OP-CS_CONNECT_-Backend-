@@ -38,6 +38,7 @@ import authRoutes from './routes/auth';
 import classesRoutes from './routes/classes';
 import sectionsRoutes from './routes/sections';
 import subjectsRoutes from './routes/subjects';
+import csaiRoutes from './routes/csai';
 
 
 dotenv.config();
@@ -231,6 +232,9 @@ app.use('/api/transport', transportRoutes);
 app.use('/api/food-service', foodServiceRoutes);
 app.use('/api/athletics', athleticsRoutes);
 app.use('/api/alumni', alumniRoutes);
+
+// CSAI Timetable Agent
+app.use('/api/cs-ai', csaiRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/circulars', circularRoutes);
 app.use('/api/announcements', announcementRoutes);
@@ -269,22 +273,24 @@ const buildSeedData = () => ({
     { id: "u8", name: "Mrs. Meera Kapoor", email: "meera@eduvault.ai", password: "demo1234", role: "admin", avatar: "MK", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Meera" },
     { id: "u9", name: "Raju Kumar", email: "raju@eduvault.ai", password: "demo1234", role: "driver", avatar: "RK", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Raju" },
     { id: "u10", name: "Mrs. Lakshmi Iyer", email: "lakshmi@eduvault.ai", password: "demo1234", role: "librarian", avatar: "LI", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lakshmi" },
-    { id: "u11", name: "Mrs. Kavita Sharma", email: "parent@eduvault.ai", password: "demo1234", role: "parent", children: ["u1", "u2"], avatar: "KS", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kavita" }
+    { id: "u11", name: "Mrs. Kavita Sharma", email: "parent@eduvault.ai", password: "demo1234", role: "parent", children: ["u1", "u2"], avatar: "KS", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kavita" },
+    { id: "u12", name: "Ms. Priya Kapoor", email: "librarian@eduvault.ai", password: "demo1234", role: "librarian", avatar: "PK", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya" },
+    { id: "u13", name: "Mr. Arjun Nair", email: "manager@eduvault.ai", password: "demo1234", role: "manager", avatar: "AN", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Arjun" }
   ]),
   timetable: {
     "10-A": [
-      { day: "Monday", periods: [{ time: "8:00-8:45", subject: "Math" }, { time: "8:45-9:30", subject: "Physics" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "CS" }] },
-      { day: "Tuesday", periods: [{ time: "8:00-8:45", subject: "English" }, { time: "8:45-9:30", subject: "Math" }, { time: "9:45-10:30", subject: "Physics" }, { time: "10:30-11:15", subject: "Chemistry" }, { time: "11:30-12:15", subject: "CS" }] },
-      { day: "Wednesday", periods: [{ time: "8:00-8:45", subject: "Chemistry" }, { time: "8:45-9:30", subject: "English" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "CS" }, { time: "11:30-12:15", subject: "Physics" }] },
-      { day: "Thursday", periods: [{ time: "8:00-8:45", subject: "Physics" }, { time: "8:45-9:30", subject: "CS" }, { time: "9:45-10:30", subject: "English" }, { time: "10:30-11:15", subject: "Math" }, { time: "11:30-12:15", subject: "Chemistry" }] },
-      { day: "Friday", periods: [{ time: "8:00-8:45", subject: "CS" }, { time: "8:45-9:30", subject: "Chemistry" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "Physics" }, { time: "11:30-12:15", subject: "English" }] }
+      { day: "Monday", periods: [{ time: "08:20-09:00", subject: "Math" }, { time: "09:00-09:40", subject: "Physics" }, { time: "09:40-10:20", subject: "Chemistry" }, { time: "10:30-11:10", subject: "English" }, { time: "11:10-11:50", subject: "CS" }, { time: "11:50-12:30", subject: "Math" }, { time: "13:00-13:40", subject: "Physics" }, { time: "13:40-14:20", subject: "Chemistry" }] },
+      { day: "Tuesday", periods: [{ time: "08:20-09:00", subject: "English" }, { time: "09:00-09:40", subject: "Math" }, { time: "09:40-10:20", subject: "Physics" }, { time: "10:30-11:10", subject: "Chemistry" }, { time: "11:10-11:50", subject: "CS" }, { time: "11:50-12:30", subject: "English" }, { time: "13:00-13:40", subject: "Math" }, { time: "13:40-14:20", subject: "CS" }] },
+      { day: "Wednesday", periods: [{ time: "08:20-09:00", subject: "Chemistry" }, { time: "09:00-09:40", subject: "English" }, { time: "09:40-10:20", subject: "Math" }, { time: "10:30-11:10", subject: "CS" }, { time: "11:10-11:50", subject: "Physics" }, { time: "11:50-12:30", subject: "Chemistry" }, { time: "13:00-13:40", subject: "English" }, { time: "13:40-14:20", subject: "Physics" }] },
+      { day: "Thursday", periods: [{ time: "08:20-09:00", subject: "Physics" }, { time: "09:00-09:40", subject: "CS" }, { time: "09:40-10:20", subject: "English" }, { time: "10:30-11:10", subject: "Math" }, { time: "11:10-11:50", subject: "Chemistry" }, { time: "11:50-12:30", subject: "Physics" }, { time: "13:00-13:40", subject: "CS" }, { time: "13:40-14:20", subject: "Math" }] },
+      { day: "Friday", periods: [{ time: "08:20-09:00", subject: "CS" }, { time: "09:00-09:40", subject: "Chemistry" }, { time: "09:40-10:20", subject: "Math" }, { time: "10:30-11:10", subject: "Physics" }, { time: "11:10-11:50", subject: "English" }, { time: "11:50-12:30", subject: "CS" }, { time: "13:00-13:40", subject: "Math" }, { time: "13:40-14:20", subject: "English" }] }
     ],
     "10-B": [
-      { day: "Monday", periods: [{ time: "8:00-8:45", subject: "Math" }, { time: "8:45-9:30", subject: "Chemistry" }, { time: "9:45-10:30", subject: "English" }, { time: "10:30-11:15", subject: "Physics" }, { time: "11:30-12:15", subject: "Biology" }] },
-      { day: "Tuesday", periods: [{ time: "8:00-8:45", subject: "Biology" }, { time: "8:45-9:30", subject: "Math" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "Physics" }] },
-      { day: "Wednesday", periods: [{ time: "8:00-8:45", subject: "English" }, { time: "8:45-9:30", subject: "Physics" }, { time: "9:45-10:30", subject: "Biology" }, { time: "10:30-11:15", subject: "Math" }, { time: "11:30-12:15", subject: "Chemistry" }] },
-      { day: "Thursday", periods: [{ time: "8:00-8:45", subject: "Chemistry" }, { time: "8:45-9:30", subject: "Biology" }, { time: "9:45-10:30", subject: "Math" }, { time: "10:30-11:15", subject: "English" }, { time: "11:30-12:15", subject: "Physics" }] },
-      { day: "Friday", periods: [{ time: "8:00-8:45", subject: "Physics" }, { time: "8:45-9:30", subject: "English" }, { time: "9:45-10:30", subject: "Chemistry" }, { time: "10:30-11:15", subject: "Biology" }, { time: "11:30-12:15", subject: "Math" }] }
+      { day: "Monday", periods: [{ time: "08:20-09:00", subject: "Math" }, { time: "09:00-09:40", subject: "Chemistry" }, { time: "09:40-10:20", subject: "English" }, { time: "10:30-11:10", subject: "Physics" }, { time: "11:10-11:50", subject: "Biology" }, { time: "11:50-12:30", subject: "Math" }, { time: "13:00-13:40", subject: "Chemistry" }, { time: "13:40-14:20", subject: "English" }] },
+      { day: "Tuesday", periods: [{ time: "08:20-09:00", subject: "Biology" }, { time: "09:00-09:40", subject: "Math" }, { time: "09:40-10:20", subject: "Chemistry" }, { time: "10:30-11:10", subject: "English" }, { time: "11:10-11:50", subject: "Physics" }, { time: "11:50-12:30", subject: "Biology" }, { time: "13:00-13:40", subject: "Math" }, { time: "13:40-14:20", subject: "Physics" }] },
+      { day: "Wednesday", periods: [{ time: "08:20-09:00", subject: "English" }, { time: "09:00-09:40", subject: "Physics" }, { time: "09:40-10:20", subject: "Biology" }, { time: "10:30-11:10", subject: "Math" }, { time: "11:10-11:50", subject: "Chemistry" }, { time: "11:50-12:30", subject: "English" }, { time: "13:00-13:40", subject: "Biology" }, { time: "13:40-14:20", subject: "Math" }] },
+      { day: "Thursday", periods: [{ time: "08:20-09:00", subject: "Chemistry" }, { time: "09:00-09:40", subject: "Biology" }, { time: "09:40-10:20", subject: "Math" }, { time: "10:30-11:10", subject: "English" }, { time: "11:10-11:50", subject: "Physics" }, { time: "11:50-12:30", subject: "Chemistry" }, { time: "13:00-13:40", subject: "Biology" }, { time: "13:40-14:20", subject: "English" }] },
+      { day: "Friday", periods: [{ time: "08:20-09:00", subject: "Physics" }, { time: "09:00-09:40", subject: "English" }, { time: "09:40-10:20", subject: "Chemistry" }, { time: "10:30-11:10", subject: "Biology" }, { time: "11:10-11:50", subject: "Math" }, { time: "11:50-12:30", subject: "Physics" }, { time: "13:00-13:40", subject: "English" }, { time: "13:40-14:20", subject: "Biology" }] }
     ]
   },
   routes: toObj([
@@ -411,8 +417,8 @@ const buildSeedData = () => ({
     { id: "ap2", name: "Exam Attendance Policy", maxAbsentDays: 0, requireMedicalCert: true, academicYear: "2025-26" }
   ]),
   bellSchedules: toObj([
-    { id: "bs1", name: "Regular Day", startTime: "08:00", endTime: "15:30", periods: 8, periodDuration: 40, breakStart: "10:25", breakDuration: 20, lunchStart: "12:20", lunchDuration: 40 },
-    { id: "bs2", name: "Short Day", startTime: "08:00", endTime: "13:00", periods: 6, periodDuration: 35, breakStart: "10:00", breakDuration: 15, lunchStart: "12:00", lunchDuration: 30 }
+    { id: "bs1", name: "Regular Day", startTime: "08:20", endTime: "15:00", periods: 8, periodDuration: 40, breakStart: "10:20", breakDuration: 10, lunchStart: "12:30", lunchDuration: 30 },
+    { id: "bs2", name: "Short Day", startTime: "08:20", endTime: "13:00", periods: 6, periodDuration: 40, breakStart: "10:20", breakDuration: 10, lunchStart: "12:30", lunchDuration: 30 }
   ]),
   roomBookings: toObj([
     { id: "rb1", room: "Lab 1", date: "2026-06-01", startTime: "09:00", endTime: "10:30", bookedBy: "u5", purpose: "Physics practical", status: "confirmed" },
@@ -553,7 +559,28 @@ async function seedDatabase() {
   console.log('[Seed] Checking if database is populated...');
   const existing = await getData('users');
   if (existing && Object.keys(existing).length > 0) {
-    console.log(`[Seed] Database already has ${Object.keys(existing).length} users — skipping seed.`);
+    console.log(`[Seed] Database already has ${Object.keys(existing).length} users — checking for missing seed users.`);
+    const existingEmails = new Set(Object.values(existing as any).map((u: any) => u.email));
+    const fullSeed = buildSeedData();
+    const missingUsers: any[] = [];
+    for (const key of Object.keys(fullSeed.users)) {
+      const su = fullSeed.users[key];
+      if (!existingEmails.has(su.email)) {
+        if (su.password && !su.password.startsWith('$2')) {
+          su.password = await bcrypt.hash(su.password, SALT_ROUNDS);
+        }
+        missingUsers.push({ key, user: su });
+      }
+    }
+    if (missingUsers.length > 0) {
+      console.log(`[Seed] Adding ${missingUsers.length} missing user(s): ${missingUsers.map(m => m.user.email).join(', ')}`);
+      for (const { key, user } of missingUsers) {
+        await setData(`users/${key}`, user);
+      }
+      console.log('[Seed] Missing users added successfully.');
+    } else {
+      console.log('[Seed] All seed users present — skipping.');
+    }
     return;
   }
   console.log('[Seed] Starting fresh database seed...');
@@ -1131,7 +1158,34 @@ app.post('/api/assignments/:id/publish', async (req, res) => {
 // ==================== TIMETABLE ====================
 app.get('/api/timetable/:class', async (req, res) => {
   try {
-    const raw = await getData(`timetable/${req.params.class}`);
+    const requesterId = req.headers['x-user-id'] as string;
+    const className = req.params.class;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const requester = await getData(`users/${requesterId}`);
+    if (!requester) return res.status(401).json({ error: 'User not found' });
+
+    if (['admin', 'principal'].includes(requester.role)) {
+      // admins can see any timetable
+    } else if (requester.role === 'teacher') {
+      const assigned = await listData('classes');
+      const canAccess = (assigned || []).some((c: any) =>
+        (c.name === className || c.id === className) &&
+        (c.classTeacherId === requesterId || (c.subjects || []).some((s: any) => s.teacherId === requesterId))
+      );
+      if (!canAccess) return res.status(403).json({ error: 'You can only view timetables for your assigned classes' });
+    } else if (requester.role === 'student') {
+      if (requester.class !== className) return res.status(403).json({ error: 'You can only view your own class timetable' });
+    } else if (requester.role === 'parent') {
+      const children = requester.children || [];
+      const childData = await Promise.all(children.map((cId: string) => getData(`users/${cId}`)));
+      const canAccess = childData.some((c: any) => c?.class === className);
+      if (!canAccess) return res.status(403).json({ error: 'You can only view timetables for your children\'s classes' });
+    } else {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const raw = await getData(`timetable/${className}`);
     if (!raw) return res.json([]);
     const arr = Array.isArray(raw) ? raw : [];
     const isFlat = arr.length > 0 && ('subject' in arr[0]);
@@ -1139,8 +1193,8 @@ app.get('/api/timetable/:class', async (req, res) => {
       ? arr
       : arr.flatMap((dayEntry: any) =>
           (dayEntry.periods || []).map((p: any, i: number) => ({
-            id: `${req.params.class}-${dayEntry.day}-${i}`,
-            class: req.params.class,
+            id: `${className}-${dayEntry.day}-${i}`,
+            class: className,
             day: dayEntry.day,
             time: p.time || `${String(8 + i).padStart(2, '0')}:00`,
             subject: p.subject || '',
@@ -1156,7 +1210,27 @@ app.get('/api/timetable/:class', async (req, res) => {
 
 app.post('/api/timetable', async (req, res) => {
   try {
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const requester = await getData(`users/${requesterId}`);
+    if (!requester) return res.status(401).json({ error: 'User not found' });
+
     const { className, schedule } = req.body;
+    if (!className) return res.status(400).json({ error: 'className required' });
+
+    if (['admin', 'principal'].includes(requester.role)) {
+      // allowed
+    } else if (requester.role === 'teacher') {
+      const allClasses = await listData('classes');
+      const isClassTeacher = (allClasses || []).some((c: any) =>
+        (c.name === className || c.id === className) && c.classTeacherId === requesterId
+      );
+      if (!isClassTeacher) return res.status(403).json({ error: 'Only class teachers can modify timetables' });
+    } else {
+      return res.status(403).json({ error: 'Only admins and class teachers can modify timetables' });
+    }
+
     await setData(`timetable/${className}`, schedule);
     res.json({ success: true });
   } catch (error) {
@@ -1931,6 +2005,87 @@ app.post('/api/ai/chat', async (req, res) => {
   }
 });
 
+// POST /api/ai/timetable-suggest — AI-powered timetable customization
+app.post('/api/ai/timetable-suggest', async (req, res) => {
+  const CEREBRAS_API_KEY = process.env.CEREBRAS_API_KEY || process.env.VITE_CEREBRAS_API_KEY || '';
+  if (!CEREBRAS_API_KEY) return res.status(500).json({ error: 'Cerebras API key not configured' });
+
+  const { section, entries = [], subjectTeacherMap = {}, request } = req.body;
+  if (!request) return res.status(400).json({ error: 'User request is required' });
+
+  const periodList = ['08:20', '09:00', '09:40', '10:30', '11:10', '11:50', '13:00', '13:40', '14:20'];
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+  const entriesStr = entries.length
+    ? entries.map((e: any) => `${e.day} ${e.time} — ${e.subject} (${e.teacher}, Room ${e.room || '—'})`).join('\n')
+    : '(empty timetable)';
+
+  const subjectsStr = Object.keys(subjectTeacherMap).length
+    ? Object.entries(subjectTeacherMap).map(([subj, teacher]) => `${subj} → ${teacher}`).join('\n')
+    : '(none assigned)';
+
+  const systemPrompt = `You are a school timetable optimization assistant. You respond ONLY with valid JSON.
+
+Available periods: ${periodList.join(', ')}
+Available days: ${days.join(', ')}
+Breaks: 10:20-10:30 (Snacks), 12:30-13:00 (Lunch)
+
+Current timetable for ${section}:
+${entriesStr}
+
+Subjects & teachers:
+${subjectsStr}
+
+Based on the user's request, suggest timetable changes. Return a JSON object with a "suggestions" array. Each suggestion has:
+- "action": "add" | "remove" | "move" | "replace"
+- "description": human-readable explanation
+- "day": day of week
+- "time": period time
+- "subject": subject name
+- "teacher": teacher name
+- "room": room number
+- For "remove": only day, time are needed to identify the slot
+- For "move": include fromDay, fromTime, day, time
+
+Example:
+{"suggestions":[{"action":"add","description":"Add Computer Science lab on Wednesday 13:00","day":"Wednesday","time":"13:00","subject":"Computer Science","teacher":"Rajesh Kumar","room":"Lab 1"}]}`;
+
+  try {
+    const response = await fetch('https://api.cerebras.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${CEREBRAS_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'llama-4-scout-17b-16e-instruct',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Section: ${section}\n\nUser request: ${request}\n\nReturn only the JSON.` },
+        ],
+        temperature: 0.3,
+        max_tokens: 2048,
+      }),
+    });
+    const data: any = await response.json();
+    const text = data?.choices?.[0]?.message?.content;
+    if (!response.ok || !text) throw new Error(data?.error?.message || 'Cerebras returned no response');
+
+    let suggestions;
+    try {
+      const cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*$/gm, '').trim();
+      suggestions = JSON.parse(cleaned);
+    } catch {
+      throw new Error('Failed to parse AI response as JSON');
+    }
+
+    res.json(suggestions);
+  } catch (error: any) {
+    console.error('[TimetableSuggest] AI error:', error);
+    res.status(500).json({ error: error?.message || 'AI suggestion failed' });
+  }
+});
+
 app.post('/api/ai/transcribe', async (req, res) => {
   try {
     if (!process.env.GROQ_API_KEY) return res.status(500).json({ error: 'Groq API key not configured' });
@@ -2510,7 +2665,20 @@ app.get('/api/parent/grades/:childId', async (req, res) => {
 
 app.get('/api/parent/timetable/:childId', async (req, res) => {
   try {
-    const child = await getData(`users/${req.params.childId}`);
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
+    const requester = await getData(`users/${requesterId}`);
+    if (!requester) return res.status(401).json({ error: 'User not found' });
+
+    const childId = req.params.childId;
+    if (requester.role === 'parent') {
+      const children = requester.children || [];
+      if (!children.includes(childId)) return res.status(403).json({ error: 'You can only view your own children\'s timetables' });
+    } else if (!['admin', 'principal'].includes(requester.role)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const child = await getData(`users/${childId}`);
     const className = child?.class || '10-A';
     const raw = await getData(`timetable/${className}`);
     const arr = Array.isArray(raw) ? raw : [];
@@ -2546,6 +2714,94 @@ app.get('/api/parent/bus/:childId', async (req, res) => {
     res.json({ route: route || null, location: null });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch child bus' });
+  }
+});
+
+// POST /api/parent/link-child — verify student credentials and link to parent
+app.post('/api/parent/link-child', async (req, res) => {
+  try {
+    const parentId = req.headers['x-user-id'] as string;
+    if (!parentId) return res.status(401).json({ error: 'Unauthorized' });
+    const parent = await getData(`users/${parentId}`);
+    if (!parent || parent.role !== 'parent') return res.status(403).json({ error: 'Only parents can link children' });
+
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+
+    const usersData = await getData('users') as any;
+    if (!usersData) return res.status(404).json({ error: 'No users found' });
+
+    const entries = Object.entries(usersData) as [string, any][];
+    const entry = entries.find(([_, u]) => u.email === email);
+    if (!entry) return res.status(404).json({ error: 'Student not found with this email' });
+
+    const [userKey, student] = entry;
+    if (student.role !== 'student') return res.status(400).json({ error: 'This email belongs to a non-student account' });
+
+    let valid = false;
+    if (student.password && student.password.startsWith('$2')) {
+      valid = await bcrypt.compare(password, student.password);
+    } else {
+      valid = password === student.password;
+    }
+    if (!valid) return res.status(401).json({ error: 'Invalid password' });
+
+    if (student.parentId && student.parentId !== parentId) {
+      return res.status(409).json({ error: 'This student is already linked to another parent' });
+    }
+
+    // Link: set parentId on student, add child to parent's children array
+    await setData(`users/${userKey}`, { ...student, parentId });
+    const currentChildren = parent.children || [];
+    if (!currentChildren.includes(student.id)) {
+      currentChildren.push(student.id);
+    }
+    await setData(`users/${parentId}`, { ...parent, children: currentChildren });
+
+    res.json({
+      success: true,
+      child: {
+        id: student.id,
+        name: student.name,
+        class: student.class,
+        email: student.email,
+      },
+      children: currentChildren,
+    });
+  } catch (error) {
+    console.error('[Parent] Link child error:', error);
+    res.status(500).json({ error: 'Failed to link child' });
+  }
+});
+
+// GET /api/parent/children — list all linked children with details
+app.get('/api/parent/children', async (req, res) => {
+  try {
+    const parentId = req.headers['x-user-id'] as string;
+    if (!parentId) return res.status(401).json({ error: 'Unauthorized' });
+    const parent = await getData(`users/${parentId}`);
+    if (!parent || parent.role !== 'parent') return res.status(403).json({ error: 'Forbidden' });
+
+    const childIds = parent.children || [];
+    const children = [];
+    for (const childId of childIds) {
+      const child = await getData(`users/${childId}`);
+      if (child) {
+        children.push({
+          id: child.id,
+          name: child.name,
+          class: child.class,
+          email: child.email,
+          rollNo: child.rollNo,
+          admissionNo: child.admissionNo,
+          avatar: child.avatar,
+        });
+      }
+    }
+    res.json({ success: true, children });
+  } catch (error) {
+    console.error('[Parent] Get children error:', error);
+    res.status(500).json({ error: 'Failed to fetch children' });
   }
 });
 
@@ -3195,7 +3451,33 @@ app.delete('/api/scheduling/bell-schedules/:id', async (req, res) => {
   catch (e) { res.status(500).json({ error: 'Failed to delete bell schedule' }); }
 });
 app.put('/api/scheduling/timetable/:className/:day/:periodIdx', async (req, res) => {
-  try { const timetable = await getData(`timetable/${req.params.className}`) as any[]; if (!timetable) return res.status(404).json({ error: 'Timetable not found' }); const dayEntry = timetable.find((d: any) => d.day === req.params.day); if (!dayEntry) return res.status(404).json({ error: 'Day not found' }); const idx = parseInt(req.params.periodIdx); if (idx < 0 || idx >= dayEntry.periods.length) return res.status(404).json({ error: 'Period not found' }); dayEntry.periods[idx] = { ...dayEntry.periods[idx], ...req.body }; await setData(`timetable/${req.params.className}`, timetable); res.json({ success: true, timetable }); }
+  try {
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
+    const requester = await getData(`users/${requesterId}`);
+    if (!requester) return res.status(401).json({ error: 'User not found' });
+    const className = req.params.className;
+    if (['admin', 'principal'].includes(requester.role)) {
+      // allowed
+    } else if (requester.role === 'teacher') {
+      const allClasses = await listData('classes');
+      const isClassTeacher = (allClasses || []).some((c: any) =>
+        (c.name === className || c.id === className) && c.classTeacherId === requesterId
+      );
+      if (!isClassTeacher) return res.status(403).json({ error: 'Only class teachers can edit timetables' });
+    } else {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    const timetable = await getData(`timetable/${className}`) as any[];
+    if (!timetable) return res.status(404).json({ error: 'Timetable not found' });
+    const dayEntry = timetable.find((d: any) => d.day === req.params.day);
+    if (!dayEntry) return res.status(404).json({ error: 'Day not found' });
+    const idx = parseInt(req.params.periodIdx);
+    if (idx < 0 || idx >= dayEntry.periods.length) return res.status(404).json({ error: 'Period not found' });
+    dayEntry.periods[idx] = { ...dayEntry.periods[idx], ...req.body };
+    await setData(`timetable/${className}`, timetable);
+    res.json({ success: true, timetable });
+  }
   catch (e) { res.status(500).json({ error: 'Failed to update entry' }); }
 });
 
@@ -3301,15 +3583,31 @@ app.post("/api/notes/:id/share", async (req, res) => {
 // ==================== MISSING: Timetable DELETE ====================
 app.delete("/api/timetable/:id", async (req, res) => {
   try {
-    // Parse the id: format is "className-day-periodIndex" (e.g. "10-A-Monday-0")
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
+    const requester = await getData(`users/${requesterId}`);
+    if (!requester) return res.status(401).json({ error: 'User not found' });
+
     const parts = req.params.id.split("-");
-    // className may contain hyphens (e.g. "10-A"), so extract day and periodIndex from the end
     const periodIndex = parseInt(parts[parts.length - 1]);
     const day = parts[parts.length - 2];
     const className = parts.slice(0, parts.length - 2).join("-");
     if (!className || !day || isNaN(periodIndex)) {
       return res.status(400).json({ error: "Invalid timetable entry id" });
     }
+
+    if (['admin', 'principal'].includes(requester.role)) {
+      // allowed
+    } else if (requester.role === 'teacher') {
+      const allClasses = await listData('classes');
+      const isClassTeacher = (allClasses || []).some((c: any) =>
+        (c.name === className || c.id === className) && c.classTeacherId === requesterId
+      );
+      if (!isClassTeacher) return res.status(403).json({ error: 'Only class teachers can delete timetable entries' });
+    } else {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     const timetable = await getData(`timetable/${className}`);
     if (!timetable) return res.status(404).json({ error: "Timetable not found" });
     const arr = Array.isArray(timetable) ? timetable : [];
