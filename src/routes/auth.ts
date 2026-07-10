@@ -170,7 +170,7 @@ router.get('/me', async (req: Request, res: Response) => {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
         const token = authHeader.slice(7);
-        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        const decoded = jwt.verify(token, getJwtSecret()) as any;
         userId = decoded.id;
       } catch { /* fall through */ }
     }

@@ -1277,12 +1277,12 @@ app.get('/api/schools', async (req, res) => {
 // ==================== ROUTES (Transport) ====================
 app.get('/api/routes', async (req, res) => {
   try {
-    const [assignmentsData, usersData] = await Promise.all([getData('busAssignments'), getData('users')]);
+    const [routesData, assignmentsData, usersData] = await Promise.all([getData('routes'), getData('busAssignments'), getData('users')]);
     const users = (usersData || {}) as Record<string, any>;
     const routes = routesData ? Object.values(routesData) as any[] : [];
     const assignments = assignmentsData ? Object.values(assignmentsData) as any[] : [];
     const all = [...routes, ...assignments];
-    const enriched = assignments.map((r: any) => ({
+    const enriched = all.map((r: any) => ({
       ...r,
       onLeave: !!(r?.driverId && users[r.driverId]?.onLeave),
     }));
@@ -2902,7 +2902,7 @@ app.post('/api/parent/link-child', async (req, res) => {
 // POST /api/parent/auto-link — auto-link parent to students via phone number match
 app.post('/api/parent/auto-link', async (req, res) => {
   try {
-    const { parentId, phone, parentType } = req.body;
+    const { parentId, phone, parentType, studentId } = req.body;
     if (!parentId || !phone || !parentType) {
       return res.status(400).json({ error: 'parentId, phone, and parentType are required' });
     }
@@ -2918,13 +2918,15 @@ app.post('/api/parent/auto-link', async (req, res) => {
 
     const linked: { id: string; name: string }[] = [];
     for (const student of users) {
-      if (student.role === 'student' && student[studentField] === phone && !student[idField]) {
-        student[idField] = parentId;
-        const userKey = Object.keys(usersData).find((k: string) => usersData[k].id === student.id);
-        if (userKey) {
-          await setData(`users/${userKey}`, student);
-          linked.push({ id: student.id, name: student.name });
-        }
+      if (student.role !== 'student') continue;
+      if (studentId && student.id !== studentId) continue;
+      if (student[studentField] !== phone) continue;
+      if (student[idField]) continue;
+      student[idField] = parentId;
+      const userKey = Object.keys(usersData).find((k: string) => usersData[k].id === student.id);
+      if (userKey) {
+        await setData(`users/${userKey}`, student);
+        linked.push({ id: student.id, name: student.name });
       }
     }
 
@@ -3315,10 +3317,10 @@ app.get('/api/analytics/coordinator', async (_req, res) => {
 // ==================== BUS ASSIGNMENTS ====================
 app.get('/api/bus/assignments', async (_req, res) => {
   try {
-    const [assignmentsData, usersData] = await Promise.all([getData('busAssignments'), getData('users')]);
+    const [routesData, assignmentsData, usersData] = await Promise.all([getData('routes'), getData('busAssignments'), getData('users')]);
     const users = (usersData || {}) as Record<string, any>;
     const assignments = assignmentsData ? Object.values(assignmentsData) as any[] : [];
-    const enriched = assignments.map((r: any) => ({
+    const enriched = all.map((r: any) => ({
       ...r,
       onLeave: !!(r?.driverId && users[r.driverId]?.onLeave),
     }));
