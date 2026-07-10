@@ -3357,11 +3357,11 @@ app.put('/api/bus/drivers/:driverId/leave', async (req, res) => {
 
 app.post('/api/bus/assignments', async (req, res) => {
   try {
-    const data = await getData('busAssignments') as any;
-    const assignments = data ? Object.values(data) : [];
+    const data = await getData('routes') as any;
+    const routes = data ? Object.values(data) : [];
     const newAss = { id: `ba${Date.now()}`, ...req.body, createdAt: new Date().toISOString() };
-    assignments.push(newAss);
-    await setData('busAssignments', Object.fromEntries(assignments.map((a: any) => [a.id, a])));
+    routes.push(newAss);
+    await setData('routes', Object.fromEntries(routes.map((a: any) => [a.id, a])));
     res.status(201).json(newAss);
   } catch (error) {
     res.status(500).json({ error: 'Failed to create bus assignment' });
