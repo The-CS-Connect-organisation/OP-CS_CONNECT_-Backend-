@@ -3,6 +3,24 @@ import { getData, setData, listData, id } from '../firebase';
 
 const router = Router();
 
+function getRequesterId(req: any): string | null {
+  return (req.headers['x-user-id'] as string) || null;
+}
+
+async function getRequester(req: any) {
+  const id = getRequesterId(req);
+  if (!id) return null;
+  return getData(`users/${id}`);
+}
+
+async function requireAdmin(req: any, res: any): Promise<boolean> {
+  const requester = await getRequester(req);
+  if (!requester) { res.status(401).json({ error: 'Unauthorized' }); return false; }
+  if (requester.role !== 'admin' && requester.role !== 'principal') {
+    res.status(403).json({ error: 'Forbidden: admins only' }); return false;
+  }
+  return true;
+}
 
 router.get('/detailed', async (req, res) => {
   try {
@@ -41,6 +59,7 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
+  if (!(await requireAdmin(req, res))) return;
   try {
     const newClass = { id: id('cls'), ...req.body, createdAt: new Date().toISOString() };
     await setData(`classes/${newClass.id}`, newClass);
@@ -51,6 +70,7 @@ router.post('/', async (req, res) => {
 });
 
 router.patch('/:id', async (req, res) => {
+  if (!(await requireAdmin(req, res))) return;
   try {
     const existing = await getData(`classes/${req.params.id}`);
     if (!existing) return res.status(404).json({ error: 'Not found' });
@@ -63,6 +83,7 @@ router.patch('/:id', async (req, res) => {
 });
 
 router.delete('/:id', async (req, res) => {
+  if (!(await requireAdmin(req, res))) return;
   try {
     await setData(`classes/${req.params.id}`, null);
     res.json({ success: true });

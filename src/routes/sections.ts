@@ -3,6 +3,21 @@ import { getData, setData, listData, id } from '../firebase';
 
 const router = Router();
 
+async function getRequester(req: any) {
+  const id = (req.headers['x-user-id'] as string) || null;
+  if (!id) return null;
+  return getData(`users/${id}`);
+}
+
+async function requireAdmin(req: any, res: any): Promise<boolean> {
+  const requester = await getRequester(req);
+  if (!requester) { res.status(401).json({ error: 'Unauthorized' }); return false; }
+  if (requester.role !== 'admin' && requester.role !== 'principal') {
+    res.status(403).json({ error: 'Forbidden: admins only' }); return false;
+  }
+  return true;
+}
+
 router.get('/', async (req, res) => {
   try {
     let sections = await listData('sections');
@@ -50,6 +65,7 @@ router.get('/:id/members', async (req, res) => {
 
 // POST /sections/:id/members — add a student to section memberIds
 router.post('/:id/members', async (req, res) => {
+  if (!(await requireAdmin(req, res))) return;
   try {
     const { studentId } = req.body;
     if (!studentId) return res.status(400).json({ error: 'studentId is required' });
@@ -67,6 +83,7 @@ router.post('/:id/members', async (req, res) => {
 
 // DELETE /sections/:id/members/:studentId — remove a student from section memberIds
 router.delete('/:id/members/:studentId', async (req, res) => {
+  if (!(await requireAdmin(req, res))) return;
   try {
     const section = await getData(`sections/${req.params.id}`);
     if (!section) return res.status(404).json({ error: 'Section not found' });
@@ -80,6 +97,7 @@ router.delete('/:id/members/:studentId', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
+  if (!(await requireAdmin(req, res))) return;
   try {
     const newSec = { id: id('sec'), ...req.body, createdAt: new Date().toISOString() };
     await setData(`sections/${newSec.id}`, newSec);
@@ -90,6 +108,7 @@ router.post('/', async (req, res) => {
 });
 
 router.patch('/:id', async (req, res) => {
+  if (!(await requireAdmin(req, res))) return;
   try {
     const existing = await getData(`sections/${req.params.id}`);
     if (!existing) return res.status(404).json({ error: 'Not found' });
@@ -102,6 +121,7 @@ router.patch('/:id', async (req, res) => {
 });
 
 router.delete('/:id', async (req, res) => {
+  if (!(await requireAdmin(req, res))) return;
   try {
     await setData(`sections/${req.params.id}`, null);
     res.json({ success: true });

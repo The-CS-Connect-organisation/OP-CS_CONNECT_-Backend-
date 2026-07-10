@@ -1565,8 +1565,28 @@ app.post('/api/question-bank', async (req, res) => {
 });
 
 // ==================== ATTENDANCE MARKING ====================
+function isTeacherAssignedToClass(teacherId: string, className: string, allClasses: any[]): boolean {
+  return (allClasses || []).some((c: any) =>
+    (c.name === className || c.id === className) &&
+    (c.classTeacherId === teacherId || (c.subjects || []).some((s: any) => s.teacherId === teacherId))
+  );
+}
+
 app.post('/api/attendance/mark', async (req, res) => {
   try {
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
+    const requester = await getData(`users/${requesterId}`);
+    if (!requester) return res.status(401).json({ error: 'User not found' });
+    if (requester.role !== 'admin' && requester.role !== 'principal' && requester.role !== 'teacher') {
+      return res.status(403).json({ error: 'Only admins and teachers can mark attendance' });
+    }
+    if (requester.role === 'teacher') {
+      const allClasses = await listData('classes');
+      if (!isTeacherAssignedToClass(requesterId, req.body.class, allClasses)) {
+        return res.status(403).json({ error: 'You can only mark attendance for your assigned classes' });
+      }
+    }
     const { class: className, date, entries } = req.body;
     if (!className || !date || !entries) return res.status(400).json({ error: 'Missing required fields' });
     for (const entry of entries) {
@@ -1588,7 +1608,20 @@ app.post('/api/attendance/mark', async (req, res) => {
 
 app.get('/api/attendance/class/:class', async (req, res) => {
   try {
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
+    const requester = await getData(`users/${requesterId}`);
+    if (!requester) return res.status(401).json({ error: 'User not found' });
     const className = req.params.class;
+    if (requester.role === 'student' && requester.class !== className) {
+      return res.status(403).json({ error: 'You can only view your own class attendance' });
+    }
+    if (requester.role === 'teacher') {
+      const allClasses = await listData('classes');
+      if (!isTeacherAssignedToClass(requesterId, className, allClasses)) {
+        return res.status(403).json({ error: 'You can only view attendance for your assigned classes' });
+      }
+    }
     const date = req.query.date as string;
     const usersData = await getData('users') as any;
     const students = usersData ? Object.values(usersData).filter((u: any) => u.role === 'student' && u.class === className) : [];
