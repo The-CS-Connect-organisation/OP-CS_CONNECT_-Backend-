@@ -5,8 +5,11 @@ import rateLimit from 'express-rate-limit';
 import { getData, setData, removeData, safeUser } from '../firebase';
 
 const router = Router();
-const JWT_SECRET: string = process.env.JWT_SECRET || 'eduvault-dev-secret';
 const SALT_ROUNDS = 10;
+
+function getJwtSecret(): string {
+  return process.env.JWT_SECRET || 'eduvault-dev-secret';
+}
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -17,7 +20,7 @@ const authLimiter = rateLimit({
 });
 
 function signToken(user: any): string {
-  return jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ id: user.id, email: user.email, role: user.role }, getJwtSecret(), { expiresIn: '7d' });
 }
 
 router.post('/login', authLimiter, async (req: Request, res: Response) => {

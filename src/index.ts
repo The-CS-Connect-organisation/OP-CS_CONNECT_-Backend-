@@ -113,9 +113,9 @@ io.on('connection', (socket) => {
 
 const JWT_SECRET: string = process.env.JWT_SECRET || (() => {
   if (process.env.NODE_ENV === 'production') {
-    console.warn('WARNING: JWT_SECRET not set in production. Using generated secret - tokens will be invalidated on restart.');
+    console.warn('WARNING: JWT_SECRET not set in production. Set JWT_SECRET environment variable to avoid token invalidation on restart.');
   }
-  return `eduvault-fallback-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return 'eduvault-dev-secret';
 })();
 process.env.JWT_SECRET = JWT_SECRET;
 
@@ -2604,7 +2604,7 @@ app.get('/api/accounts', async (_req, res) => {
 // GET /api/books (catalogue)
 app.get('/api/books', async (_req, res) => {
   try {
-    const books = await getData('libraryCatalogue');
+    const books = await getData('bookCatalogue');
     res.json(books ? Object.values(books) : []);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch books' });

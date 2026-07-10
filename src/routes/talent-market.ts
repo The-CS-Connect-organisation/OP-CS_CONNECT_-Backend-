@@ -5,10 +5,7 @@ import jwt from 'jsonwebtoken';
 const router = Router();
 
 function getJwtSecret(): string {
-  return process.env.JWT_SECRET || (() => {
-    console.warn('[talent-market] JWT_SECRET not set, tokens will fail');
-    return 'eduvault-fallback-';
-  })();
+  return process.env.JWT_SECRET || 'eduvault-dev-secret';
 }
 
 // --- Auth Middleware ---
