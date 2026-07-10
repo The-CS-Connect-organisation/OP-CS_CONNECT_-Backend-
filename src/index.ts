@@ -552,6 +552,52 @@ const buildSeedData = () => ({
   staffPositions: toObj([
     { id: "sp1", title: "Senior Teacher", department: "Science", salaryRange: { min: 60000, max: 90000 }, requirements: ["Ph.D.", "5+ years experience"] },
     { id: "sp2", title: "Professor", department: "Science", salaryRange: { min: 70000, max: 110000 }, requirements: ["Ph.D.", "8+ years experience"] }
+  ]),
+  assignments: toObj([
+    {
+      id: "a1", title: "Quadratic Equations Worksheet",
+      description: "Solve quadratic equations using factorization and the quadratic formula",
+      subject: "Math", subjectId: "sub1", class: "10-A",
+      teacherId: "u5", teacherName: "Mr. Rajesh Gupta",
+      dueDate: "2026-06-15", points: 50,
+      published: true, status: "active",
+      createdAt: "2026-06-01T10:00:00Z",
+      submissions: [
+        { studentId: "u1", content: "Completed all 10 problems. Used both factorization and quadratic formula methods.", submittedAt: "2026-06-10T14:00:00Z", grade: 45, feedback: "Excellent work! Showed clear step-by-step solutions.", gradedAt: "2026-06-12T10:00:00Z", gradedBy: "u5" }
+      ]
+    },
+    {
+      id: "a2", title: "Newton's Laws Lab Report",
+      description: "Write a lab report on the verification of Newton's Second Law of Motion",
+      subject: "Physics", subjectId: "sub2", class: "10-A",
+      teacherId: "u5", teacherName: "Mr. Rajesh Gupta",
+      dueDate: "2026-06-20", points: 100,
+      published: true, status: "active",
+      createdAt: "2026-06-02T10:00:00Z",
+      submissions: []
+    },
+    {
+      id: "a3", title: "Organic Chemistry Notes",
+      description: "Prepare comprehensive notes on Hydrocarbons and Functional Groups",
+      subject: "Chemistry", subjectId: "sub3", class: "10-B",
+      teacherId: "u6", teacherName: "Dr. Sunita Verma",
+      dueDate: "2026-06-18", points: 50,
+      published: true, status: "active",
+      createdAt: "2026-06-03T10:00:00Z",
+      submissions: [
+        { studentId: "u3", content: "Submitted detailed notes covering alkanes, alkenes, alkynes and functional groups.", submittedAt: "2026-06-14T11:00:00Z", grade: 38, feedback: "Good effort! Needs more detail on reaction mechanisms.", gradedAt: "2026-06-16T10:00:00Z", gradedBy: "u6" }
+      ]
+    },
+    {
+      id: "a4", title: "Essay on Climate Change",
+      description: "Write a 1000-word essay on the causes and effects of climate change",
+      subject: "English", subjectId: "sub4", class: "10-A",
+      teacherId: "u6", teacherName: "Dr. Sunita Verma",
+      dueDate: "2026-06-25", points: 100,
+      published: true, status: "active",
+      createdAt: "2026-06-05T10:00:00Z",
+      submissions: []
+    }
   ])
 });
 
