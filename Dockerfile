@@ -11,5 +11,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --production --ignore-scripts
 COPY --from=builder /app/dist ./dist
+COPY server.js ./
 EXPOSE 5000
-CMD ["sh", "-c", "PORT=5000 node dist/index.js"]
+CMD ["node", "server.js"]
