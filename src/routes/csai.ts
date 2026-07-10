@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getData, setData, listData, id, removeData } from '../firebase';
+import { getData, setData, listData, id } from '../firebase';
 
 const router = Router();
 
@@ -8,7 +8,8 @@ const CEREBRAS_API_KEY = () => process.env.CEREBRAS_API_KEY || process.env.VITE_
 const CBSE_PERIODS = ['08:20', '09:00', '09:40', '10:30', '11:10', '11:50', '13:00', '13:40', '14:20'];
 const CBSE_PERIOD_DURATION = 40;
 const CBSE_BREAKS = [{ start: '10:20', end: '10:30', name: 'Snacks' }, { start: '12:30', end: '13:00', name: 'Lunch' }];
-const CBSE_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const CBSE_DAYS_LIST = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 
 function buildClassContext(className: string, tt: any[]): string {
   if (!tt || tt.length === 0) return `${className}: (no timetable yet)`;
@@ -54,7 +55,7 @@ SCHOOL TIMETABLE CONFIGURATION:
 - Number of periods per day: 8
 - Available time slots: ${CBSE_PERIODS.join(', ')}
 - Breaks: ${CBSE_BREAKS.map(b => `${b.start}-${b.end} (${b.name})`).join(', ')}
-- Available days: ${CBSE_DAYS.join(', ')}
+- Available days: ${CBSE_DAYS_LIST.join(', ')}
 
 CURRENT BELL SCHEDULE:
 ${bellStr}
@@ -75,10 +76,10 @@ You MUST respond with a JSON object containing:
 2. "operations": An array of operations to execute. Each operation object can be one of:
 
 For SETTING a full class timetable (replaces entire timetable for a class):
-{ "type": "setTimetable", "className": "10-A", "timetable": [ { "day": "Monday", "periods": [ { "period": 1, "time": "08:20-09:00", "subject": "Math", "teacher": "Teacher Name" }, ... ] }, ... ] }
+{ "type": "setTimetable", "className": "10-A", "timetable": [ { "day": "Monday", "periods": [ { "period": 1, "time": "08:20", "subject": "Math", "teacher": "Teacher Name" }, ... ] }, ... ] }
 
-For ADDING a new entry to an existing timetable:
-{ "type": "addEntry", "data": { "class": "10-A", "day": "Monday", "time": "08:20-09:00", "subject": "Math", "teacher": "Teacher Name", "teacherId": "", "subjectId": "", "room": "", "period": 1 } }
+For ADDING a new entry to an existing timetable (you can also use this to create a timetable for an empty class):
+{ "type": "addEntry", "data": { "class": "10-A", "day": "Monday", "time": "08:20", "subject": "Math", "teacher": "Teacher Name", "teacherId": "", "subjectId": "", "room": "", "period": 1 } }
 
 For UPDATING an entry:
 { "type": "updateEntry", "id": "existing-entry-id", "data": { ... fields to update ... } }
@@ -94,7 +95,7 @@ IMPORTANT RULES:
 - When creating new timetables for multiple classes, analyze available subjects and teachers and distribute them intelligently.
 - For Saturday timetables, you can use fewer periods (e.g., 5-6 periods).
 - When user asks to merge subjects (like "club History and Civics together"), combine their periods into a single longer period.
-- Timings must use format like "08:20-09:00".
+- IMPORTANT: Time must be a single point like "08:20", NOT a range like "08:20-09:00". Use one of these exact times: ${CBSE_PERIODS.join(', ')}.
 - Make sure teacher assignments don't overlap.
 - Be creative but practical with subject distribution.
 - Return ONLY a JSON object, no markdown formatting.`;
@@ -137,24 +138,61 @@ IMPORTANT RULES:
             break;
           }
           case 'addEntry': {
+            const className = op.data?.class || op.className || '';
+            if (!className) {
+              results.push({ type: 'addEntry', status: 'error', error: 'Missing class name in data' });
+              break;
+            }
             const entryId = id('tt');
             const entry = { id: entryId, ...op.data, createdAt: new Date().toISOString() };
-            await setData(`timetable/${entryId}`, entry);
-            results.push({ type: 'addEntry', id: entryId, status: 'done' });
+            // Fetch existing timetable for this class and append
+            const raw = await getData(`timetable/${className}`);
+            const entries = Array.isArray(raw) ? raw : [];
+            entries.push(entry);
+            await setData(`timetable/${className}`, entries);
+            results.push({ type: 'addEntry', id: entryId, className, status: 'done' });
             break;
           }
           case 'updateEntry': {
-            const existing = await getData(`timetable/${op.id}`);
-            if (existing) {
-              const updated = { ...existing, ...op.data, updatedAt: new Date().toISOString() };
-              await setData(`timetable/${op.id}`, updated);
-              results.push({ type: 'updateEntry', id: op.id, status: 'done' });
+            // Scan all class timetables to find entry by id
+            const allTt = await getData('timetable');
+            let found = false;
+            if (allTt && typeof allTt === 'object') {
+              for (const [key, classEntries] of Object.entries(allTt)) {
+                if (Array.isArray(classEntries)) {
+                  const idx = classEntries.findIndex((e: any) => e.id === op.id);
+                  if (idx !== -1) {
+                    classEntries[idx] = { ...classEntries[idx], ...op.data, updatedAt: new Date().toISOString() };
+                    await setData(`timetable/${key}`, classEntries);
+                    found = true;
+                    results.push({ type: 'updateEntry', id: op.id, className: key, status: 'done' });
+                    break;
+                  }
+                }
+              }
             }
+            if (!found) results.push({ type: 'updateEntry', id: op.id, status: 'error', error: 'Entry not found' });
             break;
           }
           case 'deleteEntry': {
-            await removeData(`timetable/${op.id}`);
-            results.push({ type: 'deleteEntry', id: op.id, status: 'done' });
+            // Scan all class timetables to find entry by id
+            const allTt2 = await getData('timetable');
+            let found2 = false;
+            if (allTt2 && typeof allTt2 === 'object') {
+              for (const [key, classEntries] of Object.entries(allTt2)) {
+                if (Array.isArray(classEntries)) {
+                  const idx = classEntries.findIndex((e: any) => e.id === op.id);
+                  if (idx !== -1) {
+                    classEntries.splice(idx, 1);
+                    await setData(`timetable/${key}`, classEntries);
+                    found2 = true;
+                    results.push({ type: 'deleteEntry', id: op.id, className: key, status: 'done' });
+                    break;
+                  }
+                }
+              }
+            }
+            if (!found2) results.push({ type: 'deleteEntry', id: op.id, status: 'error', error: 'Entry not found' });
             break;
           }
           case 'updateBellSchedule': {

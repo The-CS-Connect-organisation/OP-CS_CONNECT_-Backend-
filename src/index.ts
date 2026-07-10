@@ -1277,12 +1277,12 @@ app.get('/api/schools', async (req, res) => {
 // ==================== ROUTES (Transport) ====================
 app.get('/api/routes', async (req, res) => {
   try {
-    const [routesData, assignmentsData, usersData] = await Promise.all([getData('routes'), getData('busAssignments'), getData('users')]);
+    const [assignmentsData, usersData] = await Promise.all([getData('busAssignments'), getData('users')]);
     const users = (usersData || {}) as Record<string, any>;
     const routes = routesData ? Object.values(routesData) as any[] : [];
     const assignments = assignmentsData ? Object.values(assignmentsData) as any[] : [];
     const all = [...routes, ...assignments];
-    const enriched = all.map((r: any) => ({
+    const enriched = assignments.map((r: any) => ({
       ...r,
       onLeave: !!(r?.driverId && users[r.driverId]?.onLeave),
     }));
@@ -2287,11 +2287,19 @@ app.put('/api/books/return/:bookId', async (req, res) => {
   try {
     const books = await getData('borrowedBooks') as any;
     if (!books || !books[req.params.bookId]) return res.status(404).json({ error: 'Book not found' });
-    books[req.params.bookId].status = 'returned';
-    books[req.params.bookId].returnDate = new Date().toISOString().split('T')[0];
+    const borrow = books[req.params.bookId];
+    borrow.status = 'returned';
+    borrow.returnDate = new Date().toISOString().split('T')[0];
     await setData('borrowedBooks', books);
+    const book = await getData(`bookCatalogue/${borrow.bookId}`);
+    if (book) {
+      book.available = Number(book.available) + 1;
+      await setData(`bookCatalogue/${borrow.bookId}/available`, book.available);
+    }
     res.json({ success: true });
-  } catch (error) { res.status(500).json({ error: 'Failed to return book' }); }
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to return book' });
+  }
 });
 
 // ==================== ACCOLADES ====================
@@ -3307,12 +3315,10 @@ app.get('/api/analytics/coordinator', async (_req, res) => {
 // ==================== BUS ASSIGNMENTS ====================
 app.get('/api/bus/assignments', async (_req, res) => {
   try {
-    const [routesData, assignmentsData, usersData] = await Promise.all([getData('routes'), getData('busAssignments'), getData('users')]);
+    const [assignmentsData, usersData] = await Promise.all([getData('busAssignments'), getData('users')]);
     const users = (usersData || {}) as Record<string, any>;
-    const routes = routesData ? Object.values(routesData) as any[] : [];
     const assignments = assignmentsData ? Object.values(assignmentsData) as any[] : [];
-    const all = [...routes, ...assignments];
-    const enriched = all.map((r: any) => ({
+    const enriched = assignments.map((r: any) => ({
       ...r,
       onLeave: !!(r?.driverId && users[r.driverId]?.onLeave),
     }));
@@ -3428,12 +3434,26 @@ app.delete('/api/library/catalogue/:id', async (req, res) => {
   catch (e) { res.status(500).json({ error: 'Failed to delete book' }); }
 });
 app.get('/api/library/holds', async (_req, res) => {
-  try { const data = await getData('bookHolds'); const all: any[] = []; if (data) { for (const v of Object.values(data) as any) { const holds = Object.values(v) as any[]; all.push(...holds); } } res.json(all.filter((h: any) => h.status === 'active')); }
-  catch (e) { res.status(500).json({ error: 'Failed to fetch holds' }); }
+  try { const data = await getData('borrowedBooks'); res.json(data ? Object.values(data).filter((b: any) => b.status === 'borrowed') : []); }
+  catch (e) { res.status(500).json({ error: 'Failed to fetch borrowed books' }); }
 });
 app.post('/api/library/holds', async (req, res) => {
-  try { const { bookId, studentId, studentName } = req.body; const book = await getData(`bookCatalogue/${bookId}`); if (!book) return res.status(404).json({ error: 'Book not found' }); const holds = await getData(`bookHolds/${bookId}`); const holdList = holds ? Object.values(holds) : []; if (holdList.some((h: any) => h.studentId === studentId && h.status === 'active')) return res.status(409).json({ error: 'Already have a hold' }); const hold = { id: id('bh'), bookId, studentId, studentName, bookTitle: book.title, status: 'active', placedAt: new Date().toISOString(), position: holdList.filter((h: any) => h.status === 'active').length + 1 }; await setData(`bookHolds/${bookId}/${hold.id}`, hold); await setData(`studentHolds/${studentId}/${hold.id}`, hold); res.status(201).json(hold); }
-  catch (e) { res.status(500).json({ error: 'Failed to place hold' }); }
+  try {
+    const { bookId, studentId, studentName } = req.body;
+    if (!bookId || !studentId || !studentName) return res.status(400).json({ error: 'bookId, studentId, studentName required' });
+    const book = await getData(`bookCatalogue/${bookId}`);
+    if (!book) return res.status(404).json({ error: 'Book not found' });
+    if (Number(book.available) < 1) return res.status(409).json({ error: 'No copies available' });
+    const allBorrowed = await getData('borrowedBooks') as any;
+    const already = allBorrowed ? Object.values(allBorrowed).find((b: any) => b.studentId === studentId && b.bookId === bookId && b.status === 'borrowed') : null;
+    if (already) return res.status(409).json({ error: 'Already borrowed this book' });
+    book.available = Number(book.available) - 1;
+    await setData(`bookCatalogue/${bookId}/available`, book.available);
+    const borrow = { id: id('bb'), bookId, bookTitle: book.title, studentId, studentName, borrowedDate: new Date().toISOString().split('T')[0], dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], status: 'borrowed' };
+    await setData(`borrowedBooks/${borrow.id}`, borrow);
+    res.status(201).json(borrow);
+  }
+  catch (e) { res.status(500).json({ error: 'Failed to borrow book' }); }
 });
 app.get('/api/library/holds/:bookId', async (req, res) => {
   try { const holds = await listData(`bookHolds/${req.params.bookId}`); res.json(holds.filter((h: any) => h.status === 'active').sort((a: any, b: any) => a.position - b.position)); }
