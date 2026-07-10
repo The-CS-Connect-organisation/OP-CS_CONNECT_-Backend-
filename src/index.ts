@@ -1282,7 +1282,7 @@ app.get('/api/routes', async (req, res) => {
     const routes = routesData ? Object.values(routesData) as any[] : [];
     const assignments = assignmentsData ? Object.values(assignmentsData) as any[] : [];
     const all = [...routes, ...assignments];
-    const enriched = assignments.map((r: any) => ({
+    const enriched = all.map((r: any) => ({
       ...r,
       onLeave: !!(r?.driverId && users[r.driverId]?.onLeave),
     }));
@@ -3320,7 +3320,7 @@ app.get('/api/bus/assignments', async (_req, res) => {
     const [routesData, assignmentsData, usersData] = await Promise.all([getData('routes'), getData('busAssignments'), getData('users')]);
     const users = (usersData || {}) as Record<string, any>;
     const assignments = assignmentsData ? Object.values(assignmentsData) as any[] : [];
-    const enriched = all.map((r: any) => ({
+    const enriched = assignments.map((r: any) => ({
       ...r,
       onLeave: !!(r?.driverId && users[r.driverId]?.onLeave),
     }));
