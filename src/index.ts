@@ -271,9 +271,11 @@ const buildSeedData = () => ({
     { id: "u8", name: "Mrs. Meera Kapoor", email: "meera@eduvault.ai", password: "demo1234", role: "admin", avatar: "MK", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Meera" },
     { id: "u9", name: "Raju Kumar", email: "raju@eduvault.ai", password: "demo1234", role: "driver", avatar: "RK", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Raju" },
     { id: "u10", name: "Mrs. Lakshmi Iyer", email: "lakshmi@eduvault.ai", password: "demo1234", role: "librarian", avatar: "LI", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lakshmi" },
-    { id: "u11", name: "Mrs. Kavita Sharma", email: "parent@eduvault.ai", password: "demo1234", role: "parent", children: ["u1", "u2"], avatar: "KS", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kavita" },
+    { id: "u11", name: "Mrs. Kavita Sharma", email: "parent@eduvault.ai", password: "demo1234", role: "parent", parentType: "mother", children: ["u1", "u2"], avatar: "KS", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kavita" },
     { id: "u12", name: "Ms. Priya Kapoor", email: "librarian@eduvault.ai", password: "demo1234", role: "librarian", avatar: "PK", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya" },
-    { id: "u13", name: "Mr. Arjun Nair", email: "manager@eduvault.ai", password: "demo1234", role: "manager", avatar: "AN", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Arjun" }
+    { id: "u13", name: "Mr. Arjun Nair", email: "manager@eduvault.ai", password: "demo1234", role: "manager", avatar: "AN", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Arjun" },
+    { id: "u14", name: "Mr. Raj Sharma", email: "father@eduvault.ai", password: "demo1234", role: "parent", parentType: "father", avatar: "RS", avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Raj" },
+    { id: "u15", name: "Student Not Linked", email: "unlinked@eduvault.ai", password: "demo1234", role: "student", class: "10-A", rollNo: "5", subjects: ["Math", "Physics", "Chemistry", "English", "CS"], gpa: 3.6, attendance: 90, feesPaid: true, avatar: "SN" }
   ]),
   timetable: {
     "10-A": [
@@ -2770,6 +2772,12 @@ app.post('/api/parent/link-child', async (req, res) => {
     const parent = await getData(`users/${parentId}`);
     if (!parent || parent.role !== 'parent') return res.status(403).json({ error: 'Only parents can link children' });
 
+    let parentType = parent.parentType || req.body.parentType;
+    if (!parentType) return res.status(400).json({ error: 'Please specify if you are the father or mother. Set parentType in your profile.' });
+
+    parentType = parentType.toLowerCase();
+    if (!['father', 'mother'].includes(parentType)) return res.status(400).json({ error: 'parentType must be "father" or "mother"' });
+
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
 
@@ -2791,20 +2799,61 @@ app.post('/api/parent/link-child', async (req, res) => {
     }
     if (!valid) return res.status(401).json({ error: 'Invalid password' });
 
-    if (student.parentId && student.parentId !== parentId) {
-      return res.status(409).json({ error: 'This student is already linked to another parent' });
+    // Two-parent enforcement
+    const slotKey = parentType === 'father' ? 'fatherId' : 'motherId';
+    const existingSlot = student[slotKey];
+    const oppositeSlot = parentType === 'father' ? 'motherId' : 'fatherId';
+
+    if (existingSlot) {
+      if (existingSlot === parentId) return res.status(409).json({ error: `You are already linked as this student's ${parentType}` });
+      return res.status(409).json({ error: `This student already has a ${parentType} linked. Only one ${parentType} per student.` });
     }
 
-    // Link: set parentId on student, add child to parent's children array
-    await setData(`users/${userKey}`, { ...student, parentId });
+    // Check if already linked as the other parent type
+    if (student[oppositeSlot] === parentId) return res.status(409).json({ error: `You are already linked as this student's ${oppositeSlot === 'fatherId' ? 'father' : 'mother'}` });
+
+    // Link: set fatherId/motherId on student, add child to parent's children array
+    const updatedStudent = { ...student, [slotKey]: parentId };
+    // Also keep parentId for backward compat
+    if (!student.parentId) updatedStudent.parentId = parentId;
+
+    await setData(`users/${userKey}`, updatedStudent);
     const currentChildren = parent.children || [];
     if (!currentChildren.includes(student.id)) {
       currentChildren.push(student.id);
     }
-    await setData(`users/${parentId}`, { ...parent, children: currentChildren });
+
+    // Save parentType on parent if not already set
+    const parentUpdate: any = { ...parent, children: currentChildren };
+    if (!parent.parentType) parentUpdate.parentType = parentType;
+    await setData(`users/${parentId}`, parentUpdate);
+
+    // Create notifications
+    const notificationId = `n_${Date.now()}`;
+    const notif = {
+      id: notificationId,
+      title: 'Child Connected',
+      message: `You've been connected as ${parentType === 'father' ? 'Father' : 'Mother'} to ${student.name}`,
+      type: 'parent_link',
+      read: false,
+      createdAt: new Date().toISOString(),
+    };
+    await setData(`notifications/${parentId}/${notificationId}`, notif);
+
+    const childNotifId = `n_${Date.now()}_child`;
+    const childNotif = {
+      id: childNotifId,
+      title: 'Parent Connected',
+      message: `${parent.name} has been connected as your ${parentType === 'father' ? 'Father' : 'Mother'}`,
+      type: 'parent_link',
+      read: false,
+      createdAt: new Date().toISOString(),
+    };
+    await setData(`notifications/${student.id}/${childNotifId}`, childNotif);
 
     res.json({
       success: true,
+      parentType,
       child: {
         id: student.id,
         name: student.name,
@@ -2840,13 +2889,69 @@ app.get('/api/parent/children', async (req, res) => {
           rollNo: child.rollNo,
           admissionNo: child.admissionNo,
           avatar: child.avatar,
+          fatherId: child.fatherId || null,
+          motherId: child.motherId || null,
         });
       }
     }
-    res.json({ success: true, children });
+    res.json({ success: true, children, parentType: parent.parentType || null });
   } catch (error) {
     console.error('[Parent] Get children error:', error);
     res.status(500).json({ error: 'Failed to fetch children' });
+  }
+});
+
+// GET /api/students/available — list all students with their parent connection status
+app.get('/api/students/available', async (req, res) => {
+  try {
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
+    const requester = await getData(`users/${requesterId}`);
+    if (!requester || requester.role !== 'parent') return res.status(403).json({ error: 'Forbidden' });
+
+    const usersData = await getData('users') as any;
+    if (!usersData) return res.json([]);
+
+    const students = Object.values(usersData).filter((u: any) => u.role === 'student');
+    const parentChildren = new Set(requester.children || []);
+
+    const result = students.map((s: any) => ({
+      id: s.id,
+      name: s.name,
+      email: s.email,
+      class: s.class,
+      rollNo: s.rollNo,
+      avatar: s.avatar,
+      fatherId: s.fatherId || null,
+      motherId: s.motherId || null,
+      alreadyLinked: parentChildren.has(s.id),
+    }));
+
+    res.json({ success: true, students: result });
+  } catch (error) {
+    console.error('[Students] Available error:', error);
+    res.status(500).json({ error: 'Failed to fetch students' });
+  }
+});
+
+// PUT /api/parent/parent-type — update the parent's type (father/mother)
+app.put('/api/parent/parent-type', async (req, res) => {
+  try {
+    const parentId = req.headers['x-user-id'] as string;
+    if (!parentId) return res.status(401).json({ error: 'Unauthorized' });
+    const parent = await getData(`users/${parentId}`);
+    if (!parent || parent.role !== 'parent') return res.status(403).json({ error: 'Forbidden' });
+
+    const { parentType } = req.body;
+    if (!parentType || !['father', 'mother'].includes(parentType)) {
+      return res.status(400).json({ error: 'parentType must be "father" or "mother"' });
+    }
+
+    await setData(`users/${parentId}/parentType`, parentType);
+    res.json({ success: true, parentType });
+  } catch (error) {
+    console.error('[Parent] Update parent type error:', error);
+    res.status(500).json({ error: 'Failed to update parent type' });
   }
 });
 
