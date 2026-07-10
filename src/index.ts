@@ -1277,11 +1277,12 @@ app.get('/api/schools', async (req, res) => {
 // ==================== ROUTES (Transport) ====================
 app.get('/api/routes', async (req, res) => {
   try {
-    const [routesData, usersData] = await Promise.all([getData('routes'), getData('users')]);
+    const [routesData, assignmentsData, usersData] = await Promise.all([getData('routes'), getData('busAssignments'), getData('users')]);
     const users = (usersData || {}) as Record<string, any>;
     const routes = routesData ? Object.values(routesData) as any[] : [];
-    // Attach the driver's on-leave status so riders can see "no service today".
-    const enriched = routes.map((r: any) => ({
+    const assignments = assignmentsData ? Object.values(assignmentsData) as any[] : [];
+    const all = [...routes, ...assignments];
+    const enriched = all.map((r: any) => ({
       ...r,
       onLeave: !!(r?.driverId && users[r.driverId]?.onLeave),
     }));
@@ -2767,10 +2768,20 @@ app.get('/api/parent/fees/:childId', async (req, res) => {
 
 app.get('/api/parent/bus/:childId', async (req, res) => {
   try {
-    const child = await getData(`users/${req.params.childId}`);
-    if (!child?.routeId) return res.json({ route: null, location: null });
-    const route = await getData(`routes/${child.routeId}`);
-    res.json({ route: route || null, location: null });
+    const childId = req.params.childId;
+    // Try to find the child's route via routeId first
+    const child = await getData(`users/${childId}`);
+    let route = null;
+    if (child?.routeId) {
+      route = await getData(`routes/${child.routeId}`);
+    }
+    // If not found, search both collections for a route/assignment containing this student
+    if (!route) {
+      const [routesData, assignmentsData] = await Promise.all([getData('routes'), getData('busAssignments')]);
+      const allRoutes = [...Object.values(routesData || {}), ...Object.values(assignmentsData || {})];
+      route = allRoutes.find((r: any) => Array.isArray(r.students) && r.students.includes(childId)) || null;
+    }
+    res.json({ route, location: null });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch child bus' });
   }
