@@ -45,12 +45,10 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
-const ALLOWED_ORIGINS_LIST = (process.env.CORS_ORIGIN || '')
-  .split(',')
-  .filter(Boolean)
-  .length > 0
-  ? (process.env.CORS_ORIGIN || '').split(',').filter(Boolean)
-  : ['http://localhost:5173', 'http://localhost:3000', 'https://the-cs-connect-organisation.github.io'];
+const ALLOWED_ORIGINS_LIST = [
+  ...((process.env.CORS_ORIGIN || '').split(',').filter(Boolean)),
+  'http://localhost:5173', 'http://localhost:3000', 'https://the-cs-connect-organisation.github.io'
+];
 const io = new SocketIOServer(server, {
   cors: { origin: ALLOWED_ORIGINS_LIST, methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] }
 });
