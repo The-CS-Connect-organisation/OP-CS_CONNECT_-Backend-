@@ -605,28 +605,7 @@ async function seedDatabase() {
   console.log('[Seed] Checking if database is populated...');
   const existing = await getData('users');
   if (existing && Object.keys(existing).length > 0) {
-    console.log(`[Seed] Database already has ${Object.keys(existing).length} users — checking for missing seed users.`);
-    const existingEmails = new Set(Object.values(existing as any).map((u: any) => u.email));
-    const fullSeed = buildSeedData();
-    const missingUsers: any[] = [];
-    for (const key of Object.keys(fullSeed.users)) {
-      const su = fullSeed.users[key];
-      if (!existingEmails.has(su.email)) {
-        if (su.password && !su.password.startsWith('$2')) {
-          su.password = await bcrypt.hash(su.password, SALT_ROUNDS);
-        }
-        missingUsers.push({ key, user: su });
-      }
-    }
-    if (missingUsers.length > 0) {
-      console.log(`[Seed] Adding ${missingUsers.length} missing user(s): ${missingUsers.map(m => m.user.email).join(', ')}`);
-      for (const { key, user } of missingUsers) {
-        await setData(`users/${key}`, user);
-      }
-      console.log('[Seed] Missing users added successfully.');
-    } else {
-      console.log('[Seed] All seed users present — skipping.');
-    }
+    console.log(`[Seed] Database already has ${Object.keys(existing).length} users — skipping seed.`);
     return;
   }
   console.log('[Seed] Starting fresh database seed...');
@@ -3866,7 +3845,7 @@ server.listen(process.env.PORT || PORT, async () => {
   console.log(`EduVault AI Backend running on port ${actualPort}`);
   console.log(`Firebase RTDB URL: ${process.env.FIREBASE_DATABASE_URL || 'https://schoolsync-op-csconnect-default-rtdb.asia-southeast1.firebasedatabase.app'}`);
   console.log(`API endpoints ready at http://localhost:${PORT}/api/`);
-  // Auto-seed on restart for fresh database
+  // Seed only if database is completely empty (does not restore deleted accounts)
   try {
     await seedDatabase();
   } catch (e) {
