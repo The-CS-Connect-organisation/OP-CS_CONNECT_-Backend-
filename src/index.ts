@@ -3296,10 +3296,12 @@ app.get('/api/analytics/coordinator', async (_req, res) => {
 // ==================== BUS ASSIGNMENTS ====================
 app.get('/api/bus/assignments', async (_req, res) => {
   try {
-    const [routesData, usersData] = await Promise.all([getData('routes'), getData('users')]);
+    const [routesData, assignmentsData, usersData] = await Promise.all([getData('routes'), getData('busAssignments'), getData('users')]);
     const users = (usersData || {}) as Record<string, any>;
     const routes = routesData ? Object.values(routesData) as any[] : [];
-    const enriched = routes.map((r: any) => ({
+    const assignments = assignmentsData ? Object.values(assignmentsData) as any[] : [];
+    const all = [...routes, ...assignments];
+    const enriched = all.map((r: any) => ({
       ...r,
       onLeave: !!(r?.driverId && users[r.driverId]?.onLeave),
     }));
@@ -3379,7 +3381,12 @@ app.put('/api/bus/assignments/:id', async (req, res) => {
 
 app.delete('/api/bus/assignments/:id', async (req, res) => {
   try {
-    await removeData(`busAssignments/${req.params.id}`);
+    const existing = await getData(`routes/${req.params.id}`);
+    if (existing) {
+      await removeData(`routes/${req.params.id}`);
+    } else {
+      await removeData(`busAssignments/${req.params.id}`);
+    }
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete bus assignment' });
