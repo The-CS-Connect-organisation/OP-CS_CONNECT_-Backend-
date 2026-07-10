@@ -1282,7 +1282,7 @@ app.get('/api/routes', async (req, res) => {
     const routes = routesData ? Object.values(routesData) as any[] : [];
     const assignments = assignmentsData ? Object.values(assignmentsData) as any[] : [];
     const all = [...routes, ...assignments];
-    const enriched = all.map((r: any) => ({
+    const enriched = assignments.map((r: any) => ({
       ...r,
       onLeave: !!(r?.driverId && users[r.driverId]?.onLeave),
     }));
