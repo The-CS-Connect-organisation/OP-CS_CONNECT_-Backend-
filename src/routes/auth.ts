@@ -80,6 +80,11 @@ router.post('/signup', authLimiter, async (req: Request, res: Response) => {
       if (className) newUser.classes = [className];
     }
     // Student-specific fields
+    if (role === 'parent') {
+      const { parentType } = req.body;
+      if (phone) newUser.phone = phone;
+      if (parentType) newUser.parentType = parentType;
+    }
     if (role === 'student') {
       if (subjects) newUser.subjects = subjects;
       if (rollNo) newUser.rollNo = rollNo;

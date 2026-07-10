@@ -2868,6 +2868,51 @@ app.post('/api/parent/link-child', async (req, res) => {
   }
 });
 
+// POST /api/parent/auto-link — auto-link parent to students via phone number match
+app.post('/api/parent/auto-link', async (req, res) => {
+  try {
+    const { parentId, phone, parentType } = req.body;
+    if (!parentId || !phone || !parentType) {
+      return res.status(400).json({ error: 'parentId, phone, and parentType are required' });
+    }
+    const parent = await getData(`users/${parentId}`);
+    if (!parent || parent.role !== 'parent') {
+      return res.status(403).json({ error: 'Only parent accounts can be auto-linked' });
+    }
+    const usersData = await getData('users') as any;
+    if (!usersData) return res.json({ success: true, linked: [], count: 0 });
+    const users = Object.values(usersData) as any[];
+    const studentField = parentType === 'father' ? 'fatherPhone' : 'motherPhone';
+    const idField = parentType === 'father' ? 'fatherId' : 'motherId';
+
+    const linked: { id: string; name: string }[] = [];
+    for (const student of users) {
+      if (student.role === 'student' && student[studentField] === phone && !student[idField]) {
+        student[idField] = parentId;
+        const userKey = Object.keys(usersData).find((k: string) => usersData[k].id === student.id);
+        if (userKey) {
+          await setData(`users/${userKey}`, student);
+          linked.push({ id: student.id, name: student.name });
+        }
+      }
+    }
+
+    if (linked.length > 0) {
+      const existingChildren = parent.children || [];
+      const newIds = linked.map(c => c.id).filter((id: string) => !existingChildren.includes(id));
+      if (newIds.length > 0) {
+        parent.children = [...existingChildren, ...newIds];
+        const parentKey = Object.keys(usersData).find((k: string) => usersData[k].id === parentId);
+        if (parentKey) await setData(`users/${parentKey}`, parent);
+      }
+    }
+    res.json({ success: true, linked, count: linked.length });
+  } catch (error) {
+    console.error('[Parent] Auto-link error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /api/parent/children — list all linked children with details
 app.get('/api/parent/children', async (req, res) => {
   try {

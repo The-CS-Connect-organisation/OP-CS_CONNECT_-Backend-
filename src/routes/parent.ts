@@ -343,4 +343,50 @@ router.get('/notifications', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/parent/auto-link - Auto-link parent to students via phone number match
+router.post('/auto-link', async (req: Request, res: Response) => {
+  try {
+    const { parentId, phone, parentType } = req.body;
+    if (!parentId || !phone || !parentType) {
+      return res.status(400).json({ error: 'parentId, phone, and parentType are required' });
+    }
+
+    const parent = await getData(`users/${parentId}`);
+    if (!parent || parent.role !== 'parent') {
+      return res.status(403).json({ error: 'Only parent accounts can be auto-linked' });
+    }
+
+    const studentsData = await listData('users');
+    const studentField = parentType === 'father' ? 'fatherPhone' : 'motherPhone';
+    const idField = parentType === 'father' ? 'fatherId' : 'motherId';
+
+    const linked: { id: string; name: string }[] = [];
+    const matchingStudents = studentsData.filter(
+      (u: any) => u.role === 'student' && u[studentField] === phone
+    );
+
+    for (const student of matchingStudents) {
+      if (!student[idField]) {
+        student[idField] = parentId;
+        await setData(`users/${student.id}`, student);
+        linked.push({ id: student.id, name: student.name });
+      }
+    }
+
+    if (linked.length > 0) {
+      const existingChildren = parent.children || [];
+      const newIds = linked.map(c => c.id).filter((id: string) => !existingChildren.includes(id));
+      if (newIds.length > 0) {
+        parent.children = [...existingChildren, ...newIds];
+        await setData(`users/${parentId}`, parent);
+      }
+    }
+
+    res.json({ success: true, linked, count: linked.length });
+  } catch (err) {
+    console.error('[Parent] Auto-link error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;
