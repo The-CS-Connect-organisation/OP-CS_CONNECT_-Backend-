@@ -1215,7 +1215,7 @@ app.get('/api/timetable/:class', async (req, res) => {
             id: `${className}-${dayEntry.day}-${i}`,
             class: className,
             day: dayEntry.day,
-            time: p.time || `${String(8 + i).padStart(2, '0')}:00`,
+            time: (p.time || '').split('-')[0] || `${String(8 + i).padStart(2, '0')}:00`,
             subject: p.subject || '',
             teacher: p.teacher || '',
             room: p.room || '',
