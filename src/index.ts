@@ -3855,7 +3855,22 @@ app.post("/api/notes/:id/share", async (req, res) => {
   try { const note = await getData(`notes/${req.params.id}`); if (!note) return res.status(404).json({ error: "Note not found" }); if (!note.shares) note.shares = []; note.shares.push({ userId: req.body.userId, sharedAt: new Date().toISOString() }); await setData(`notes/${req.params.id}`, note); res.json({ success: true }); }
   catch (e) { res.status(500).json({ error: "Failed to share note" }); }
 });
-// ==================== MISSING: Timetable DELETE ====================
+// ==================== Timetable DELETE ====================
+app.delete('/api/timetable', async (req, res) => {
+  try {
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) return res.status(401).json({ error: 'Unauthorized' });
+    const requester = await getData(`users/${requesterId}`);
+    if (!requester || !['admin', 'principal'].includes(requester.role)) {
+      return res.status(403).json({ error: 'Only admins can clear all timetables' });
+    }
+    await removeData('timetable');
+    res.json({ success: true, message: 'All timetables cleared' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to clear timetables' });
+  }
+});
+
 app.delete("/api/timetable/:id", async (req, res) => {
   try {
     const requesterId = req.headers['x-user-id'] as string;
