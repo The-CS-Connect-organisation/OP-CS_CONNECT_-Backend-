@@ -108,6 +108,140 @@ io.on('connection', (socket) => {
   });
 });
 
+// ==================== ROUTE OPTIMIZATION UTILITIES ====================
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function nearestNeighbor(points: Array<{ id: string; lat: number; lng: number }>,
+  startLat?: number, startLng?: number): Array<{ id: string; lat: number; lng: number }> {
+  if (points.length <= 1) return points;
+  const unvisited = [...points];
+  const ordered: Array<{ id: string; lat: number; lng: number }> = [];
+  let current = { lat: startLat || points[0].lat, lng: startLng || points[0].lng, id: 'start' };
+  while (unvisited.length > 0) {
+    let nearestIdx = 0;
+    let nearestDist = Infinity;
+    for (let i = 0; i < unvisited.length; i++) {
+      const d = haversineKm(current.lat, current.lng, unvisited[i].lat, unvisited[i].lng);
+      if (d < nearestDist) {
+        nearestDist = d;
+        nearestIdx = i;
+      }
+    }
+    const nearest = unvisited.splice(nearestIdx, 1)[0];
+    ordered.push(nearest);
+    current = nearest;
+  }
+  return ordered;
+}
+
+function generateGoogleMapsUrl(originLat: number, originLng: number,
+  stops: Array<{ name: string; lat: number; lng: number }>,
+  destLat: number, destLng: number): string {
+  const base = 'https://www.google.com/maps/dir/?api=1';
+  const origin = `&origin=${originLat},${originLng}`;
+  const destination = `&destination=${destLat},${destLng}`;
+  const waypoints = stops.length > 0
+    ? `&waypoints=${stops.map(s => `${s.lat},${s.lng}`).join('|')}`
+    : '';
+  const travelMode = '&travelmode=driving';
+  return `${base}${origin}${destination}${waypoints}${travelMode}`;
+}
+
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const encoded = encodeURIComponent(address);
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=1`,
+      { headers: { 'User-Agent': 'EduVault-ERP/1.0' } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) {
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function optimizeRouteForBus(routeId: string): Promise<any> {
+  try {
+    const busRoute = await getData(`busRoutes/${routeId}`);
+    const legacyRoute = !busRoute ? await getData(`routes/${routeId}`) : null;
+    const route = busRoute || legacyRoute;
+    if (!route) return null;
+
+    const assignments = await listData('busAssignments');
+    const routeAssignments = assignments.filter((a: any) => a.routeId === routeId);
+    const usersData = await getData('users') as any;
+    const users = usersData ? Object.values(usersData) as any[] : [];
+
+    const studentCoords: Array<{ id: string; name: string; lat: number; lng: number; address: string }> = [];
+
+    for (const a of routeAssignments) {
+      const student = users.find((u: any) => u.id === a.studentId);
+      if (student?.homeLat && student?.homeLng) {
+        studentCoords.push({
+          id: student.id, name: student.name,
+          lat: student.homeLat, lng: student.homeLng,
+          address: student.address || ''
+        });
+      }
+    }
+
+    if (Array.isArray(route.students)) {
+      for (const studentId of route.students) {
+        const student = users.find((u: any) => u.id === studentId);
+        if (student?.homeLat && student?.homeLng &&
+          !studentCoords.find(s => s.id === student.id)) {
+          studentCoords.push({
+            id: student.id, name: student.name,
+            lat: student.homeLat, lng: student.homeLng,
+            address: student.address || ''
+          });
+        }
+      }
+    }
+
+    if (studentCoords.length === 0) {
+      const result = { optimizedStops: [], googleMapsUrl: '', lastOptimized: new Date().toISOString(), message: 'No students with coordinates' };
+      await setData(`busRoutes/${routeId}/routeOptimization`, result).catch(() => {});
+      return result;
+    }
+
+    const schoolLat = 17.3850;
+    const schoolLng = 78.4867;
+    const ordered = nearestNeighbor(studentCoords, schoolLat, schoolLng);
+    const mapsUrl = generateGoogleMapsUrl(schoolLat, schoolLng, ordered, schoolLat, schoolLng);
+
+    const optimizedData = {
+      optimizedStops: ordered,
+      googleMapsUrl: mapsUrl,
+      totalStops: ordered.length,
+      totalDistanceKm: ordered.reduce((sum, s, i) => {
+        if (i === 0) return sum + haversineKm(schoolLat, schoolLng, s.lat, s.lng);
+        return sum + haversineKm(ordered[i - 1].lat, ordered[i - 1].lng, s.lat, s.lng);
+      }, 0),
+      lastOptimized: new Date().toISOString()
+    };
+
+    await setData(`busRoutes/${routeId}/routeOptimization`, optimizedData).catch(() => {});
+    return optimizedData;
+  } catch (err) {
+    console.error('[RouteOpt] Error:', err);
+    return null;
+  }
+}
+
 const JWT_SECRET: string = process.env.JWT_SECRET || (() => {
   if (process.env.NODE_ENV === 'production') {
     console.warn('WARNING: JWT_SECRET not set in production. Set JWT_SECRET environment variable to avoid token invalidation on restart.');
@@ -314,6 +448,22 @@ app.post('/api/users', async (req, res) => {
       newUser.classes = [newUser.class];
     }
     await setData(`users/${newUser.id}`, newUser);
+    // Auto-create transport driver record when a driver user is created
+    if (newUser.role === 'driver') {
+      const transportDriver = {
+        id: `drv_${newUser.id}`,
+        userId: newUser.id,
+        name: newUser.name || '',
+        license: newUser.license || '',
+        contact: newUser.phone || '',
+        expiryDate: newUser.licenseExpiry || '',
+        status: 'active',
+        createdAt: new Date().toISOString(),
+      };
+      await setData(`transportDrivers/${transportDriver.id}`, transportDriver).catch((err) => {
+        console.warn('[Users] Failed to create transport driver record:', err);
+      });
+    }
     res.status(201).json(safeUser(newUser));
   } catch (error) {
     res.status(500).json({ error: 'Failed to create user' });
@@ -877,16 +1027,59 @@ app.get('/api/schools', async (req, res) => {
 // ==================== ROUTES (Transport) ====================
 app.get('/api/routes', async (req, res) => {
   try {
-    const [routesData, assignmentsData, usersData] = await Promise.all([getData('routes'), getData('busAssignments'), getData('users')]);
+    const { studentId } = req.query;
+    const [routesData, assignmentsData, usersData, busRoutesData] = await Promise.all([
+      getData('routes'), getData('busAssignments'), getData('users'), getData('busRoutes')
+    ]);
     const users = (usersData || {}) as Record<string, any>;
     const routes = routesData ? Object.values(routesData) as any[] : [];
     const assignments = assignmentsData ? Object.values(assignmentsData) as any[] : [];
-    const all = [...routes, ...assignments];
-    const enriched = all.map((r: any) => ({
-      ...r,
-      onLeave: !!(r?.driverId && users[r.driverId]?.onLeave),
-    }));
-    res.json(enriched);
+    const busRoutes = busRoutesData ? Object.values(busRoutesData) as any[] : [];
+
+    let all: any[];
+
+    if (studentId) {
+      const routeMap = new Map<string, any>();
+      // Find student's bus assignments and merge with full route details
+      const studentAssignments = assignments.filter((a: any) => a.studentId === studentId);
+      for (const a of studentAssignments) {
+        const br = busRoutes.find((r: any) => r.id === a.routeId);
+        if (br) {
+          routeMap.set(br.id, {
+            id: br.id,
+            name: br.name,
+            routeName: br.name,
+            busNumber: br.vehicleNumber || 'N/A',
+            driverName: br.driverName || 'Unknown',
+            driverId: br.driverId,
+            driverPhone: users[br.driverId]?.phone || 'N/A',
+            stops: br.stops || [],
+            students: [studentId],
+            onLeave: !!(br.driverId && users[br.driverId]?.onLeave),
+            status: 'active',
+            estimatedArrival: '--:--',
+          });
+        }
+      }
+      // Also check legacy routes with students array
+      for (const r of routes) {
+        if (Array.isArray(r.students) && r.students.includes(studentId as string)) {
+          routeMap.set(r.id, {
+            ...r,
+            onLeave: !!(r.driverId && users[r.driverId]?.onLeave),
+          });
+        }
+      }
+      all = Array.from(routeMap.values());
+    } else {
+      all = [...routes, ...assignments];
+      all = all.map((r: any) => ({
+        ...r,
+        onLeave: !!(r?.driverId && users[r.driverId]?.onLeave),
+      }));
+    }
+
+    res.json(all);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch routes' });
   }
@@ -2979,6 +3172,10 @@ app.post('/api/bus/assignments', async (req, res) => {
     const newAss = { id: `ba${Date.now()}`, ...req.body, createdAt: new Date().toISOString() };
     routes.push(newAss);
     await setData('routes', Object.fromEntries(routes.map((a: any) => [a.id, a])));
+    // Auto-optimize the route if a routeId is provided
+    if (newAss.routeId) {
+      optimizeRouteForBus(newAss.routeId).catch(() => {});
+    }
     res.status(201).json(newAss);
   } catch (error) {
     res.status(500).json({ error: 'Failed to create bus assignment' });
@@ -2991,12 +3188,17 @@ app.put('/api/bus/assignments/:id', async (req, res) => {
     const existing = await getData(`routes/${req.params.id}`);
     if (existing) {
       await setData(`routes/${req.params.id}`, { ...existing, ...req.body });
+      if (existing.routeId || req.body.routeId) {
+        optimizeRouteForBus(req.body.routeId || existing.routeId).catch(() => {});
+      }
       res.json({ success: true });
     } else {
       const data = await getData('busAssignments') as any;
       if (data && data[req.params.id]) {
+        const before = data[req.params.id];
         data[req.params.id] = { ...data[req.params.id], ...req.body };
         await setData('busAssignments', data);
+        if (before.routeId) optimizeRouteForBus(before.routeId).catch(() => {});
         res.json({ success: true });
       } else {
         res.status(404).json({ error: 'Not found' });
@@ -3013,11 +3215,87 @@ app.delete('/api/bus/assignments/:id', async (req, res) => {
     if (existing) {
       await removeData(`routes/${req.params.id}`);
     } else {
+      const assignment = await getData(`busAssignments/${req.params.id}`);
+      if (assignment?.routeId) {
+        optimizeRouteForBus(assignment.routeId).catch(() => {});
+      }
       await removeData(`busAssignments/${req.params.id}`);
     }
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete bus assignment' });
+  }
+});
+
+// ==================== ROUTE OPTIMIZATION ENDPOINTS ====================
+
+// POST /api/route-optimize/:routeId - Trigger route optimization for a bus route
+app.post('/api/route-optimize/:routeId', async (req, res) => {
+  try {
+    const result = await optimizeRouteForBus(req.params.routeId);
+    if (!result) return res.status(404).json({ error: 'Route not found or no data' });
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to optimize route' });
+  }
+});
+
+// GET /api/route-optimize/:routeId - Get current optimized route data
+app.get('/api/route-optimize/:routeId', async (req, res) => {
+  try {
+    const optData = await getData(`busRoutes/${req.params.routeId}/routeOptimization`);
+    const legacyOpt = !optData ? await getData(`routes/${req.params.routeId}/routeOptimization`) : null;
+    if (optData || legacyOpt) return res.json({ success: true, ...(optData || legacyOpt) });
+    
+    const busRoute = await getData(`busRoutes/${req.params.routeId}`);
+    const legacyRoute = !busRoute ? await getData(`routes/${req.params.routeId}`) : null;
+    const route = busRoute || legacyRoute;
+    if (!route) return res.status(404).json({ error: 'Route not found' });
+    
+    res.json({ success: true, optimizedStops: [], googleMapsUrl: '', message: 'Not yet optimized' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch optimized route' });
+  }
+});
+
+// POST /api/geocode - Convert address to lat/lng (uses OpenStreetMap Nominatim, free)
+app.post('/api/geocode', async (req, res) => {
+  try {
+    const { address } = req.body;
+    if (!address) return res.status(400).json({ error: 'Address is required' });
+    const coords = await geocodeAddress(address);
+    res.json({ success: true, lat: coords?.lat || null, lng: coords?.lng || null, found: !!coords });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to geocode' });
+  }
+});
+
+// Auto-geocode and store lat/lng when user saves address
+app.put('/api/users/:id/geocode', async (req, res) => {
+  try {
+    const { address } = req.body;
+    if (!address) return res.status(400).json({ error: 'Address is required' });
+    const coords = await geocodeAddress(address);
+    if (coords) {
+      const user = await getData(`users/${req.params.id}`);
+      if (user) {
+        await setData(`users/${req.params.id}`, { ...user, address, homeLat: coords.lat, homeLng: coords.lng });
+        res.json({ success: true, lat: coords.lat, lng: coords.lng });
+      } else {
+        res.status(404).json({ error: 'User not found' });
+      }
+    } else {
+      // Save address even without geocoding result
+      const user = await getData(`users/${req.params.id}`);
+      if (user) {
+        await setData(`users/${req.params.id}`, { ...user, address, homeLat: null, homeLng: null });
+        res.json({ success: true, lat: null, lng: null, message: 'Address saved but could not geocode' });
+      } else {
+        res.status(404).json({ error: 'User not found' });
+      }
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to geocode user address' });
   }
 });
 

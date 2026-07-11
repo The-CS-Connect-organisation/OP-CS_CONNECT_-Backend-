@@ -123,6 +123,65 @@ router.post('/assignments', async (req: Request, res: Response) => {
   }
 });
 
+// PUT /api/bus/assignments/:id - Update bus assignment
+router.put('/assignments/:id', async (req: Request, res: Response) => {
+  try {
+    const requesterId = req.headers['x-user-id'] as string;
+    if (!requesterId) {
+      return res.status(401).json({ error: 'Unauthorized - User ID required' });
+    }
+
+    const requester = await getData(`users/${requesterId}`);
+    if (!['admin', 'principal', 'transport'].includes(requester?.role)) {
+      return res.status(403).json({ error: 'Forbidden - Insufficient permissions' });
+    }
+
+    const { id } = req.params;
+    const existing = await getData(`busAssignments/${id}`);
+    if (!existing) {
+      return res.status(404).json({ error: 'Bus assignment not found' });
+    }
+
+    const { studentId, routeId, pickupStop, dropoffStop, status, students } = req.body;
+
+    // If updating students list on a bus route (used by AdminBusAssignment page)
+    if (students !== undefined) {
+      // This is a route-level update (adding/removing students from a bus)
+      const route = await getData(`busRoutes/${id}`);
+      if (route) {
+        await setData(`busRoutes/${id}`, { ...route, students, studentCount: Array.isArray(students) ? students.length : 0 });
+        return res.json({ success: true, route: { ...route, students, studentCount: Array.isArray(students) ? students.length : 0 } });
+      }
+      const legacyRoute = await getData(`routes/${id}`);
+      if (legacyRoute) {
+        await setData(`routes/${id}`, { ...legacyRoute, students });
+        return res.json({ success: true, route: { ...legacyRoute, students } });
+      }
+      return res.status(404).json({ error: 'Route not found for student update' });
+    }
+
+    const updates: any = {};
+    if (studentId) updates.studentId = studentId;
+    if (routeId) {
+      const route = await getData(`busRoutes/${routeId}`);
+      if (route) {
+        updates.routeId = routeId;
+        updates.routeName = route.name;
+      }
+    }
+    if (pickupStop) updates.pickupStop = pickupStop;
+    if (dropoffStop) updates.dropoffStop = dropoffStop;
+    if (status) updates.status = status;
+
+    const updated = { ...existing, ...updates, updatedAt: new Date().toISOString() };
+    await setData(`busAssignments/${id}`, updated);
+    res.json({ success: true, assignment: updated });
+  } catch (err) {
+    console.error('[Bus] Update assignment error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // DELETE /api/bus/assignments/:id - Delete bus assignment
 router.delete('/assignments/:id', async (req: Request, res: Response) => {
   try {
