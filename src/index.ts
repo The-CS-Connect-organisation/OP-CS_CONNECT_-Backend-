@@ -1167,6 +1167,14 @@ app.post('/api/assignments/:id/publish', async (req, res) => {
 });
 
 // ==================== TIMETABLE ====================
+app.get('/api/timetable', async (_req, res) => {
+  try {
+    const data = await getData('timetable');
+    const classNames = data ? Object.keys(data) : [];
+    res.json(classNames);
+  } catch { res.json([]); }
+});
+
 app.get('/api/timetable/:class', async (req, res) => {
   try {
     const requesterId = req.headers['x-user-id'] as string;
