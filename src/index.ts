@@ -914,6 +914,15 @@ app.post('/api/routes', async (req, res) => {
   }
 });
 
+app.delete('/api/routes/:id', async (req, res) => {
+  try {
+    await removeData(`routes/${req.params.id}`);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete route' });
+  }
+});
+
 app.put('/api/routes/:id', async (req, res) => {
   try {
     const existing = await getData(`routes/${req.params.id}`);
