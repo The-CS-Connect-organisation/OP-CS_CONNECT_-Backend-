@@ -77,9 +77,6 @@ async function refreshTrackingDisabled(): Promise<void> {
   }
 }
 
-// Seed a demo location for bus "r1" (assigned to driver Raju)
-busLocations.set('r1', { lat: 17.3850, lng: 78.4867, timestamp: Date.now() });
-
 io.on('connection', (socket) => {
   console.log(`[Socket] Client connected: ${socket.id}`);
 
